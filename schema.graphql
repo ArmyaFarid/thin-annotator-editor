@@ -1,0 +1,271 @@
+"""
+Indicates an Input Object is a OneOf Input Object.
+"""
+directive @oneOf on INPUT_OBJECT
+
+type Query {
+  defaultVideo: Video!
+  videos(
+    """
+    Returns the items in the list that come before the specified cursor.
+    """
+    before: String = null
+
+    """
+    Returns the items in the list that come after the specified cursor.
+    """
+    after: String = null
+
+    """
+    Returns the first n items from the list.
+    """
+    first: Int = null
+
+    """
+    Returns the items in the list that come after the specified cursor.
+    """
+    last: Int = null
+  ): VideoConnection!
+  defaultImage: Image!
+  images(
+    """
+    Returns the items in the list that come before the specified cursor.
+    """
+    before: String = null
+
+    """
+    Returns the items in the list that come after the specified cursor.
+    """
+    after: String = null
+
+    """
+    Returns the first n items from the list.
+    """
+    first: Int = null
+
+    """
+    Returns the items in the list that come after the specified cursor.
+    """
+    last: Int = null
+  ): ImageConnection!
+}
+
+type Video implements Node {
+  """
+  The Globally Unique ID of this object
+  """
+  id: ID!
+  path: String!
+  posterPath: String
+  width: Int!
+  height: Int!
+  url: String!
+  posterUrl: String!
+}
+
+"""
+An object with a Globally Unique ID
+"""
+interface Node {
+  """
+  The Globally Unique ID of this object
+  """
+  id: ID!
+}
+
+"""
+A connection to a list of items.
+"""
+type VideoConnection {
+  """
+  Pagination data for this connection
+  """
+  pageInfo: PageInfo!
+
+  """
+  Contains the nodes in this connection
+  """
+  edges: [VideoEdge!]!
+}
+
+"""
+Information to aid in pagination.
+"""
+type PageInfo {
+  """
+  When paginating forwards, are there more items?
+  """
+  hasNextPage: Boolean!
+
+  """
+  When paginating backwards, are there more items?
+  """
+  hasPreviousPage: Boolean!
+
+  """
+  When paginating backwards, the cursor to continue.
+  """
+  startCursor: String
+
+  """
+  When paginating forwards, the cursor to continue.
+  """
+  endCursor: String
+}
+
+"""
+An edge in a connection.
+"""
+type VideoEdge {
+  """
+  A cursor for use in pagination
+  """
+  cursor: String!
+
+  """
+  The item at the end of the edge
+  """
+  node: Video!
+}
+
+type Image implements Node {
+  """
+  The Globally Unique ID of this object
+  """
+  id: ID!
+  path: String!
+  width: Int!
+  height: Int!
+  thumbnailPath: String
+  url: String!
+  thumbnailUrl: String
+}
+
+"""
+A connection to a list of items.
+"""
+type ImageConnection {
+  """
+  Pagination data for this connection
+  """
+  pageInfo: PageInfo!
+
+  """
+  Contains the nodes in this connection
+  """
+  edges: [ImageEdge!]!
+}
+
+"""
+An edge in a connection.
+"""
+type ImageEdge {
+  """
+  A cursor for use in pagination
+  """
+  cursor: String!
+
+  """
+  The item at the end of the edge
+  """
+  node: Image!
+}
+
+type Mutation {
+  uploadVideo(
+    file: Upload!
+    startTimeSec: Float = null
+    durationTimeSec: Float = null
+  ): Video!
+  startSession(input: StartSessionInput!): StartSession!
+  closeSession(input: CloseSessionInput!): CloseSession!
+  addPoints(input: AddPointsInput!): RLEMaskListOnFrame!
+  removeObject(input: RemoveObjectInput!): [RLEMaskListOnFrame!]!
+  clearPointsInFrame(input: ClearPointsInFrameInput!): RLEMaskListOnFrame!
+  clearPointsInVideo(input: ClearPointsInVideoInput!): ClearPointsInVideo!
+  cancelPropagateInVideo(
+    input: CancelPropagateInVideoInput!
+  ): CancelPropagateInVideo!
+  startSessionImage(input: StartSessionInput!): StartSession!
+  addPointsImage(input: AddPointsImageInput!): RLEMaskListOnFrame!
+}
+
+"""
+Represents a file upload.
+"""
+scalar Upload
+
+type StartSession {
+  sessionId: String!
+}
+
+input StartSessionInput {
+  path: String!
+}
+
+type CloseSession {
+  success: Boolean!
+}
+
+input CloseSessionInput {
+  sessionId: String!
+}
+
+type RLEMaskListOnFrame {
+  frameIndex: Int!
+  rleMaskList: [RLEMaskForObject!]!
+}
+
+type RLEMaskForObject {
+  objectId: Int!
+  rleMask: RLEMask!
+}
+
+type RLEMask {
+  size: [Int!]!
+  counts: String!
+  order: String!
+}
+
+input AddPointsInput {
+  sessionId: String!
+  frameIndex: Int!
+  clearOldPoints: Boolean!
+  objectId: Int!
+  labels: [Int!]!
+  points: [[Float!]!]!
+}
+
+input RemoveObjectInput {
+  sessionId: String!
+  objectId: Int!
+}
+
+input ClearPointsInFrameInput {
+  sessionId: String!
+  frameIndex: Int!
+  objectId: Int!
+}
+
+type ClearPointsInVideo {
+  success: Boolean!
+}
+
+input ClearPointsInVideoInput {
+  sessionId: String!
+}
+
+type CancelPropagateInVideo {
+  success: Boolean!
+}
+
+input CancelPropagateInVideoInput {
+  sessionId: String!
+}
+
+input AddPointsImageInput {
+  sessionId: String!
+  objectId: Int!
+  labels: [Int!]!
+  points: [[Float!]!]!
+}
