@@ -21,6 +21,7 @@ import {defineConfig} from 'vite';
 import babel from 'vite-plugin-babel';
 import relay from 'vite-plugin-relay';
 import {stylexPlugin} from 'vite-plugin-stylex-dev';
+import svgr from 'vite-plugin-svgr';
 
 export default defineConfig({
   resolve: {
@@ -34,6 +35,7 @@ export default defineConfig({
         plugins: [jotaiDebugLabel, jotaiReactRefresh],
       },
     }),
+    svgr(),
     stylexPlugin(),
     relay,
     babel(),

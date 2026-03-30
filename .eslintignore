@@ -1,3 +1,7 @@
 node_modules/
 dist/
 env.d.ts
+tailwind.config.js
+postcss.config.js
+vite.config.ts
+eslint.config.js

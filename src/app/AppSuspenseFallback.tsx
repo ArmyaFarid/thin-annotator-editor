@@ -13,22 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// import SAM2DemoApp from '@/demo/SAM2DemoApp';
-import AppEntry from '@/app/App.tsx';
-import SettingsContextProvider from '@/settings/SettingsContextProvider';
-import {RouterProvider, createBrowserRouter} from 'react-router-dom';
+import LoadingStateScreen from '@/common/loading/LoadingStateScreen';
 
-export default function App() {
-  const router = createBrowserRouter([
-    {
-      path: '*',
-      element: (
-        <SettingsContextProvider>
-          <AppEntry />
-        </SettingsContextProvider>
-      ),
-    },
-  ]);
-
-  return <RouterProvider router={router} />;
+export default function DemoSuspenseFallback() {
+  return <LoadingStateScreen title="Fetching data" />;
 }

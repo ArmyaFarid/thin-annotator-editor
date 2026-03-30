@@ -21,37 +21,35 @@
 
 import '@/assets/scss/App.scss';
 import ErrorReport from '@/common/error/ErrorReport';
-import DemoErrorFallback from '@/demo/DemoErrorFallback';
-import DemoSuspenseFallback from '@/demo/DemoSuspenseFallback';
+import AppErrorFallback from '@/app/AppErrorFallback';
+import AppSuspenseFallback from '@/app/AppSuspenseFallback';
 import RelayEnvironmentProvider from '@/graphql/RelayEnvironmentProvider';
 import RootLayout from '@/layouts/RootLayout';
-import SAM2DemoPage from '@/routes/DemoPageWrapper';
-import TestMask from '@/routes/MaskOverlayDemo.tsx';
+import AnnotatorPage from '@/pages/annotator/AnnotatorPageWrapper.tsx';
 import PageNotFoundPage from '@/routes/PageNotFoundPage';
 import useSettingsContext from '@/settings/useSettingsContext';
 import {Route, Routes} from 'react-router-dom';
+import {Toaster} from 'sonner';
 
-export default function DemoAppWrapper() {
+export default function AppWrapper() {
   const {settings} = useSettingsContext();
   return (
     <RelayEnvironmentProvider
       endpoint={settings.videoAPIEndpoint}
-      suspenseFallback={<DemoSuspenseFallback />}
-      errorFallback={DemoErrorFallback}>
-      <DemoApp />
+      suspenseFallback={<AppSuspenseFallback />}
+      errorFallback={AppErrorFallback}>
+      <Toaster richColors position="top-right" />
+      <AppRoutes />
     </RelayEnvironmentProvider>
   );
 }
 
-function DemoApp() {
+function AppRoutes() {
   return (
     <>
       <Routes>
         <Route element={<RootLayout />}>
-          {/*<Route index={true} element={<SAM2DemoPage />} />*/}
-          <Route path="video" element={<SAM2DemoPage />} />
-          <Route path="test" element={<TestMask />} />
-          {/*<Route path="image-segmentator" element={<SAM2SegmentationPage />} />*/}
+          <Route index={true} element={<AnnotatorPage />} />
           <Route path="*" element={<PageNotFoundPage />} />
         </Route>
       </Routes>

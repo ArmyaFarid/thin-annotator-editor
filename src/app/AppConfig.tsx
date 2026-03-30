@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import {Effects} from '@/common/components/video/effects/Effects';
+import {Tool} from '@/app/types.ts';
 
 type EffectLayers = {
   background: keyof Effects;
@@ -42,3 +43,13 @@ export const DEFAULT_EFFECT_LAYERS: EffectLayers = {
 };
 
 export const MAX_UPLOAD_FILE_SIZE = '70MB';
+
+export const TOOLS: Tool[] = [
+  'select-add',
+  'select-remove',
+  'bounding-box',
+  // 'draw',
+  // 'move',
+  'zoom-in',
+  'zoom-out',
+];

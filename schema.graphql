@@ -268,4 +268,5 @@ input AddPointsImageInput {
   objectId: Int!
   labels: [Int!]!
   points: [[Float!]!]!
+  bboxes: [[Float!]!]!
 }

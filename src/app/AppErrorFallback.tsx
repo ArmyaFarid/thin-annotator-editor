@@ -13,22 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// import SAM2DemoApp from '@/demo/SAM2DemoApp';
-import AppEntry from '@/app/App.tsx';
-import SettingsContextProvider from '@/settings/SettingsContextProvider';
-import {RouterProvider, createBrowserRouter} from 'react-router-dom';
+import LoadingStateScreen from '@/common/loading/LoadingStateScreen';
+import {FallbackProps} from 'react-error-boundary';
 
-export default function App() {
-  const router = createBrowserRouter([
-    {
-      path: '*',
-      element: (
-        <SettingsContextProvider>
-          <AppEntry />
-        </SettingsContextProvider>
-      ),
-    },
-  ]);
-
-  return <RouterProvider router={router} />;
+export default function DemoErrorFallback(_props: FallbackProps) {
+  return (
+    <LoadingStateScreen
+      title="Well, this is embarrassing..."
+      description="This app is not optimized for your device. Please try again on a different device with a larger screen."
+      linkProps={{to: '..', label: 'Back to homepage'}}
+    />
+  );
 }

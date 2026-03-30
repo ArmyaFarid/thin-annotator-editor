@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<67f791f6c7d1d841acee03ca68f8c901>>
+ * @generated SignedSource<<a731addfc85cd66fd26c6a47c02d3244>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,20 +9,20 @@
 // @ts-nocheck
 
 import { ConcreteRequest, Query } from 'relay-runtime';
-export type ImageSegmentationPageQuery$variables = Record<PropertyKey, never>;
-export type ImageSegmentationPageQuery$data = {
-  readonly defaultVideo: {
+export type ImageEditorImgQuery$variables = Record<PropertyKey, never>;
+export type ImageEditorImgQuery$data = {
+  readonly defaultImage: {
     readonly height: number;
     readonly path: string;
-    readonly posterPath: string | null | undefined;
-    readonly posterUrl: string;
+    readonly thumbnailPath: string | null | undefined;
+    readonly thumbnailUrl: string | null | undefined;
     readonly url: string;
     readonly width: number;
   };
 };
-export type ImageSegmentationPageQuery = {
-  response: ImageSegmentationPageQuery$data;
-  variables: ImageSegmentationPageQuery$variables;
+export type ImageEditorImgQuery = {
+  response: ImageEditorImgQuery$data;
+  variables: ImageEditorImgQuery$variables;
 };
 
 const node: ConcreteRequest = (function(){
@@ -37,7 +37,7 @@ v1 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "posterPath",
+  "name": "thumbnailPath",
   "storageKey": null
 },
 v2 = {
@@ -51,7 +51,7 @@ v3 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "posterUrl",
+  "name": "thumbnailUrl",
   "storageKey": null
 },
 v4 = {
@@ -73,14 +73,14 @@ return {
     "argumentDefinitions": [],
     "kind": "Fragment",
     "metadata": null,
-    "name": "ImageSegmentationPageQuery",
+    "name": "ImageEditorImgQuery",
     "selections": [
       {
         "alias": null,
         "args": null,
-        "concreteType": "Video",
+        "concreteType": "Image",
         "kind": "LinkedField",
-        "name": "defaultVideo",
+        "name": "defaultImage",
         "plural": false,
         "selections": [
           (v0/*: any*/),
@@ -100,14 +100,14 @@ return {
   "operation": {
     "argumentDefinitions": [],
     "kind": "Operation",
-    "name": "ImageSegmentationPageQuery",
+    "name": "ImageEditorImgQuery",
     "selections": [
       {
         "alias": null,
         "args": null,
-        "concreteType": "Video",
+        "concreteType": "Image",
         "kind": "LinkedField",
-        "name": "defaultVideo",
+        "name": "defaultImage",
         "plural": false,
         "selections": [
           (v0/*: any*/),
@@ -129,16 +129,16 @@ return {
     ]
   },
   "params": {
-    "cacheID": "b616d6d7abd1e78702a95fc5abfe382b",
+    "cacheID": "71087167db0ef68521044c9d9ebb9eb2",
     "id": null,
     "metadata": {},
-    "name": "ImageSegmentationPageQuery",
+    "name": "ImageEditorImgQuery",
     "operationKind": "query",
-    "text": "query ImageSegmentationPageQuery {\n  defaultVideo {\n    path\n    posterPath\n    url\n    posterUrl\n    height\n    width\n    id\n  }\n}\n"
+    "text": "query ImageEditorImgQuery {\n  defaultImage {\n    path\n    thumbnailPath\n    url\n    thumbnailUrl\n    height\n    width\n    id\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "0926451a43e926afeb33a2ca31a007d3";
+(node as any).hash = "e424faa613267c5d8566c305d6c6fec1";
 
 export default node;

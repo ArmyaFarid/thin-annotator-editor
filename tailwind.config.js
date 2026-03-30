@@ -37,7 +37,7 @@ export default {
           'base-300': '#DEE3E9',
           primary: '#0064E0',
           'primary-content': '#FFFFFF',
-          secondary: '#0F191E',
+          secondary: '#2B2B2B',
           'secondary-content': '#FFFFFF',
           accent: '#6441D2',
           'accent-content': '#FFFFFF',
@@ -49,7 +49,6 @@ export default {
           'warning-content': '#FFFFFF',
           error: '#C80A28',
           'error-content': '#FFFFFF',
-
           '--rounded-box': '0.35rem', // border radius rounded-box utility class, used in card and other large boxes
           '--rounded-btn': '0.35rem', // border radius rounded-btn utility class, used in buttons and similar element
           '--rounded-badge': '1rem', // border radius rounded-badge utility class, used in badges and similar
@@ -100,6 +99,8 @@ export default {
           800: '#1A1C1F',
           900: '#0F191E',
         },
+        'secondary': '#3A3A3A',
+        'primary': '#2B2B2B',
       },
       lineHeight: {
         tight: 1.2,

@@ -27,7 +27,7 @@ const styles = stylex.create({
     flexDirection: 'column',
     height: '100%',
     maxHeight: '100vh',
-    backgroundColor: '#000',
+    backgroundColor: '#2B2B2B',
   },
   content: {
     position: 'relative',
