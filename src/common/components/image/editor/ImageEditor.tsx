@@ -285,6 +285,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
     path: string,
     pairCode: string,
     onCompleted: (sessionId: string) => void,
+    onError: (err: never) => void,
   ) => {
     commit({
       variables: {
@@ -298,19 +299,32 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
           onCompleted(response.startSessionImage.sessionId);
         }
       },
-      onError: err => console.error('Failed to start session:', err),
+      onError: err => onError(err),
     });
   };
 
   function sessionStart() {
     const id = toast.loading('Debut de la session...');
     if (activeImage?.url) {
-      startSession(activeImage?.path, sessionId => {
-        setSessionId(sessionId);
-        toast.success('Session en cours, selectioner une zone pour commencer', {
-          id,
-        });
-      });
+      startSession(
+        activeImage?.path,
+        defaultPairsData?.defaultPairs.id,
+        sessionId => {
+          setSessionId(sessionId);
+          toast.success(
+            'Session en cours, selectioner une zone pour commencer',
+            {
+              id,
+            },
+          );
+        },
+        err => {
+          // setSessionId('START_SESSION');
+          toast.error('Failed', {
+            id,
+          });
+        },
+      );
     }
     console.log('starting.....');
   }
@@ -344,6 +358,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
       variables: {
         input: {
           sessionId,
+          imagePath: activeImage?.path,
           objectId: 1, // Hardcoded for this demo
           points: points,
           labels: labels,

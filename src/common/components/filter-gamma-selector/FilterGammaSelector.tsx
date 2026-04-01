@@ -12,7 +12,7 @@ export default function FilterGammaSelector() {
   const setFilter = (filter: string | null) =>
     setCombination({...combination, filter});
 
-  const setGamma = (gamma: string | null) =>
+  const setGamma = (gamma: number | null) =>
     setCombination({...combination, gamma});
 
   const clearAll = () => setCombination({filter: null, gamma: null});
@@ -33,7 +33,7 @@ export default function FilterGammaSelector() {
         : 'bg-transparent text-muted-foreground border-white/15 hover:border-white/30 hover:text-foreground'
     }`;
 
-  const gammaPill = (g: string) =>
+  const gammaPill = (g: number) =>
     `px-2.5 py-1 text-xs font-medium rounded-full border transition-all whitespace-nowrap ${
       combination.gamma === g
         ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
@@ -85,7 +85,7 @@ export default function FilterGammaSelector() {
             </label>
             <select
               value={combination.gamma ?? ''}
-              onChange={e => setGamma(e.target.value || null)}
+              onChange={e => setGamma(Number(e.target.value) || null)}
               className="px-2 py-1 text-xs bg-background border border-white/20 rounded-md text-foreground focus:outline-none">
               <option value="">— none —</option>
               {gammas.map(g => (

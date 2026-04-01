@@ -46,7 +46,7 @@ export const sessionIdAtom = atom<string | undefined>(undefined);
 
 export type FilterGammaCombination = {
   filter: string | null;
-  gamma: string | null;
+  gamma: number | null;
 };
 
 export const filterGammaCombinationAtom = atom<FilterGammaCombination>({

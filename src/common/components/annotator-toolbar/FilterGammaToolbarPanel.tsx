@@ -1,3 +1,4 @@
+import {useEffect} from 'react';
 import useFilterGamma from '@/common/components/filter-gamma-selector/useFilterGamma.ts';
 import useFilterGammaConfig from '@/common/components/image/editor/useFilterGammaConfig.ts';
 
@@ -7,6 +8,18 @@ export default function FilterGammaToolbarPanel() {
   const [combination, setCombination] = useFilterGamma();
   const [{filters, gammas}] = useFilterGammaConfig();
 
+  useEffect(() => {
+    if (!filters.length) {
+      return;
+    }
+    const firstFilter = filters[0];
+    const isPPL = firstFilter === PPL_FILTER;
+    setCombination({
+      filter: firstFilter,
+      gamma: isPPL ? null : gammas[0] ?? null,
+    });
+  }, [filters, gammas]);
+
   const setFilter = (filter: string | null) => {
     const isPPL = filter === PPL_FILTER;
     setCombination({
@@ -15,7 +28,7 @@ export default function FilterGammaToolbarPanel() {
     });
   };
 
-  const setGamma = (gamma: string | null) =>
+  const setGamma = (gamma: number | null) =>
     setCombination({...combination, gamma});
 
   const showGamma = combination.filter !== PPL_FILTER;
@@ -27,7 +40,7 @@ export default function FilterGammaToolbarPanel() {
         : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
     }`;
 
-  const gammaPill = (g: string) =>
+  const gammaPill = (g: number) =>
     `w-full px-2 py-1 text-left text-xs font-medium rounded transition-all ${
       combination.gamma === g
         ? 'bg-emerald-500/15 text-emerald-400'
