@@ -48,6 +48,7 @@ type Query {
     """
     last: Int = null
   ): ImageConnection!
+  defaultPairs: ThinSectionImagePairs!
 }
 
 type Video implements Node {
@@ -171,6 +172,37 @@ type ImageEdge {
   node: Image!
 }
 
+type ThinSectionImagePairs implements Node {
+  """
+  The Globally Unique ID of this object
+  """
+  id: ID!
+  sampleId: String!
+  label: String
+  description: String
+  AcquiredCache: [AcquiredImage!]
+  PolarizedFilterTypes: [PolarizedFilterType!]
+  Gammas: [Int!]
+  acquiredImages: [AcquiredImage!]!
+  imageByAcquisition(acquisitionType: PolarizedFilterType!): Image
+  polarizedFilterTypes: [PolarizedFilterType!]!
+  gammas: [Int]!
+}
+
+type AcquiredImage {
+  polarizedFilterType: PolarizedFilterType!
+  gamma: Int
+  acquisitionLabel: String
+  image: Image!
+}
+
+enum PolarizedFilterType {
+  PPL
+  XPL
+  XPL_GAMMA
+  OTHER
+}
+
 type Mutation {
   uploadVideo(
     file: Upload!
@@ -234,6 +266,7 @@ input AddPointsInput {
   objectId: Int!
   labels: [Int!]!
   points: [[Float!]!]!
+  bboxes: [[Float!]!]!
 }
 
 input RemoveObjectInput {

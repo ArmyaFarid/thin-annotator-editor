@@ -13,6 +13,9 @@ import useSessionId from '@/common/components/image/editor/useSessionId.ts';
 import Box = module;
 import AddMarkIcon from '@/assets/icons/add-mark.svg?react';
 import RemoveMarkIcon from '@/assets/icons/remove-mark.svg?react';
+import {ImageEditorDefaultPairsQuery} from '@/common/components/image/editor/__generated__/ImageEditorDefaultPairsQuery.graphql.ts';
+import useFilterGammaConfig from '@/common/components/image/editor/useFilterGammaConfig.ts';
+import useFilterGamma from '@/common/components/filter-gamma-selector/useFilterGamma.ts';
 
 interface ImageEditorProps {}
 
@@ -20,6 +23,16 @@ interface RLEMask {
   counts: string;
   size: [number, number];
 }
+
+type Image = {
+  height: number;
+  id: string;
+  path: string;
+  thumbnailPath: string | null | undefined;
+  thumbnailUrl: string | null | undefined;
+  url: string;
+  width: number;
+};
 
 // interface Mask {
 //   id: number;
@@ -75,7 +88,14 @@ const getDistinctColor = (index: number, alpha: number = 0.6) => {
 };
 
 export const ImageEditor: React.FC<ImageEditorProps> = () => {
+  const [activeImage, setActiveImage] = useState<Image | null>(null);
+
   const [activeTool, setActiveTool] = useAnnotatorToolbar();
+
+  const [activeFilterGammacombination] = useFilterGamma();
+
+  const [, setConfig] = useFilterGammaConfig();
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [counter, setCounter] = useState(1);
@@ -182,8 +202,61 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
     {},
   );
 
-  const imgW = data.defaultImage?.width ?? 1280;
-  const imgH = data.defaultImage?.height ?? 720;
+  const defaultPairsData = useLazyLoadQuery<ImageEditorDefaultPairsQuery>(
+    graphql`
+      query ImageEditorDefaultPairsQuery {
+        defaultPairs {
+          id
+          sampleId
+          label
+          description
+          polarizedFilterTypes
+          gammas
+          acquiredImages {
+            polarizedFilterType
+            gamma
+            acquisitionLabel
+            image {
+              id
+              path
+              width
+              height
+              thumbnailPath
+              url
+              thumbnailUrl
+            }
+          }
+        }
+      }
+    `,
+    {},
+  );
+
+  useEffect(() => {
+    setConfig({
+      filters: defaultPairsData.defaultPairs.polarizedFilterTypes,
+      gammas: defaultPairsData.defaultPairs.gammas,
+    });
+  }, [defaultPairsData]);
+
+  useEffect(() => {
+    console.log(activeFilterGammacombination);
+    const matchingAcquiredSectionImage =
+      defaultPairsData.defaultPairs.acquiredImages.filter(
+        aqui =>
+          aqui.polarizedFilterType === activeFilterGammacombination.filter &&
+          aqui.gamma === (activeFilterGammacombination.gamma ?? 0),
+      );
+    setActiveImage(matchingAcquiredSectionImage[0]?.image ?? null);
+  }, [activeFilterGammacombination]);
+
+  useEffect(() => {
+    console.log('Here a new version');
+    console.log(activeImage);
+  }, [activeImage]);
+
+  // const imgW = data.defaultImage?.width ?? 1280;
+  // const imgH = data.defaultImage?.height ?? 720;
 
   const StartSessionMutation = graphql`
     mutation ImageEditorStartSessionMutation($input: StartSessionInput!) {
@@ -241,44 +314,44 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
     console.log('starting.....');
   }
 
-  const click = (x: number, y: number) => {
-    if (!sessionId) {
-      sessionStart();
-      return;
-    }
-
-    // Generate random x,y respecting image size
-    let randomX = Math.floor(Math.random() * imgW);
-    let randomY = Math.floor(Math.random() * imgH);
-
-    if (x) {
-      randomX = x;
-      randomY = y;
-    }
-
-    commitPoint({
-      variables: {
-        input: {
-          sessionId,
-          objectId: 1, // Hardcoded for this demo
-          points: [[randomX, randomY]],
-          labels: [1],
-        },
-      },
-      onCompleted: (res: any) => {
-        // Just take the first mask returned
-        const firstMask = res.addPointsImage.rleMaskList[0]?.rleMask;
-        if (firstMask) {
-          try {
-            console.log(firstMask);
-            addMask(firstMask, [[x, y]], [1]);
-          } catch (e) {
-            console.log(e);
-          }
-        }
-      },
-    });
-  };
+  // const click = (x: number, y: number) => {
+  //   if (!sessionId) {
+  //     sessionStart();
+  //     return;
+  //   }
+  //
+  //   // Generate random x,y respecting image size
+  //   let randomX = Math.floor(Math.random() * imgW);
+  //   let randomY = Math.floor(Math.random() * imgH);
+  //
+  //   if (x) {
+  //     randomX = x;
+  //     randomY = y;
+  //   }
+  //
+  //   commitPoint({
+  //     variables: {
+  //       input: {
+  //         sessionId,
+  //         objectId: 1, // Hardcoded for this demo
+  //         points: [[randomX, randomY]],
+  //         labels: [1],
+  //       },
+  //     },
+  //     onCompleted: (res: any) => {
+  //       // Just take the first mask returned
+  //       const firstMask = res.addPointsImage.rleMaskList[0]?.rleMask;
+  //       if (firstMask) {
+  //         try {
+  //           console.log(firstMask);
+  //           addMask(firstMask, [[x, y]], [1]);
+  //         } catch (e) {
+  //           console.log(e);
+  //         }
+  //       }
+  //     },
+  //   });
+  // };
 
   const sendPrompt = () => {
     if (!sessionId) {

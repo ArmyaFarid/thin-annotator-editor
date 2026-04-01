@@ -7,6 +7,7 @@ import ZoomOut from '@/assets/icons/zoom-out.svg?react';
 import {Tool} from '@/app/types.ts';
 import useAnnotatorToolbar from '@/common/components/annotator-toolbar/useAnnotatorToolbar.ts';
 import {TOOLS} from '@/app/AppConfig.tsx';
+import FilterGammaToolbarPanel from '@/common/components/annotator-toolbar/FilterGammaToolbarPanel.tsx';
 
 export const TOOL_ICONS: Record<
   Tool,
@@ -43,6 +44,7 @@ export const Toolbar: React.FC<ToolbarProps> = () => {
           </button>
         );
       })}
+      <FilterGammaToolbarPanel />
     </div>
   );
 };

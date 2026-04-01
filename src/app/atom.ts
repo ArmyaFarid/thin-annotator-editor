@@ -43,3 +43,23 @@ export const sessionIdAtom = atom<string | undefined>(undefined);
 //   'annotator:sessionId',
 //   undefined,
 // );
+
+export type FilterGammaCombination = {
+  filter: string | null;
+  gamma: string | null;
+};
+
+export const filterGammaCombinationAtom = atom<FilterGammaCombination>({
+  filter: null,
+  gamma: null,
+});
+
+export type LoadedFilterGammaConfig = {
+  filters: string[];
+  gammas: number[];
+};
+
+export const loadedFilterGammaConfigAtom = atom<LoadedFilterGammaConfig>({
+  filters: [],
+  gammas: [],
+});

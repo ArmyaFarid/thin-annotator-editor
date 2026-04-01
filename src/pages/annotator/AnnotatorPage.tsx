@@ -22,6 +22,7 @@ import {Toolbar} from '@/common/components/annotator-toolbar/Toolbar.tsx';
 import useAnnotatorToolbar from '@/common/components/annotator-toolbar/useAnnotatorToolbar.ts';
 import {ImageEditor} from '@/common/components/image/editor/ImageEditor.tsx';
 import MaskList from '@/common/components/image/editor/maskView/MaskList.tsx';
+import FilterGammaSelector from '@/common/components/filter-gamma-selector/FilterGammaSelector.tsx';
 
 type LocationState = {
   video?: VideoData;
@@ -52,9 +53,11 @@ export default function AnnotatorPage() {
         </div>
 
         {/* Image area (main) */}
-        <div className="flex-1 h-full bg-secondary border border-white/20 rounded-md flex justify-center items-center">
-          {/* image area */}
-          <ImageEditor />
+        <div className="flex-1 h-full bg-secondary border border-white/20 rounded-md flex flex-col">
+          <FilterGammaSelector />
+          <div className="flex-1 flex justify-center items-center">
+            <ImageEditor />
+          </div>
         </div>
 
         {/* Annotation box */}
