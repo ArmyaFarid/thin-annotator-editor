@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<122fd9a38ba328510343898c1b7fd09c>>
+ * @generated SignedSource<<5f6fdc81f28d9d2af860487db5e9290a>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -10,6 +10,7 @@
 
 import { ConcreteRequest, Mutation } from 'relay-runtime';
 export type StartSessionInput = {
+  pairsCode: string;
   path: string;
 };
 export type MaskOverlayDemoStartSessionMutation$variables = {

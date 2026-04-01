@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<48972ee54f28afa350d0a789541386f2>>
+ * @generated SignedSource<<a1ade915ee602c80a026ffe49c11415d>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -11,6 +11,7 @@
 import { ConcreteRequest, Mutation } from 'relay-runtime';
 export type AddPointsImageInput = {
   bboxes: ReadonlyArray<ReadonlyArray<number>>;
+  imagePath: string;
   labels: ReadonlyArray<number>;
   objectId: number;
   points: ReadonlyArray<ReadonlyArray<number>>;

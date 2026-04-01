@@ -233,6 +233,7 @@ type StartSession {
 
 input StartSessionInput {
   path: String!
+  pairsCode: String!
 }
 
 type CloseSession {
@@ -298,6 +299,7 @@ input CancelPropagateInVideoInput {
 
 input AddPointsImageInput {
   sessionId: String!
+  imagePath: String!
   objectId: Int!
   labels: [Int!]!
   points: [[Float!]!]!

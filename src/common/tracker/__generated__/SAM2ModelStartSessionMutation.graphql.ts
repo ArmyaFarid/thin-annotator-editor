@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<90910bae5bb646118174e736434aac56>>
+ * @generated SignedSource<<ae9df227da9a3365b5a20017f57f7c47>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -10,6 +10,7 @@
 
 import { ConcreteRequest, Mutation } from 'relay-runtime';
 export type StartSessionInput = {
+  pairsCode: string;
   path: string;
 };
 export type SAM2ModelStartSessionMutation$variables = {

@@ -255,9 +255,6 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
     console.log(activeImage);
   }, [activeImage]);
 
-  // const imgW = data.defaultImage?.width ?? 1280;
-  // const imgH = data.defaultImage?.height ?? 720;
-
   const StartSessionMutation = graphql`
     mutation ImageEditorStartSessionMutation($input: StartSessionInput!) {
       startSessionImage(input: $input) {
@@ -286,11 +283,15 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
 
   const startSession = (
     path: string,
+    pairCode: string,
     onCompleted: (sessionId: string) => void,
   ) => {
     commit({
       variables: {
-        input: {path},
+        input: {
+          path: path,
+          pairsCode: pairCode,
+        },
       },
       onCompleted: (response: any) => {
         if (response.startSessionImage) {
@@ -303,8 +304,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
 
   function sessionStart() {
     const id = toast.loading('Debut de la session...');
-    if (data.defaultImage.url) {
-      startSession(data.defaultImage.path, sessionId => {
+    if (activeImage?.url) {
+      startSession(activeImage?.path, sessionId => {
         setSessionId(sessionId);
         toast.success('Session en cours, selectioner une zone pour commencer', {
           id,
@@ -313,45 +314,6 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
     }
     console.log('starting.....');
   }
-
-  // const click = (x: number, y: number) => {
-  //   if (!sessionId) {
-  //     sessionStart();
-  //     return;
-  //   }
-  //
-  //   // Generate random x,y respecting image size
-  //   let randomX = Math.floor(Math.random() * imgW);
-  //   let randomY = Math.floor(Math.random() * imgH);
-  //
-  //   if (x) {
-  //     randomX = x;
-  //     randomY = y;
-  //   }
-  //
-  //   commitPoint({
-  //     variables: {
-  //       input: {
-  //         sessionId,
-  //         objectId: 1, // Hardcoded for this demo
-  //         points: [[randomX, randomY]],
-  //         labels: [1],
-  //       },
-  //     },
-  //     onCompleted: (res: any) => {
-  //       // Just take the first mask returned
-  //       const firstMask = res.addPointsImage.rleMaskList[0]?.rleMask;
-  //       if (firstMask) {
-  //         try {
-  //           console.log(firstMask);
-  //           addMask(firstMask, [[x, y]], [1]);
-  //         } catch (e) {
-  //           console.log(e);
-  //         }
-  //       }
-  //     },
-  //   });
-  // };
 
   const sendPrompt = () => {
     if (!sessionId) {
@@ -683,7 +645,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
       onMouseUp={handleMouseUp}
       onClick={handleClick}>
       <img
-        src={data.defaultImage.url}
+        src={activeImage?.url}
         style={{display: 'block', height: '100%', width: 'auto'}}
         alt="background"
         draggable={false}
