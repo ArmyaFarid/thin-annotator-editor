@@ -41,6 +41,7 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
     const containerRef = useRef<HTMLDivElement>(null);
     const imgRef = useRef<HTMLImageElement>(null);
     const displayCanvasRef = useRef<HTMLCanvasElement>(null);
+    const cursorCanvasRef = useRef<HTMLCanvasElement>(null);
     const workingRef = useRef<HTMLCanvasElement | null>(null);
     const colorBufferRef = useRef<HTMLCanvasElement | null>(null);
     const isDrawing = useRef(false);
@@ -138,6 +139,37 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
         return () => el.removeEventListener("wheel", onWheel);
     }, []);
 
+    function drawCursor(e: React.MouseEvent) {
+        const cursor = cursorCanvasRef.current;
+        const display = displayCanvasRef.current;
+        if (!cursor || !display) return;
+        const rect = display.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const ctx = cursor.getContext("2d")!;
+        ctx.clearRect(0, 0, cursor.width, cursor.height);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x * (imageW / rect.width), y * (imageH / rect.height), brushSize * (imageW / rect.width), 0, Math.PI * 2);
+        if (tool === "erase") {
+            ctx.strokeStyle = "rgba(255,80,80,0.9)";
+            ctx.fillStyle = "rgba(255,80,80,0.12)";
+        } else {
+            ctx.strokeStyle = "rgba(80,195,247,0.9)";
+            ctx.fillStyle = "rgba(80,195,247,0.12)";
+        }
+        ctx.lineWidth = 1.5 * (imageW / rect.width);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    function clearCursor() {
+        const cursor = cursorCanvasRef.current;
+        if (!cursor) return;
+        cursor.getContext("2d")!.clearRect(0, 0, cursor.width, cursor.height);
+    }
+
     function drawBrush(e: React.MouseEvent) {
         const display = displayCanvasRef.current;
         const working = workingRef.current;
@@ -176,8 +208,10 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
             const dy = e.clientY - panDragRef.current.startY;
             setPanX(panDragRef.current.startPanX + dx);
             setPanY(panDragRef.current.startPanY + dy);
+            clearCursor();
             return;
         }
+        drawCursor(e);
         if (!isDrawing.current) return;
         drawBrush(e);
     }
@@ -274,12 +308,24 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
                             inset: 0,
                             width: "100%",
                             height: "100%",
+                            pointerEvents: "none",
+                        }}
+                    />
+                    <canvas
+                        ref={cursorCanvasRef}
+                        width={imageW}
+                        height={imageH}
+                        style={{
+                            position: "absolute",
+                            inset: 0,
+                            width: "100%",
+                            height: "100%",
                             cursor: canvasCursor,
                         }}
                         onMouseDown={handleMouseDown}
                         onMouseMove={handleMouseMove}
                         onMouseUp={handleMouseUp}
-                        onMouseLeave={handleMouseUp}
+                        onMouseLeave={() => { clearCursor(); handleMouseUp(); }}
                     />
                 </div>
             </div>
