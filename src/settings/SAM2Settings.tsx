@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {INFERENCE_API_ENDPOINT, VIDEO_API_ENDPOINT} from '@/demo/DemoConfig';
+import {INFERENCE_API_ENDPOINT, VIDEO_API_ENDPOINT} from '@/app/AppConfig.tsx';
 import ApprovableInput from '@/settings/ApprovableInput';
 import useSettingsContext from '@/settings/useSettingsContext';
 

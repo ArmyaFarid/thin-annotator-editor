@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {DEMO_FRIENDLY_NAME} from '@/demo/DemoConfig';
+const DEMO_FRIENDLY_NAME = 'Image Annotation Tool';
 import SAM2Settings from '@/settings/SAM2Settings';
 import {XMarkIcon} from '@heroicons/react/24/solid';
 import {forwardRef, useState} from 'react';

@@ -1,6 +1,8 @@
 export type Tool =
-  | 'select-add'
-  | 'select-remove'
-  | 'bounding-box'
-  | 'zoom-in'
-  | 'zoom-out';
+    | 'select-add'
+    | 'select-remove'
+    | 'bounding-box'
+    | 'freeform-draw'
+    | 'polygon-lasso'
+    | 'zoom-in'
+    | 'zoom-out';

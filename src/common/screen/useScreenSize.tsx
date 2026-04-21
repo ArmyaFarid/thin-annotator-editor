@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {screenSizes} from '@/theme/tokens.stylex';
+const screenSizes: Record<string, number> = {md: 768};
 import {useLayoutEffect, useState} from 'react';
 
 export default function useScreenSize(): {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import emptyFunction from '@/common/utils/emptyFunction';
-import {INFERENCE_API_ENDPOINT, VIDEO_API_ENDPOINT} from '@/demo/DemoConfig';
+import {INFERENCE_API_ENDPOINT, VIDEO_API_ENDPOINT} from '@/app/AppConfig.tsx';
 import SettingsModal from '@/settings/SettingsModal';
 import {
   Action,
