@@ -21,6 +21,14 @@ export class Mask implements AnnotationObject {
     ) {}
 
     render(ctx: CanvasRenderingContext2D, state: RenderState, scale: Scale): void {
+        // Skeleton mode: active mask whose layers are all polygons (post-contour-extraction)
+        const isSkeletonMode = state === "active" && this.layers.length > 0
+            && this.layers.every(l => l.canvasShape && !l.rleMask);
+        if (isSkeletonMode) {
+            this.renderSkeleton(ctx, scale);
+            return;
+        }
+
         const hasHole = this.layers.some(l => l.layerKind === "hole");
 
         if (!hasHole) {
@@ -102,6 +110,44 @@ export class Mask implements AnnotationObject {
             ctx.filter = "drop-shadow(0 0 4px rgba(255,255,255,0.85))";
         }
         ctx.drawImage(off, 0, 0);
+        ctx.restore();
+    }
+
+    private renderSkeleton(ctx: CanvasRenderingContext2D, scale: Scale): void {
+        const {r, g, b} = this.color;
+        ctx.save();
+        ctx.filter = "drop-shadow(0 0 4px rgba(255,255,255,0.7))";
+
+        for (const layer of this.layers) {
+            if (!layer.canvasShape || layer.canvasShape.kind !== "polygon") continue;
+            const s = layer.canvasShape;
+            if (s.vertices.length < 3) continue;
+            const isHole = layer.layerKind === "hole";
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(s.vertices[0].x * scale.x, s.vertices[0].y * scale.y);
+            for (let i = 1; i < s.vertices.length; i++) {
+                ctx.lineTo(s.vertices[i].x * scale.x, s.vertices[i].y * scale.y);
+            }
+            ctx.closePath();
+
+            if (!isHole) {
+                ctx.fillStyle = `rgba(${r},${g},${b},0.15)`;
+                ctx.fill();
+                ctx.strokeStyle = `rgba(${r},${g},${b},1)`;
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            } else {
+                ctx.strokeStyle = "rgba(255,140,50,0.9)";
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([5, 3]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            ctx.restore();
+        }
+
         ctx.restore();
     }
 

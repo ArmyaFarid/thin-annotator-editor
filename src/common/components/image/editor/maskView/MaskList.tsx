@@ -4,6 +4,7 @@ import {
     currentMaskAtom,
     editorOnAtom,
     masksAtom,
+    type MaskLayer,
     promptsAtom,
     refineModeAtom,
     sessionIdAtom,
@@ -11,6 +12,8 @@ import {
     activeImageSizeAtom,
 } from "@/app/atom.ts";
 import {mergeToCanvas, canvasToRLE} from "@/canvas/utils/maskMerge.ts";
+import {rleToEditableContours} from "@/canvas/utils/contourExtract.ts";
+import {MASK_FILL_ALPHA} from "@/canvas/mask-style.ts";
 
 export default function MaskList() {
     const [masks, setMasks] = useAtom(masksAtom);
@@ -26,10 +29,32 @@ export default function MaskList() {
     function handleMaskClick(maskId: number) {
         const mask = masks.find(m => m.id === maskId);
         if (!mask) return;
-
         setPrompts([]);
-        setCurrentMask(mask.id);
+        setCurrentMask(maskId);
         setEditorOn(true);
+    }
+
+    function handleActivateAnchors() {
+        if (!activeMask || !imageSize) return;
+        const merged = mergeToCanvas(activeMask, imageSize.w, imageSize.h);
+        const rle = canvasToRLE(merged);
+        const contours = rleToEditableContours(rle);
+        const {r, g, b} = activeMask.color;
+        const base = Date.now();
+        const newLayers: MaskLayer[] = contours.map((c, i) => ({
+            id: base + i,
+            source: "manual" as const,
+            layerKind: c.kind,
+            canvasShape: {
+                kind: "polygon" as const,
+                id: base + i + 100000,
+                vertices: c.vertices,
+                fillColor: `rgba(${r},${g},${b},${MASK_FILL_ALPHA})`,
+                strokeColor: `rgb(${r},${g},${b})`,
+            },
+        }));
+        setMasks(prev => prev.map(m => m.id === activeMask.id ? {...m, layers: newLayers} : m));
+        setActiveTool("polygon-lasso");
     }
 
     function handleExport() {
@@ -54,6 +79,9 @@ export default function MaskList() {
     }
 
     const activeMask = currentMask !== 0 ? masks.find(m => m.id === currentMask) : null;
+    const isAnchorMode = activeMask
+        ? activeMask.layers.length > 0 && activeMask.layers.every(l => !l.rleMask)
+        : false;
 
     return (
         <div className="h-full w-full flex flex-col bg-secondary border border-white/20 rounded-md p-2 gap-2">
@@ -114,6 +142,18 @@ export default function MaskList() {
                             Raffiner
                         </button>
                     </div>
+
+                    {/* Anchor mode toggle */}
+                    <button
+                        onClick={handleActivateAnchors}
+                        disabled={isAnchorMode || !imageSize}
+                        className={`w-full px-2 py-1 rounded text-sm border transition-colors ${
+                            isAnchorMode
+                                ? "border-emerald-400 text-emerald-400 bg-emerald-400/10 cursor-default"
+                                : "border-white/20 text-white/60 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                        }`}>
+                        {isAnchorMode ? "Mode ancres actif" : "Activer les ancres"}
+                    </button>
 
                     {/* Hole drawing tool selector — shown only in subtract mode */}
                     {subtractMode ? (
