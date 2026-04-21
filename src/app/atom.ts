@@ -27,6 +27,7 @@ export interface MaskLayer {
     source?: "sam" | "manual";
     rleMask?: RLEMask;
     canvasShape?: PolygonAnnotation;
+    layerKind?: "fill" | "hole";
 }
 
 export interface Mask {
@@ -72,3 +73,8 @@ export const loadedFilterGammaConfigAtom = atom<LoadedFilterGammaConfig>({
     filters: [],
     gammas: [],
 });
+
+// 0 = off, >0 = objectId being refined
+export const refineModeAtom = atom<number>(0);
+export const subtractModeAtom = atom<boolean>(false);
+export const activeImageSizeAtom = atom<{w: number; h: number} | null>(null);

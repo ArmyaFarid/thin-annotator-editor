@@ -273,3 +273,7 @@ src/canvas/
   types.ts            ← shared canvas types (RenderState, Rect, ImageSpaceMouseEvent, …)
   coordinates.ts      ← toImageSpace, toDisplaySpace helpers
 ```
+
+
+## Git 
+Commit changes with meaninngfull name for well management

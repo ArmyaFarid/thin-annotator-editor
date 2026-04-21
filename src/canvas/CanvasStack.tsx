@@ -5,6 +5,7 @@ import {
     currentMaskAtom,
     masksAtom,
     promptsAtom,
+    subtractModeAtom,
     type Mask,
     type Prompt,
     type PolygonAnnotation,
@@ -51,6 +52,9 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     const setMasks = useSetAtom(masksAtom);
     const currentMask = useAtomValue(currentMaskAtom);
     const setCurrentMask = useSetAtom(currentMaskAtom);
+    const subtractMode = useAtomValue(subtractModeAtom);
+    const subtractModeRef = useRef(subtractMode);
+    useEffect(() => { subtractModeRef.current = subtractMode; }, [subtractMode]);
 
     const [view, setView] = useState<View>({zoom: 1, panX: 0, panY: 0});
     const viewRef = useRef(view);
@@ -94,6 +98,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
             const shapeId = genId();
             const vertices = douglasPeucker(points, 2);
             if (vertices.length < 3) return;
+            const layerKind = subtractModeRef.current ? "hole" as const : "fill" as const;
 
             if (activeMaskId !== 0) {
                 setMasks((prev: Mask[]) => {
@@ -107,7 +112,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                     };
                     return prev.map(m =>
                         m.id === activeMaskId
-                            ? {...m, layers: [...m.layers, {id: layerId, canvasShape, source: "manual" as const}]}
+                            ? {...m, layers: [...m.layers, {id: layerId, canvasShape, source: "manual" as const, layerKind}]}
                             : m
                     );
                 });
@@ -126,7 +131,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                         label: `Dessin ${prev.length + 1}`,
                         point_labels: [],
                         point_coords: [],
-                        layers: [{id: layerId, canvasShape, source: "manual" as const}],
+                        layers: [{id: layerId, canvasShape, source: "manual" as const, layerKind}],
                         color: maskColor,
                     }];
                 });
@@ -137,6 +142,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
             const activeMaskId = currentMaskRef.current;
             const layerId = genId();
             const shapeId = genId();
+            const layerKind = subtractModeRef.current ? "hole" as const : "fill" as const;
 
             if (activeMaskId !== 0) {
                 setMasks((prev: Mask[]) => {
@@ -150,7 +156,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                     };
                     return prev.map(m =>
                         m.id === activeMaskId
-                            ? {...m, layers: [...m.layers, {id: layerId, canvasShape, source: "manual" as const}]}
+                            ? {...m, layers: [...m.layers, {id: layerId, canvasShape, source: "manual" as const, layerKind}]}
                             : m
                     );
                 });
@@ -169,7 +175,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                         label: `Polygone ${prev.length + 1}`,
                         point_labels: [],
                         point_coords: [],
-                        layers: [{id: layerId, canvasShape, source: "manual" as const}],
+                        layers: [{id: layerId, canvasShape, source: "manual" as const, layerKind}],
                         color: maskColor,
                     }];
                 });

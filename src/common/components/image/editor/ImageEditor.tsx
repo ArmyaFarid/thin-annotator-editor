@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import {graphql, useLazyLoadQuery, useMutation} from "react-relay";
+import {useAtomValue, useSetAtom} from "jotai";
 import {toast} from "sonner";
 import {CanvasStack} from "@/canvas/CanvasStack.tsx";
 import usePrompts from "@/common/components/image/editor/usePrompts.ts";
@@ -10,6 +11,8 @@ import useFilterGamma from "@/common/components/filter-gamma-selector/useFilterG
 import useFilterGammaConfig from "@/common/components/image/editor/useFilterGammaConfig.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
 import {MASK_FILL_ALPHA} from "@/canvas/mask-style.ts";
+import {refineModeAtom, activeImageSizeAtom} from "@/app/atom.ts";
+import {RefineOverlay} from "@/common/components/image/editor/refine/RefineOverlay.tsx";
 import type {ImageEditorImgQuery} from "@/common/components/image/editor/__generated__/ImageEditorImgQuery.graphql.ts";
 import type {ImageEditorDefaultPairsQuery} from "@/common/components/image/editor/__generated__/ImageEditorDefaultPairsQuery.graphql.ts";
 
@@ -36,6 +39,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
     const [currentMask, setCurrentMask] = useCurrentMask();
     const [sessionId, setSessionId] = useSessionId();
     const maskCounter = useRef(1);
+    const refineMode = useAtomValue(refineModeAtom);
+    const setImageSize = useSetAtom(activeImageSizeAtom);
 
     useLazyLoadQuery<ImageEditorImgQuery>(
         graphql`
@@ -87,7 +92,9 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
                 a.polarizedFilterType === activeFilterGammaCombination.filter &&
                 a.gamma === (activeFilterGammaCombination.gamma ?? 0),
         );
-        setActiveImage((match?.image as ActiveImage) ?? null);
+        const img = (match?.image as ActiveImage) ?? null;
+        setActiveImage(img);
+        if (img) setImageSize({w: img.width, h: img.height});
     }, [activeFilterGammaCombination, pairsData]);
 
     const StartSessionMutation = graphql`
@@ -212,5 +219,16 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
         if (sessionId === "START_SESSION") startSession();
     }, [sessionId]);
 
-    return <CanvasStack imageUrl={activeImage?.url} />;
+    return (
+        <>
+            <CanvasStack imageUrl={activeImage?.url} />
+            {refineMode !== 0 && activeImage ? (
+                <RefineOverlay
+                    imageUrl={activeImage.url}
+                    imageW={activeImage.width}
+                    imageH={activeImage.height}
+                />
+            ) : null}
+        </>
+    );
 };

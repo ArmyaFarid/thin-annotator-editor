@@ -11,6 +11,8 @@ export class Mask implements AnnotationObject {
 
     private readonly rleCanvasCache = new Map<number, HTMLCanvasElement>();
     private readonly rleDataCache = new Map<number, Uint8Array>();
+    // Separate cache for alpha-only shape canvases used by hole compositing
+    private readonly rleAlphaCache = new Map<number, HTMLCanvasElement>();
 
     constructor(
         public readonly id: number,
@@ -19,21 +21,87 @@ export class Mask implements AnnotationObject {
     ) {}
 
     render(ctx: CanvasRenderingContext2D, state: RenderState, scale: Scale): void {
+        const hasHole = this.layers.some(l => l.layerKind === "hole");
+
+        if (!hasHole) {
+            // Fast path: no holes, draw layers directly as before
+            ctx.save();
+            if (state === "active") {
+                ctx.filter = "drop-shadow(0 0 4px rgba(255,255,255,0.85))";
+            }
+            for (const layer of this.layers) {
+                if (layer.rleMask) {
+                    const src = this.getLayerCanvas(layer);
+                    if (!src) continue;
+                    const [h, w] = layer.rleMask.size;
+                    ctx.drawImage(src, 0, 0, w, h, 0, 0, w * scale.x, h * scale.y);
+                } else if (layer.canvasShape) {
+                    const s = layer.canvasShape;
+                    new Polygon(s.id, s.vertices, s.fillColor, s.strokeColor).render(ctx, state, scale);
+                }
+            }
+            ctx.restore();
+            return;
+        }
+
+        // Hole path: composite layers onto an offscreen canvas to handle destination-out correctly
+        const offW = ctx.canvas.width;
+        const offH = ctx.canvas.height;
+        const off = document.createElement("canvas");
+        off.width = offW;
+        off.height = offH;
+        const offCtx = off.getContext("2d")!;
+
+        for (const layer of this.layers) {
+            const isHole = layer.layerKind === "hole";
+
+            if (isHole) {
+                // For holes we need an alpha-only shape to use destination-out
+                if (layer.rleMask) {
+                    const alphaCanvas = this.getLayerAlphaCanvas(layer);
+                    if (alphaCanvas) {
+                        const [h, w] = layer.rleMask.size;
+                        offCtx.save();
+                        offCtx.globalCompositeOperation = "destination-out";
+                        offCtx.drawImage(alphaCanvas, 0, 0, w, h, 0, 0, w * scale.x, h * scale.y);
+                        offCtx.restore();
+                    }
+                } else if (layer.canvasShape) {
+                    const s = layer.canvasShape;
+                    if (s.vertices.length >= 3) {
+                        offCtx.save();
+                        offCtx.globalCompositeOperation = "destination-out";
+                        offCtx.fillStyle = "rgba(255,255,255,1)";
+                        offCtx.beginPath();
+                        offCtx.moveTo(s.vertices[0].x * scale.x, s.vertices[0].y * scale.y);
+                        for (let i = 1; i < s.vertices.length; i++) {
+                            offCtx.lineTo(s.vertices[i].x * scale.x, s.vertices[i].y * scale.y);
+                        }
+                        offCtx.closePath();
+                        offCtx.fill();
+                        offCtx.restore();
+                    }
+                }
+            } else {
+                // Normal fill layer
+                if (layer.rleMask) {
+                    const src = this.getLayerCanvas(layer);
+                    if (src) {
+                        const [h, w] = layer.rleMask.size;
+                        offCtx.drawImage(src, 0, 0, w, h, 0, 0, w * scale.x, h * scale.y);
+                    }
+                } else if (layer.canvasShape) {
+                    const s = layer.canvasShape;
+                    new Polygon(s.id, s.vertices, s.fillColor, s.strokeColor).render(offCtx, state, scale);
+                }
+            }
+        }
+
         ctx.save();
         if (state === "active") {
             ctx.filter = "drop-shadow(0 0 4px rgba(255,255,255,0.85))";
         }
-        for (const layer of this.layers) {
-            if (layer.rleMask) {
-                const src = this.getLayerCanvas(layer);
-                if (!src) continue;
-                const [h, w] = layer.rleMask.size;
-                ctx.drawImage(src, 0, 0, w, h, 0, 0, w * scale.x, h * scale.y);
-            } else if (layer.canvasShape) {
-                const s = layer.canvasShape;
-                new Polygon(s.id, s.vertices, s.fillColor, s.strokeColor).render(ctx, state, scale);
-            }
-        }
+        ctx.drawImage(off, 0, 0);
         ctx.restore();
     }
 
@@ -135,6 +203,40 @@ export class Mask implements AnnotationObject {
         canvas.height = maskH;
         canvas.getContext("2d")!.putImageData(new ImageData(rgbaData, maskW, maskH), 0, 0);
         this.rleCanvasCache.set(layer.id, canvas);
+        return canvas;
+    }
+
+    /**
+     * Returns a white-on-transparent canvas for use with destination-out compositing.
+     * Only needed for hole layers.
+     */
+    private getLayerAlphaCanvas(layer: MaskLayer): HTMLCanvasElement | null {
+        if (this.rleAlphaCache.has(layer.id)) return this.rleAlphaCache.get(layer.id)!;
+        if (!layer.rleMask) return null;
+
+        const data = this.getLayerData(layer);
+        if (!data) return null;
+
+        const [maskH, maskW] = layer.rleMask.size;
+        const rgba = new Uint8ClampedArray(maskW * maskH * 4);
+
+        for (let x = 0; x < maskW; x++) {
+            for (let y = 0; y < maskH; y++) {
+                if (data[x * maskH + y] === 1) {
+                    const i = (y * maskW + x) * 4;
+                    rgba[i] = 255;
+                    rgba[i + 1] = 255;
+                    rgba[i + 2] = 255;
+                    rgba[i + 3] = 255;
+                }
+            }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = maskW;
+        canvas.height = maskH;
+        canvas.getContext("2d")!.putImageData(new ImageData(rgba, maskW, maskH), 0, 0);
+        this.rleAlphaCache.set(layer.id, canvas);
         return canvas;
     }
 }
