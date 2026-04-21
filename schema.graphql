@@ -233,7 +233,7 @@ type StartSession {
 
 input StartSessionInput {
   path: String!
-  pairsCode: String!
+  pairsCode: ID!
 }
 
 type CloseSession {

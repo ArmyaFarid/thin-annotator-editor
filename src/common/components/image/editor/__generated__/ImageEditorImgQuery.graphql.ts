@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<a731addfc85cd66fd26c6a47c02d3244>>
+ * @generated SignedSource<<41451d1eee6e976901a3051b37be9b50>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -14,8 +14,6 @@ export type ImageEditorImgQuery$data = {
   readonly defaultImage: {
     readonly height: number;
     readonly path: string;
-    readonly thumbnailPath: string | null | undefined;
-    readonly thumbnailUrl: string | null | undefined;
     readonly url: string;
     readonly width: number;
   };
@@ -37,31 +35,17 @@ v1 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "thumbnailPath",
+  "name": "url",
   "storageKey": null
 },
 v2 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "url",
-  "storageKey": null
-},
-v3 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "thumbnailUrl",
-  "storageKey": null
-},
-v4 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
   "name": "height",
   "storageKey": null
 },
-v5 = {
+v3 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
@@ -86,9 +70,7 @@ return {
           (v0/*: any*/),
           (v1/*: any*/),
           (v2/*: any*/),
-          (v3/*: any*/),
-          (v4/*: any*/),
-          (v5/*: any*/)
+          (v3/*: any*/)
         ],
         "storageKey": null
       }
@@ -114,8 +96,6 @@ return {
           (v1/*: any*/),
           (v2/*: any*/),
           (v3/*: any*/),
-          (v4/*: any*/),
-          (v5/*: any*/),
           {
             "alias": null,
             "args": null,
@@ -129,16 +109,16 @@ return {
     ]
   },
   "params": {
-    "cacheID": "71087167db0ef68521044c9d9ebb9eb2",
+    "cacheID": "53a5d9c6da63af54366cae5cdd13fe4c",
     "id": null,
     "metadata": {},
     "name": "ImageEditorImgQuery",
     "operationKind": "query",
-    "text": "query ImageEditorImgQuery {\n  defaultImage {\n    path\n    thumbnailPath\n    url\n    thumbnailUrl\n    height\n    width\n    id\n  }\n}\n"
+    "text": "query ImageEditorImgQuery {\n  defaultImage {\n    path\n    url\n    height\n    width\n    id\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "e424faa613267c5d8566c305d6c6fec1";
+(node as any).hash = "53ace7126f052efe54c583b7f8b7b462";
 
 export default node;

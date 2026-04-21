@@ -7,11 +7,13 @@ import {
     promptsAtom,
     type Mask,
     type Prompt,
+    type PolygonAnnotation,
 } from "@/app/atom.ts";
 import {CanvasEngine} from "@/canvas/CanvasEngine.ts";
 import type {EngineCallbacks, ImageSpacePoint} from "@/canvas/types.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
 import {MASK_FILL_ALPHA} from "@/canvas/mask-style.ts";
+import {douglasPeucker} from "@/canvas/utils/polygonUtils.ts";
 import {useAtom} from "jotai";
 
 interface CanvasStackProps {
@@ -86,30 +88,45 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 },
             ]);
         },
-        onFreeformPathAdded(points: ImageSpacePoint[], color: string, strokeWidth: number) {
+        onFreeformPathAdded(points: ImageSpacePoint[]) {
             const activeMaskId = currentMaskRef.current;
             const layerId = genId();
             const shapeId = genId();
-            const canvasShape = {kind: "freeform" as const, id: shapeId, points, color, strokeWidth};
+            const vertices = douglasPeucker(points, 2);
+            if (vertices.length < 3) return;
 
             if (activeMaskId !== 0) {
-                setMasks((prev: Mask[]) =>
-                    prev.map(m =>
+                setMasks((prev: Mask[]) => {
+                    const target = prev.find(m => m.id === activeMaskId);
+                    if (!target) return prev;
+                    const {r, g, b} = target.color;
+                    const canvasShape: PolygonAnnotation = {
+                        kind: "polygon", id: shapeId, vertices,
+                        fillColor: `rgba(${r},${g},${b},${MASK_FILL_ALPHA})`,
+                        strokeColor: `rgb(${r},${g},${b})`,
+                    };
+                    return prev.map(m =>
                         m.id === activeMaskId
-                            ? {...m, layers: [...m.layers, {id: layerId, canvasShape}]}
+                            ? {...m, layers: [...m.layers, {id: layerId, canvasShape, source: "manual" as const}]}
                             : m
-                    )
-                );
+                    );
+                });
             } else {
                 const newId = genId();
                 setMasks((prev: Mask[]) => {
                     const maskColor = getDistinctColor(prev.length, MASK_FILL_ALPHA);
+                    const {r, g, b} = maskColor;
+                    const canvasShape: PolygonAnnotation = {
+                        kind: "polygon", id: shapeId, vertices,
+                        fillColor: `rgba(${r},${g},${b},${MASK_FILL_ALPHA})`,
+                        strokeColor: `rgb(${r},${g},${b})`,
+                    };
                     return [...prev, {
                         id: newId,
                         label: `Dessin ${prev.length + 1}`,
                         point_labels: [],
                         point_coords: [],
-                        layers: [{id: layerId, canvasShape}],
+                        layers: [{id: layerId, canvasShape, source: "manual" as const}],
                         color: maskColor,
                     }];
                 });
@@ -133,7 +150,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                     };
                     return prev.map(m =>
                         m.id === activeMaskId
-                            ? {...m, layers: [...m.layers, {id: layerId, canvasShape}]}
+                            ? {...m, layers: [...m.layers, {id: layerId, canvasShape, source: "manual" as const}]}
                             : m
                     );
                 });
@@ -152,7 +169,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                         label: `Polygone ${prev.length + 1}`,
                         point_labels: [],
                         point_coords: [],
-                        layers: [{id: layerId, canvasShape}],
+                        layers: [{id: layerId, canvasShape, source: "manual" as const}],
                         color: maskColor,
                     }];
                 });
@@ -174,10 +191,9 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                     if (m.id !== objectId) return m;
                     return {
                         ...m,
-                        layers: m.layers.map(l => {
-                            if (l.id !== layerId || l.canvasShape?.kind !== "polygon") return l;
-                            return {...l, canvasShape: {...l.canvasShape, vertices}};
-                        }),
+                        layers: m.layers.map(l =>
+                            l.id !== layerId ? l : {...l, canvasShape: {...l.canvasShape, vertices}}
+                        ),
                     };
                 })
             );

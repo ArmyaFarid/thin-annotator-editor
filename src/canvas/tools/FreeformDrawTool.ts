@@ -53,7 +53,7 @@ export class FreeformDrawTool {
         this.dynLayer.setInteractionState({type: "idle"});
 
         if (this.points.length >= 2) {
-            this.callbacks.onFreeformPathAdded(this.points, this.color, this.strokeWidth);
+            this.callbacks.onFreeformPathAdded(this.points);
         }
 
         this.points = [];

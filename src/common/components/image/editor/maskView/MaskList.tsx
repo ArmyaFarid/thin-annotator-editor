@@ -90,11 +90,18 @@ export default function MaskList() {
             {prompts.map(p => (
               <div
                 key={p.id}
-                className="flex justify-between border-b border-white/10 py-1">
-                <span>ID {p.id}</span>
-                <span>
-                  ({p.point_coords[0]}, {p.point_coords[1]})
+                className="flex items-center justify-between gap-1 border-b border-white/10 py-1">
+                <span className="text-white/60 shrink-0">
+                  {p.bbox ? "bbox" : p.point_labels === 1 ? "+" : "−"}
                 </span>
+                <span className="flex-1 text-center">
+                  ({Math.round(p.point_coords[0])}, {Math.round(p.point_coords[1])})
+                </span>
+                <button
+                  className="shrink-0 text-white/40 hover:text-red-400 leading-none"
+                  onClick={() => setPrompts(prev => prev.filter(x => x.id !== p.id))}>
+                  ×
+                </button>
               </div>
             ))}
           </div>

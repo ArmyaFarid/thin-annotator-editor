@@ -34,7 +34,7 @@ export type InteractionState =
 export interface EngineCallbacks {
     onKeypointAdded(x: number, y: number, label: 0 | 1): void;
     onBboxAdded(x: number, y: number, w: number, h: number): void;
-    onFreeformPathAdded(points: ImageSpacePoint[], color: string, strokeWidth: number): void;
+    onFreeformPathAdded(points: ImageSpacePoint[]): void;
     onPolygonAdded(vertices: ImageSpacePoint[]): void;
     onLayerDeleted(objectId: number, layerId: number): void;
     onPolygonVertexMoved(objectId: number, layerId: number, vertices: ImageSpacePoint[]): void;

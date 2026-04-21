@@ -10,6 +10,8 @@ import useFilterGamma from "@/common/components/filter-gamma-selector/useFilterG
 import useFilterGammaConfig from "@/common/components/image/editor/useFilterGammaConfig.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
 import {MASK_FILL_ALPHA} from "@/canvas/mask-style.ts";
+import {rleToPolygon} from "@/canvas/utils/polygonUtils.ts";
+import type {PolygonAnnotation} from "@/app/atom.ts";
 import type {ImageEditorImgQuery} from "@/common/components/image/editor/__generated__/ImageEditorImgQuery.graphql.ts";
 import type {ImageEditorDefaultPairsQuery} from "@/common/components/image/editor/__generated__/ImageEditorDefaultPairsQuery.graphql.ts";
 
@@ -164,23 +166,33 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
                 },
             },
             onCompleted: (res: any) => {
-                const firstMask = res?.addPointsImage?.rleMaskList?.[0]?.rleMask as RLEMask | undefined;
-                if (!firstMask) return;
+                const rawMask = res?.addPointsImage?.rleMaskList?.[0]?.rleMask as RLEMask | undefined;
+                if (!rawMask) return;
+
+                const vertices = rleToPolygon(rawMask);
+                if (vertices.length < 3) return;
 
                 const coords = pointPrompts.map(p => p.point_coords);
                 const labels = pointPrompts.map(p => p.point_labels);
                 const layerId = Date.now() + 1;
+                const shapeId = Date.now() + 2;
 
                 if (currentMask === 0) {
                     const id = Date.now();
                     const color = getDistinctColor(maskCounter.current, MASK_FILL_ALPHA);
                     maskCounter.current += 1;
+                    const {r, g, b} = color;
+                    const canvasShape: PolygonAnnotation = {
+                        kind: "polygon", id: shapeId, vertices,
+                        fillColor: `rgba(${r},${g},${b},${MASK_FILL_ALPHA})`,
+                        strokeColor: `rgb(${r},${g},${b})`,
+                    };
                     setMasks(prev => [
                         ...prev,
                         {
                             id,
                             label: `Lame ${maskCounter.current - 1}`,
-                            layers: [{id: layerId, rleMask: firstMask}],
+                            layers: [{id: layerId, canvasShape, source: "sam" as const}],
                             point_coords: coords,
                             point_labels: labels,
                             color,
@@ -188,14 +200,20 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
                     ]);
                     setCurrentMask(id);
                 } else {
-                    // Replace the existing AI layer (rleMask) or prepend one if absent
+                    // Replace the existing SAM layer or prepend one if absent
                     setMasks(prev =>
                         prev.map(m => {
                             if (m.id !== currentMask) return m;
-                            const hasRle = m.layers.some(l => l.rleMask);
-                            const layers = hasRle
-                                ? m.layers.map(l => l.rleMask ? {...l, rleMask: firstMask} : l)
-                                : [{id: layerId, rleMask: firstMask}, ...m.layers];
+                            const {r, g, b} = m.color;
+                            const canvasShape: PolygonAnnotation = {
+                                kind: "polygon", id: shapeId, vertices,
+                                fillColor: `rgba(${r},${g},${b},${MASK_FILL_ALPHA})`,
+                                strokeColor: `rgb(${r},${g},${b})`,
+                            };
+                            const hasSam = m.layers.some(l => l.source === "sam");
+                            const layers = hasSam
+                                ? m.layers.map(l => l.source === "sam" ? {...l, canvasShape} : l)
+                                : [{id: layerId, canvasShape, source: "sam" as const}, ...m.layers];
                             return {...m, layers, point_coords: coords, point_labels: labels};
                         }),
                     );

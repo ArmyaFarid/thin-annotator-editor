@@ -2,11 +2,6 @@ import {atom} from 'jotai';
 import {Tool} from '@/app/types.ts';
 import type {ImageSpacePoint} from '@/canvas/types.ts';
 
-export interface RLEMask {
-    counts: string;
-    size: [number, number];
-}
-
 export interface Box {
     left: number;
     top: number;
@@ -14,10 +9,18 @@ export interface Box {
     height: number;
 }
 
+export interface PolygonAnnotation {
+    kind: "polygon";
+    id: number;
+    vertices: ImageSpacePoint[];
+    fillColor: string;
+    strokeColor: string;
+}
+
 export interface MaskLayer {
     id: number;
-    rleMask?: RLEMask;
-    canvasShape?: ClientAnnotation;
+    source?: "sam" | "manual";
+    canvasShape: PolygonAnnotation;
 }
 
 export interface Mask {
@@ -36,24 +39,6 @@ export interface Prompt {
     point_coords: [number, number];
     bbox?: Box;
 }
-
-export interface FreeformPathAnnotation {
-    kind: 'freeform';
-    id: number;
-    points: ImageSpacePoint[];
-    color: string;
-    strokeWidth: number;
-}
-
-export interface PolygonAnnotation {
-    kind: 'polygon';
-    id: number;
-    vertices: ImageSpacePoint[];
-    fillColor: string;
-    strokeColor: string;
-}
-
-export type ClientAnnotation = FreeformPathAnnotation | PolygonAnnotation;
 
 export const activeToolAtom = atom<Tool>('select-add');
 export const promptsAtom = atom<Prompt[]>([]);
