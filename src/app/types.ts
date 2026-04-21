@@ -5,4 +5,6 @@ export type Tool =
     | 'freeform-draw'
     | 'polygon-lasso'
     | 'zoom-in'
-    | 'zoom-out';
+    | 'zoom-out'
+    | 'grab'
+    | 'slic-bbox';

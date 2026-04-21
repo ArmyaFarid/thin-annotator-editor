@@ -11,8 +11,9 @@ import useFilterGamma from "@/common/components/filter-gamma-selector/useFilterG
 import useFilterGammaConfig from "@/common/components/image/editor/useFilterGammaConfig.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
 import {MASK_FILL_ALPHA} from "@/canvas/mask-style.ts";
-import {refineModeAtom, activeImageSizeAtom} from "@/app/atom.ts";
+import {refineModeAtom, activeImageSizeAtom, slicOverlayAtom} from "@/app/atom.ts";
 import {RefineOverlay} from "@/common/components/image/editor/refine/RefineOverlay.tsx";
+import {SlicOverlay} from "@/common/components/image/editor/slic/SlicOverlay.tsx";
 import type {ImageEditorImgQuery} from "@/common/components/image/editor/__generated__/ImageEditorImgQuery.graphql.ts";
 import type {ImageEditorDefaultPairsQuery} from "@/common/components/image/editor/__generated__/ImageEditorDefaultPairsQuery.graphql.ts";
 
@@ -41,6 +42,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
     const maskCounter = useRef(1);
     const refineMode = useAtomValue(refineModeAtom);
     const setImageSize = useSetAtom(activeImageSizeAtom);
+    const slicOverlay = useAtomValue(slicOverlayAtom);
 
     useLazyLoadQuery<ImageEditorImgQuery>(
         graphql`
@@ -228,6 +230,9 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
                     imageW={activeImage.width}
                     imageH={activeImage.height}
                 />
+            ) : null}
+            {slicOverlay !== null && activeImage ? (
+                <SlicOverlay imageUrl={activeImage.url} />
             ) : null}
         </>
     );

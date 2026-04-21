@@ -6,6 +6,8 @@ import ZoomInIcon from "@/assets/icons/zoom-in.svg?react";
 import ZoomOutIcon from "@/assets/icons/zoom-out.svg?react";
 import FreeformDrawIcon from "@/assets/icons/freeform-draw.svg?react";
 import PolygonLassoIcon from "@/assets/icons/polygon-lasso.svg?react";
+import GrabIcon from "@/assets/icons/grab.svg?react";
+import SlicBboxIcon from "@/assets/icons/slic-bbox.svg?react";
 import {Tool} from "@/app/types.ts";
 import useAnnotatorToolbar from "@/common/components/annotator-toolbar/useAnnotatorToolbar.ts";
 import {TOOLS} from "@/app/AppConfig.tsx";
@@ -17,8 +19,10 @@ const TOOL_ICONS: Record<Tool, React.FC<React.SVGProps<SVGSVGElement>>> = {
     "bounding-box": BoundingBoxIcon,
     "freeform-draw": FreeformDrawIcon,
     "polygon-lasso": PolygonLassoIcon,
+    "slic-bbox": SlicBboxIcon,
     "zoom-in": ZoomInIcon,
     "zoom-out": ZoomOutIcon,
+    "grab": GrabIcon,
 };
 
 const TOOL_TITLES: Record<Tool, string> = {
@@ -27,8 +31,10 @@ const TOOL_TITLES: Record<Tool, string> = {
     "bounding-box": "Boîte englobante",
     "freeform-draw": "Dessin libre",
     "polygon-lasso": "Lasso polygone",
+    "slic-bbox": "Superpixels (SLIC)",
     "zoom-in": "Zoom avant",
     "zoom-out": "Zoom arrière",
+    "grab": "Déplacer (G)",
 };
 
 interface ToolbarProps {}

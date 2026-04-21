@@ -1,6 +1,7 @@
 import type {DynamicLayer} from "@/canvas/layers/DynamicLayer.ts";
 import {KeypointTool} from "@/canvas/tools/KeypointTool.ts";
 import {BoundingBoxTool} from "@/canvas/tools/BoundingBoxTool.ts";
+import {SlicBboxTool} from "@/canvas/tools/SlicBboxTool.ts";
 import {FreeformDrawTool} from "@/canvas/tools/FreeformDrawTool.ts";
 import {PolygonLassoTool} from "@/canvas/tools/PolygonLassoTool.ts";
 import type {EngineCallbacks, ImageSpacePoint} from "@/canvas/types.ts";
@@ -12,6 +13,7 @@ export class ToolManager {
     private readonly selectAdd: KeypointTool;
     private readonly selectRemove: KeypointTool;
     private readonly bbox: BoundingBoxTool;
+    private readonly slicBbox: SlicBboxTool;
     private readonly freeform: FreeformDrawTool;
     private readonly polygon: PolygonLassoTool;
 
@@ -19,6 +21,7 @@ export class ToolManager {
         this.selectAdd = new KeypointTool(1, callbacks);
         this.selectRemove = new KeypointTool(0, callbacks);
         this.bbox = new BoundingBoxTool(dynLayer, callbacks);
+        this.slicBbox = new SlicBboxTool(dynLayer, callbacks);
         this.freeform = new FreeformDrawTool(dynLayer, callbacks);
         this.polygon = new PolygonLassoTool(dynLayer, callbacks);
     }
@@ -32,17 +35,20 @@ export class ToolManager {
 
     onMouseDown(p: ImageSpacePoint): void {
         if (this.activeTool === "bounding-box") this.bbox.onMouseDown(p);
+        if (this.activeTool === "slic-bbox") this.slicBbox.onMouseDown(p);
         if (this.activeTool === "freeform-draw") this.freeform.onMouseDown(p);
     }
 
     onMouseMove(p: ImageSpacePoint): void {
         if (this.activeTool === "bounding-box") this.bbox.onMouseMove(p);
+        if (this.activeTool === "slic-bbox") this.slicBbox.onMouseMove(p);
         if (this.activeTool === "freeform-draw") this.freeform.onMouseMove(p);
         if (this.activeTool === "polygon-lasso") this.polygon.onMouseMove(p);
     }
 
     onMouseUp(p: ImageSpacePoint, scale: {x: number; y: number}): void {
         if (this.activeTool === "bounding-box") this.bbox.onMouseUp(p, scale);
+        if (this.activeTool === "slic-bbox") this.slicBbox.onMouseUp(p, scale);
         if (this.activeTool === "freeform-draw") this.freeform.onMouseUp();
     }
 
@@ -62,6 +68,7 @@ export class ToolManager {
 
     private cancelCurrent(): void {
         this.bbox.cancel();
+        this.slicBbox.cancel();
         this.freeform.cancel();
         this.polygon.cancel();
     }

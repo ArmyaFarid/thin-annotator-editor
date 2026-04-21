@@ -1,11 +1,13 @@
 import React, {useCallback, useEffect, useRef, useState} from "react";
-import {useAtomValue, useSetAtom} from "jotai";
+import {useAtom, useAtomValue, useSetAtom} from "jotai";
 import {
     activeToolAtom,
+    activeImageSizeAtom,
     currentMaskAtom,
     masksAtom,
     promptsAtom,
     subtractModeAtom,
+    slicOverlayAtom,
     type Mask,
     type Prompt,
     type PolygonAnnotation,
@@ -15,7 +17,7 @@ import type {EngineCallbacks, ImageSpacePoint} from "@/canvas/types.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
 import {MASK_FILL_ALPHA} from "@/canvas/mask-style.ts";
 import {douglasPeucker} from "@/canvas/utils/polygonUtils.ts";
-import {useAtom} from "jotai";
+import {simulateSlic} from "@/canvas/utils/slicSimulate.ts";
 
 interface CanvasStackProps {
     imageUrl: string | undefined;
@@ -45,6 +47,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     const engineRef = useRef<CanvasEngine | null>(null);
 
     const activeTool = useAtomValue(activeToolAtom);
+    const setActiveTool = useSetAtom(activeToolAtom);
     const prompts = useAtomValue(promptsAtom);
     const masks = useAtomValue(masksAtom);
 
@@ -55,13 +58,18 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     const subtractMode = useAtomValue(subtractModeAtom);
     const subtractModeRef = useRef(subtractMode);
     useEffect(() => { subtractModeRef.current = subtractMode; }, [subtractMode]);
+    const imageSize = useAtomValue(activeImageSizeAtom);
+    const imageSizeRef = useRef(imageSize);
+    useEffect(() => { imageSizeRef.current = imageSize; }, [imageSize]);
+    const setSlicOverlay = useSetAtom(slicOverlayAtom);
 
     const [view, setView] = useState<View>({zoom: 1, panX: 0, panY: 0});
     const viewRef = useRef(view);
     useEffect(() => { viewRef.current = view; }, [view]);
 
-    // Pan drag state (zoom tools + middle mouse)
+    // Pan drag state (grab tool + zoom tools + middle mouse)
     const panDrag = useRef<{startX: number; startY: number; startPanX: number; startPanY: number} | null>(null);
+    const [grabbing, setGrabbing] = useState(false);
 
     // Keep fresh currentMask for stable callbacks
     const currentMaskRef = useRef<number>(currentMask);
@@ -71,6 +79,17 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     useEffect(() => {
         setView({zoom: 1, panX: 0, panY: 0});
     }, [imageUrl]);
+
+    // Keyboard shortcut: G → grab tool
+    useEffect(() => {
+        const onKeyDown = (e: KeyboardEvent) => {
+            const tag = (e.target as HTMLElement).tagName;
+            if (tag === "INPUT" || tag === "TEXTAREA") return;
+            if (e.key === "g" || e.key === "G") setActiveTool("grab");
+        };
+        window.addEventListener("keydown", onKeyDown);
+        return () => window.removeEventListener("keydown", onKeyDown);
+    }, [setActiveTool]);
 
     const callbacks = useCallback((): EngineCallbacks => ({
         onKeypointAdded(x: number, y: number, label: 0 | 1) {
@@ -91,6 +110,16 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                     bbox: {left: x, top: y, width: w, height: h},
                 },
             ]);
+        },
+        onSlicBboxAdded(x: number, y: number, w: number, h: number) {
+            const size = imageSizeRef.current;
+            if (!size) return;
+            const superpixels = simulateSlic(x, y, w, h, size.w, size.h);
+            setSlicOverlay({
+                bbox: {x, y, w, h},
+                superpixels,
+                targetMaskId: currentMaskRef.current,
+            });
         },
         onFreeformPathAdded(points: ImageSpacePoint[]) {
             const activeMaskId = currentMaskRef.current;
@@ -205,7 +234,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 })
             );
         },
-    }), [setPrompts, setMasks, setCurrentMask]);
+    }), [setPrompts, setMasks, setCurrentMask, setSlicOverlay]);
 
     // Mount engine once
     useEffect(() => {
@@ -278,10 +307,11 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
 
     // Unified mouse handlers — distinguish pan drag from canvas interactions
     const isZoomTool = activeTool === "zoom-in" || activeTool === "zoom-out";
+    const isGrabTool = activeTool === "grab";
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
-        // Middle mouse or zoom tool: start pan drag
-        if (e.button === 1 || isZoomTool) {
+        // Middle mouse, zoom tool, or grab tool: start pan drag
+        if (e.button === 1 || isZoomTool || isGrabTool) {
             e.preventDefault();
             panDrag.current = {
                 startX: e.clientX,
@@ -289,10 +319,11 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 startPanX: viewRef.current.panX,
                 startPanY: viewRef.current.panY,
             };
+            if (isGrabTool) setGrabbing(true);
             return;
         }
         engineRef.current?.onMouseDown(e.nativeEvent);
-    }, [isZoomTool]);
+    }, [isZoomTool, isGrabTool]);
 
     const handleMouseMove = useCallback((e: React.MouseEvent) => {
         if (panDrag.current) {
@@ -311,6 +342,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     const handleMouseUp = useCallback((e: React.MouseEvent) => {
         if (panDrag.current) {
             panDrag.current = null;
+            setGrabbing(false);
             return;
         }
         engineRef.current?.onMouseUp(e.nativeEvent);
@@ -318,6 +350,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
 
     const handleMouseLeave = useCallback((e: React.MouseEvent) => {
         panDrag.current = null;
+        setGrabbing(false);
         engineRef.current?.onMouseLeave(e.nativeEvent);
     }, []);
 
@@ -334,11 +367,15 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
             return;
         }
 
-        engineRef.current?.onClick(e.nativeEvent);
-    }, [isZoomTool, activeTool]);
+        // Grab tool: click does nothing
+        if (isGrabTool) return;
 
-    const cursor = isZoomTool
-        ? (activeTool === "zoom-in" ? "zoom-in" : "zoom-out")
+        engineRef.current?.onClick(e.nativeEvent);
+    }, [isZoomTool, isGrabTool, activeTool]);
+
+    const cursor = activeTool === "zoom-in" ? "zoom-in"
+        : activeTool === "zoom-out" ? "zoom-out"
+        : isGrabTool ? (grabbing ? "grabbing" : "grab")
         : getCursor(activeTool);
 
     const transform = `matrix(${view.zoom},0,0,${view.zoom},${view.panX},${view.panY})`;
@@ -388,6 +425,7 @@ function getCursor(tool: string): string {
         case "select-add":
         case "select-remove":
         case "bounding-box":
+        case "slic-bbox":
         case "polygon-lasso":
             return "crosshair";
         case "freeform-draw":

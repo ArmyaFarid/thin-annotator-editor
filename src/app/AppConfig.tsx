@@ -10,6 +10,8 @@ export const TOOLS: Tool[] = [
     'bounding-box',
     'freeform-draw',
     'polygon-lasso',
+    'slic-bbox',
     'zoom-in',
     'zoom-out',
+    'grab',
 ];

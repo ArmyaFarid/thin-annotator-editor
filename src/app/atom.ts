@@ -78,3 +78,16 @@ export const loadedFilterGammaConfigAtom = atom<LoadedFilterGammaConfig>({
 export const refineModeAtom = atom<number>(0);
 export const subtractModeAtom = atom<boolean>(false);
 export const activeImageSizeAtom = atom<{w: number; h: number} | null>(null);
+
+export interface SlicSuperpixel {
+    id: number;
+    rle: RLEMask;
+}
+
+export interface SlicOverlayState {
+    bbox: {x: number; y: number; w: number; h: number};
+    superpixels: SlicSuperpixel[];
+    targetMaskId: number;
+}
+
+export const slicOverlayAtom = atom<SlicOverlayState | null>(null);

@@ -7,7 +7,7 @@ const DY = [0, 1, 1, 1, 0, -1, -1, -1];
 // Moore neighborhood boundary tracing.
 // Terminates when we return to the start pixel (simply-connected region assumption).
 // `data` is column-major (COCO RLE format): pixel (x,y) = data[x * h + y].
-function traceBoundary(data: Uint8Array, w: number, h: number): ImageSpacePoint[] {
+export function traceBoundary(data: Uint8Array, w: number, h: number): ImageSpacePoint[] {
     // Find topmost-leftmost foreground pixel (scan row by row)
     let sx = -1, sy = -1;
     outer: for (let y = 0; y < h; y++) {

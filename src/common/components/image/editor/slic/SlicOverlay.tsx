@@ -1,0 +1,394 @@
+import React, {useCallback, useEffect, useRef, useState} from "react";
+import {useAtom, useAtomValue, useSetAtom} from "jotai";
+import {masksAtom, slicOverlayAtom, currentMaskAtom, activeImageSizeAtom} from "@/app/atom.ts";
+import {decode} from "@/jscocotools/mask.ts";
+import {canvasToRLE} from "@/canvas/utils/maskMerge.ts";
+import {getDistinctColor} from "@/canvas/color.ts";
+import {MASK_FILL_ALPHA} from "@/canvas/mask-style.ts";
+
+interface SlicOverlayProps {
+    imageUrl: string;
+}
+
+interface PanDrag { startX: number; startY: number; startPanX: number; startPanY: number }
+
+function hslColor(index: number, total: number): string {
+    const hue = Math.round((index / total) * 360);
+    return `hsl(${hue}, 80%, 55%)`;
+}
+
+export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
+    const [slicOverlay, setSlicOverlay] = useAtom(slicOverlayAtom);
+    const [masks, setMasks] = useAtom(masksAtom);
+    const setCurrentMask = useSetAtom(currentMaskAtom);
+    const imageSize = useAtomValue(activeImageSizeAtom);
+
+    const [selected, setSelected] = useState<Set<number>>(new Set());
+    const [zoom, setZoom] = useState(1);
+    const [panX, setPanX] = useState(0);
+    const [panY, setPanY] = useState(0);
+    const [isPanning, setIsPanning] = useState(false);
+
+    const containerRef = useRef<HTMLDivElement>(null);
+    const imgRef = useRef<HTMLImageElement>(null);
+    const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
+    const labelCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const viewRef = useRef({zoom: 1, panX: 0, panY: 0});
+    const panDragRef = useRef<PanDrag | null>(null);
+
+    useEffect(() => { viewRef.current = {zoom, panX, panY}; }, [zoom, panX, panY]);
+
+    // Build label canvas (R+G = superpixel id, 1-indexed) for hit testing
+    useEffect(() => {
+        if (!slicOverlay || !imageSize) return;
+        const {superpixels} = slicOverlay;
+        const {w: iw, h: ih} = imageSize;
+
+        const label = document.createElement("canvas");
+        label.width = iw;
+        label.height = ih;
+        const lCtx = label.getContext("2d")!;
+        const lData = lCtx.createImageData(iw, ih);
+
+        for (let si = 0; si < superpixels.length; si++) {
+            const sp = superpixels[si];
+            let decoded: Uint8Array;
+            try {
+                const result = decode([sp.rle]);
+                decoded = result.data as Uint8Array;
+            } catch { continue; }
+
+            const [h, w] = sp.rle.size;
+            const id = sp.id;
+            const rHi = (id >> 8) & 0xff;
+            const rLo = id & 0xff;
+
+            for (let x = 0; x < w; x++) {
+                for (let y = 0; y < h; y++) {
+                    if (decoded[x * h + y] === 1) {
+                        const i = (y * w + x) * 4;
+                        lData.data[i] = rHi;
+                        lData.data[i + 1] = rLo;
+                        lData.data[i + 2] = 0;
+                        lData.data[i + 3] = 255;
+                    }
+                }
+            }
+        }
+
+        lCtx.putImageData(lData, 0, 0);
+        labelCanvasRef.current = label;
+    }, [slicOverlay, imageSize]);
+
+    const redrawOverlay = useCallback(() => {
+        if (!slicOverlay || !imageSize || !overlayCanvasRef.current) return;
+        const canvas = overlayCanvasRef.current;
+        const ctx = canvas.getContext("2d")!;
+        const {w: iw, h: ih} = imageSize;
+        const {superpixels} = slicOverlay;
+
+        ctx.clearRect(0, 0, iw, ih);
+
+        for (let si = 0; si < superpixels.length; si++) {
+            const sp = superpixels[si];
+            if (!selected.has(sp.id)) continue;
+
+            let decoded: Uint8Array;
+            try {
+                const result = decode([sp.rle]);
+                decoded = result.data as Uint8Array;
+            } catch { continue; }
+
+            const [h, w] = sp.rle.size;
+            const color = hslColor(si, superpixels.length);
+            const rgba = new Uint8ClampedArray(w * h * 4);
+            const tempCtx = document.createElement("canvas");
+            tempCtx.width = w;
+            tempCtx.height = h;
+            const tCtx = tempCtx.getContext("2d")!;
+
+            // Parse hsl color to rgba
+            tCtx.fillStyle = color;
+            tCtx.fillRect(0, 0, 1, 1);
+            const [cr, cg, cb] = Array.from(tCtx.getImageData(0, 0, 1, 1).data);
+
+            for (let x = 0; x < w; x++) {
+                for (let y = 0; y < h; y++) {
+                    if (decoded[x * h + y] === 1) {
+                        const i = (y * w + x) * 4;
+                        rgba[i] = cr;
+                        rgba[i + 1] = cg;
+                        rgba[i + 2] = cb;
+                        rgba[i + 3] = 153;
+                    }
+                }
+            }
+
+            const tile = document.createElement("canvas");
+            tile.width = w;
+            tile.height = h;
+            tile.getContext("2d")!.putImageData(new ImageData(rgba, w, h), 0, 0);
+            ctx.drawImage(tile, 0, 0, w, h, 0, 0, iw, ih);
+        }
+    }, [slicOverlay, imageSize, selected]);
+
+    useEffect(() => { redrawOverlay(); }, [redrawOverlay]);
+
+    // Auto-fit zoom when opening
+    useEffect(() => {
+        if (!slicOverlay || !imageSize) return;
+        setSelected(new Set());
+        setZoom(1);
+        setPanX(0);
+        setPanY(0);
+
+        requestAnimationFrame(() => {
+            const container = containerRef.current;
+            if (!container) return;
+            const cw = container.clientWidth;
+            const ch = container.clientHeight;
+            if (cw === 0 || ch === 0) return;
+
+            const {bbox} = slicOverlay;
+            const scaleX = cw / imageSize.w;
+            const scaleY = ch / imageSize.h;
+            const PADDING = 0.25;
+            const paddedW = bbox.w * scaleX * (1 + PADDING * 2);
+            const paddedH = bbox.h * scaleY * (1 + PADDING * 2);
+            const fitZoom = Math.min(cw / paddedW, ch / paddedH, 20);
+
+            const cx = (bbox.x + bbox.w / 2) * scaleX;
+            const cy = (bbox.y + bbox.h / 2) * scaleY;
+            setZoom(fitZoom);
+            setPanX(cw / 2 - cx * fitZoom);
+            setPanY(ch / 2 - cy * fitZoom);
+        });
+    }, [slicOverlay]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Scroll-to-zoom (native, non-passive)
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const onWheel = (e: WheelEvent) => {
+            e.preventDefault();
+            const rect = el.getBoundingClientRect();
+            const cx = e.clientX - rect.left;
+            const cy = e.clientY - rect.top;
+            const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+            const {zoom: z, panX: px, panY: py} = viewRef.current;
+            const newZ = Math.max(0.25, Math.min(20, z * factor));
+            setZoom(newZ);
+            setPanX(cx - (cx - px) * newZ / z);
+            setPanY(cy - (cy - py) * newZ / z);
+        };
+        el.addEventListener("wheel", onWheel, {passive: false});
+        return () => el.removeEventListener("wheel", onWheel);
+    }, []);
+
+    function getSuperpixelAt(e: React.MouseEvent): number | null {
+        const label = labelCanvasRef.current;
+        const overlay = overlayCanvasRef.current;
+        if (!label || !overlay || !imageSize) return null;
+        const rect = overlay.getBoundingClientRect();
+        const ix = Math.floor((e.clientX - rect.left) * (imageSize.w / rect.width));
+        const iy = Math.floor((e.clientY - rect.top) * (imageSize.h / rect.height));
+        if (ix < 0 || iy < 0 || ix >= imageSize.w || iy >= imageSize.h) return null;
+        const px = label.getContext("2d")!.getImageData(ix, iy, 1, 1).data;
+        const id = (px[0] << 8) | px[1];
+        return id > 0 ? id : null;
+    }
+
+    function handleOverlayMouseDown(e: React.MouseEvent) {
+        if (e.button === 1) {
+            e.preventDefault();
+            const {panX: px, panY: py} = viewRef.current;
+            panDragRef.current = {startX: e.clientX, startY: e.clientY, startPanX: px, startPanY: py};
+            setIsPanning(true);
+            return;
+        }
+        if (e.button !== 0) return;
+        const id = getSuperpixelAt(e);
+        if (id === null) return;
+        setSelected(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    }
+
+    function handleOverlayMouseMove(e: React.MouseEvent) {
+        if (panDragRef.current) {
+            const dx = e.clientX - panDragRef.current.startX;
+            const dy = e.clientY - panDragRef.current.startY;
+            setPanX(panDragRef.current.startPanX + dx);
+            setPanY(panDragRef.current.startPanY + dy);
+        }
+    }
+
+    function handleOverlayMouseUp() {
+        panDragRef.current = null;
+        setIsPanning(false);
+    }
+
+    function handleApply() {
+        if (!slicOverlay || !imageSize || selected.size === 0) return;
+        const {superpixels, targetMaskId} = slicOverlay;
+        const {w: iw, h: ih} = imageSize;
+
+        const mergeCanvas = document.createElement("canvas");
+        mergeCanvas.width = iw;
+        mergeCanvas.height = ih;
+        const mCtx = mergeCanvas.getContext("2d")!;
+
+        for (const sp of superpixels) {
+            if (!selected.has(sp.id)) continue;
+            let decoded: Uint8Array;
+            try {
+                const result = decode([sp.rle]);
+                decoded = result.data as Uint8Array;
+            } catch { continue; }
+
+            const [h, w] = sp.rle.size;
+            const rgba = new Uint8ClampedArray(w * h * 4);
+            for (let x = 0; x < w; x++) {
+                for (let y = 0; y < h; y++) {
+                    if (decoded[x * h + y] === 1) {
+                        const i = (y * w + x) * 4;
+                        rgba[i] = 255;
+                        rgba[i + 1] = 255;
+                        rgba[i + 2] = 255;
+                        rgba[i + 3] = 255;
+                    }
+                }
+            }
+            const tile = document.createElement("canvas");
+            tile.width = w;
+            tile.height = h;
+            tile.getContext("2d")!.putImageData(new ImageData(rgba, w, h), 0, 0);
+            mCtx.drawImage(tile, 0, 0, w, h, 0, 0, iw, ih);
+        }
+
+        const newRle = canvasToRLE(mergeCanvas);
+        const layerId = Date.now();
+
+        if (targetMaskId !== 0) {
+            setMasks(prev =>
+                prev.map(m => {
+                    if (m.id !== targetMaskId) return m;
+                    return {...m, layers: [...m.layers, {id: layerId, rleMask: newRle, source: "manual" as const, layerKind: "fill" as const}]};
+                })
+            );
+        } else {
+            const newId = Date.now() + 1;
+            const color = getDistinctColor(masks.length, MASK_FILL_ALPHA);
+            setMasks(prev => [
+                ...prev,
+                {
+                    id: newId,
+                    label: `SLIC ${prev.length + 1}`,
+                    layers: [{id: layerId, rleMask: newRle, source: "manual" as const, layerKind: "fill" as const}],
+                    point_coords: [],
+                    point_labels: [],
+                    color,
+                },
+            ]);
+            setCurrentMask(newId);
+        }
+
+        setSlicOverlay(null);
+    }
+
+    if (!slicOverlay || !imageSize) return null;
+
+    const {w: iw, h: ih} = imageSize;
+    const transform = `matrix(${zoom},0,0,${zoom},${panX},${panY})`;
+    const cursor = isPanning ? "grabbing" : "crosshair";
+
+    return (
+        <div className="fixed inset-0 z-50 bg-black/85 flex flex-col items-center justify-center gap-4 p-4">
+            {/* Toolbar */}
+            <div className="flex items-center gap-3 bg-[#1a1a1a] border border-white/20 rounded-lg px-4 py-2 flex-wrap">
+                <span className="text-sm font-medium text-white/80">
+                    Superpixels SLIC — {selected.size} sélectionné{selected.size !== 1 ? "s" : ""}
+                </span>
+                <div className="w-px h-5 bg-white/20" />
+                <button
+                    onClick={() => setSelected(new Set(slicOverlay.superpixels.map(s => s.id)))}
+                    className="px-3 py-1 rounded text-sm text-white/60 hover:text-white transition-colors">
+                    Tout sélectionner
+                </button>
+                <button
+                    onClick={() => setSelected(new Set())}
+                    className="px-3 py-1 rounded text-sm text-white/60 hover:text-white transition-colors">
+                    Tout désélectionner
+                </button>
+                <div className="w-px h-5 bg-white/20" />
+                <span className="text-xs text-white/50">Zoom:</span>
+                <input
+                    type="range" min={25} max={2000} value={Math.round(zoom * 100)}
+                    onChange={e => {
+                        const newZ = +e.target.value / 100;
+                        const container = containerRef.current;
+                        if (container) {
+                            const cx = container.clientWidth / 2;
+                            const cy = container.clientHeight / 2;
+                            const {zoom: z, panX: px, panY: py} = viewRef.current;
+                            setPanX(cx - (cx - px) * newZ / z);
+                            setPanY(cy - (cy - py) * newZ / z);
+                        }
+                        setZoom(newZ);
+                    }}
+                    className="w-24"
+                />
+                <span className="text-xs text-white/60 w-12">{Math.round(zoom * 100)}%</span>
+            </div>
+
+            {/* Image + overlay canvas */}
+            <div
+                ref={containerRef}
+                style={{overflow: "hidden", display: "inline-block", lineHeight: 0, position: "relative", maxHeight: "72vh", maxWidth: "85vw"}}>
+                <div style={{display: "inline-block", lineHeight: 0, transform, transformOrigin: "0 0"}}>
+                    <img
+                        ref={imgRef}
+                        src={imageUrl}
+                        draggable={false}
+                        style={{maxHeight: "72vh", maxWidth: "85vw", display: "block", userSelect: "none"}}
+                        alt=""
+                    />
+                    <canvas
+                        ref={overlayCanvasRef}
+                        width={iw}
+                        height={ih}
+                        style={{
+                            position: "absolute",
+                            inset: 0,
+                            width: "100%",
+                            height: "100%",
+                            cursor,
+                        }}
+                        onMouseDown={handleOverlayMouseDown}
+                        onMouseMove={handleOverlayMouseMove}
+                        onMouseUp={handleOverlayMouseUp}
+                        onMouseLeave={handleOverlayMouseUp}
+                    />
+                </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3">
+                <span className="text-xs text-white/30">Cliquer pour sélectionner · Molette: zoom · Clic molette: déplacer</span>
+                <button
+                    onClick={() => setSlicOverlay(null)}
+                    className="px-5 py-2 rounded-lg border border-white/20 text-sm hover:bg-white/10 transition-colors">
+                    Annuler
+                </button>
+                <button
+                    onClick={handleApply}
+                    disabled={selected.size === 0}
+                    className="px-5 py-2 rounded-lg bg-[#4FC3F7] text-black font-medium text-sm hover:bg-[#4FC3F7]/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                    Appliquer ({selected.size})
+                </button>
+            </div>
+        </div>
+    );
+};
