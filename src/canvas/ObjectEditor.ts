@@ -49,15 +49,16 @@ export class ObjectEditor {
         // Delete buttons checked first
         for (const layer of this.layers) {
             const d = this.delPos(layer, scale);
-            if (Math.hypot(px - d.x, py - d.y) < HIT_PX) {
+            if (d && Math.hypot(px - d.x, py - d.y) < HIT_PX) {
                 this.callbacks.onLayerDeleted(this.objectId, layer.id);
                 return true;
             }
         }
 
-        // Polygon vertex drag
+        // Polygon vertex drag (only for polygon layers)
         for (const layer of this.layers) {
             const verts = this.getVertices(layer);
+            if (!verts) continue;
             for (let i = 0; i < verts.length; i++) {
                 const vx = verts[i].x * scale.x;
                 const vy = verts[i].y * scale.y;
@@ -93,7 +94,7 @@ export class ObjectEditor {
 
         for (const layer of this.layers) {
             const d = this.delPos(layer, scale);
-            if (Math.hypot(px - d.x, py - d.y) < HIT_PX) {
+            if (d && Math.hypot(px - d.x, py - d.y) < HIT_PX) {
                 this.hoverDelete = layer.id;
                 return;
             }
@@ -101,6 +102,7 @@ export class ObjectEditor {
 
         for (const layer of this.layers) {
             const verts = this.getVertices(layer);
+            if (!verts) continue;
             for (let i = 0; i < verts.length; i++) {
                 const vx = verts[i].x * scale.x;
                 const vy = verts[i].y * scale.y;
@@ -119,7 +121,7 @@ export class ObjectEditor {
         if (updated) {
             this.callbacks.onPolygonVertexMoved(this.objectId, layerId, updated);
             this.layers = this.layers.map(l => {
-                if (l.id !== layerId) return l;
+                if (l.id !== layerId || !l.canvasShape) return l;
                 return {...l, canvasShape: {...l.canvasShape, vertices: updated}};
             });
             this.tempVertices.delete(layerId);
@@ -138,8 +140,8 @@ export class ObjectEditor {
     private renderLayer(ctx: CanvasRenderingContext2D, layer: MaskLayer, scale: Scale): void {
         const verts = this.getVertices(layer);
 
-        // Live outline while dragging a vertex of this polygon
-        if (this.dragVertex?.layerId === layer.id) {
+        // Live outline while dragging a vertex
+        if (verts && this.dragVertex?.layerId === layer.id) {
             ctx.save();
             ctx.beginPath();
             ctx.moveTo(verts[0].x * scale.x, verts[0].y * scale.y);
@@ -153,56 +155,72 @@ export class ObjectEditor {
             ctx.restore();
         }
 
-        // Vertex handles
-        for (let i = 0; i < verts.length; i++) {
-            const vx = verts[i].x * scale.x;
-            const vy = verts[i].y * scale.y;
-            const hovered = this.hoverVertex?.layerId === layer.id && this.hoverVertex.idx === i;
-            const dragged = this.dragVertex?.layerId === layer.id && this.dragVertex.idx === i;
+        // Vertex handles (polygon layers only)
+        if (verts) {
+            for (let i = 0; i < verts.length; i++) {
+                const vx = verts[i].x * scale.x;
+                const vy = verts[i].y * scale.y;
+                const hovered = this.hoverVertex?.layerId === layer.id && this.hoverVertex.idx === i;
+                const dragged = this.dragVertex?.layerId === layer.id && this.dragVertex.idx === i;
 
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(vx, vy, dragged || hovered ? VERTEX_R + 2 : VERTEX_R, 0, Math.PI * 2);
+                ctx.fillStyle = dragged ? "#f97316" : hovered ? "#fff" : "rgba(255,255,255,0.75)";
+                ctx.fill();
+                ctx.strokeStyle = "#F59E0B";
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        // Delete × button (all layer types)
+        const d = this.delPos(layer, scale);
+        if (d) {
+            const hovered = this.hoverDelete === layer.id;
             ctx.save();
             ctx.beginPath();
-            ctx.arc(vx, vy, dragged || hovered ? VERTEX_R + 2 : VERTEX_R, 0, Math.PI * 2);
-            ctx.fillStyle = dragged ? "#f97316" : hovered ? "#fff" : "rgba(255,255,255,0.75)";
+            ctx.arc(d.x, d.y, DEL_R, 0, Math.PI * 2);
+            ctx.fillStyle = hovered ? "#ef4444" : "rgba(239,68,68,0.8)";
             ctx.fill();
-            ctx.strokeStyle = "#F59E0B";
+            ctx.strokeStyle = "rgba(255,255,255,0.5)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.strokeStyle = "#fff";
             ctx.lineWidth = 1.5;
+            ctx.lineCap = "round";
+            ctx.beginPath();
+            ctx.moveTo(d.x - 3.5, d.y - 3.5);
+            ctx.lineTo(d.x + 3.5, d.y + 3.5);
+            ctx.moveTo(d.x + 3.5, d.y - 3.5);
+            ctx.lineTo(d.x - 3.5, d.y + 3.5);
             ctx.stroke();
             ctx.restore();
         }
-
-        // Delete ×
-        const d = this.delPos(layer, scale);
-        const hovered = this.hoverDelete === layer.id;
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(d.x, d.y, DEL_R, 0, Math.PI * 2);
-        ctx.fillStyle = hovered ? "#ef4444" : "rgba(239,68,68,0.8)";
-        ctx.fill();
-        ctx.strokeStyle = "rgba(255,255,255,0.5)";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        ctx.strokeStyle = "#fff";
-        ctx.lineWidth = 1.5;
-        ctx.lineCap = "round";
-        ctx.beginPath();
-        ctx.moveTo(d.x - 3.5, d.y - 3.5);
-        ctx.lineTo(d.x + 3.5, d.y + 3.5);
-        ctx.moveTo(d.x + 3.5, d.y - 3.5);
-        ctx.lineTo(d.x - 3.5, d.y + 3.5);
-        ctx.stroke();
-        ctx.restore();
     }
 
-    private getVertices(layer: MaskLayer): ImageSpacePoint[] {
-        return this.tempVertices.get(layer.id) ?? layer.canvasShape.vertices;
+    // Returns polygon vertices (with live-drag override), or null for RLE layers.
+    private getVertices(layer: MaskLayer): ImageSpacePoint[] | null {
+        const temp = this.tempVertices.get(layer.id);
+        if (temp) return temp;
+        if (layer.canvasShape?.kind === "polygon") return layer.canvasShape.vertices;
+        return null;
     }
 
-    // Returns delete button position in CANVAS PIXELS.
-    private delPos(layer: MaskLayer, scale: Scale): {x: number; y: number} {
-        const verts = this.getVertices(layer) ?? layer.canvasShape.vertices;
-        const maxX = Math.max(...verts.map(v => v.x)) * scale.x;
-        const minY = Math.min(...verts.map(v => v.y)) * scale.y;
-        return {x: maxX + DEL_R + 4, y: minY};
+    // Returns delete button position in CANVAS PIXELS, or null if no position can be determined.
+    private delPos(layer: MaskLayer, scale: Scale): {x: number; y: number} | null {
+        if (layer.canvasShape?.kind === "polygon") {
+            const verts = this.getVertices(layer) ?? layer.canvasShape.vertices;
+            const maxX = Math.max(...verts.map(v => v.x)) * scale.x;
+            const minY = Math.min(...verts.map(v => v.y)) * scale.y;
+            return {x: maxX + DEL_R + 4, y: minY};
+        }
+        if (layer.rleMask) {
+            // Fixed position: 20px inset from the top-right corner of the canvas
+            const canvasW = layer.rleMask.size[1] * scale.x;
+            return {x: canvasW - 20, y: 20};
+        }
+        return null;
     }
 }

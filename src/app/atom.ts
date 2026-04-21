@@ -2,6 +2,11 @@ import {atom} from 'jotai';
 import {Tool} from '@/app/types.ts';
 import type {ImageSpacePoint} from '@/canvas/types.ts';
 
+export interface RLEMask {
+    counts: string;
+    size: [number, number];
+}
+
 export interface Box {
     left: number;
     top: number;
@@ -20,7 +25,8 @@ export interface PolygonAnnotation {
 export interface MaskLayer {
     id: number;
     source?: "sam" | "manual";
-    canvasShape: PolygonAnnotation;
+    rleMask?: RLEMask;
+    canvasShape?: PolygonAnnotation;
 }
 
 export interface Mask {

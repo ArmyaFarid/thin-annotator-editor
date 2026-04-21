@@ -191,9 +191,10 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                     if (m.id !== objectId) return m;
                     return {
                         ...m,
-                        layers: m.layers.map(l =>
-                            l.id !== layerId ? l : {...l, canvasShape: {...l.canvasShape, vertices}}
-                        ),
+                        layers: m.layers.map(l => {
+                            if (l.id !== layerId || l.canvasShape?.kind !== "polygon") return l;
+                            return {...l, canvasShape: {...l.canvasShape, vertices}};
+                        }),
                     };
                 })
             );

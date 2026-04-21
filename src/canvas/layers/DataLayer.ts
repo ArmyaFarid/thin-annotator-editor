@@ -6,8 +6,12 @@ import {Mask} from "@/canvas/annotations/Mask.ts";
 
 function maskSig(m: MaskData): string {
     return m.layers.map(l => {
-        const vStr = l.canvasShape.vertices.map(v => `${v.x.toFixed(1)},${v.y.toFixed(1)}`).join(";");
-        return `poly-${l.id}-${vStr}`;
+        if (l.rleMask) return l.rleMask.counts;
+        if (l.canvasShape) {
+            const vStr = l.canvasShape.vertices.map(v => `${v.x.toFixed(1)},${v.y.toFixed(1)}`).join(";");
+            return `poly-${l.id}-${vStr}`;
+        }
+        return `empty-${l.id}`;
     }).join("|");
 }
 
