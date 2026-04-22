@@ -283,7 +283,9 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
         const ch = container?.clientHeight ?? 0;
         if (cw > 0 && ch > 0 && img.naturalWidth > 0) {
             const fitZoom = Math.min(cw / img.naturalWidth, ch / img.naturalHeight);
-            setView({zoom: fitZoom, panX: 0, panY: 0});
+            const panX = (cw - img.naturalWidth * fitZoom) / 2;
+            const panY = (ch - img.naturalHeight * fitZoom) / 2;
+            setView({zoom: fitZoom, panX, panY});
         }
     }, []);
 
@@ -330,14 +332,11 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     }, [isZoomTool, isGrabTool]);
 
     const handleMouseMove = useCallback((e: React.MouseEvent) => {
-        if (panDrag.current) {
-            const dx = e.clientX - panDrag.current.startX;
-            const dy = e.clientY - panDrag.current.startY;
-            setView(v => ({
-                ...v,
-                panX: panDrag.current!.startPanX + dx,
-                panY: panDrag.current!.startPanY + dy,
-            }));
+        const drag = panDrag.current;
+        if (drag) {
+            const dx = e.clientX - drag.startX;
+            const dy = e.clientY - drag.startY;
+            setView(v => ({...v, panX: drag.startPanX + dx, panY: drag.startPanY + dy}));
             return;
         }
         engineRef.current?.onMouseMove(e.nativeEvent);
