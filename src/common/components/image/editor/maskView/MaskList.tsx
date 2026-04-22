@@ -57,6 +57,20 @@ export default function MaskList() {
         setActiveTool("polygon-lasso");
     }
 
+    function handleDeactivateAnchors() {
+        if (!activeMask || !imageSize) return;
+        const merged = mergeToCanvas(activeMask, imageSize.w, imageSize.h);
+        const rle = canvasToRLE(merged);
+        const newLayer: MaskLayer = {
+            id: Date.now(),
+            source: "manual" as const,
+            layerKind: "fill" as const,
+            rleMask: rle,
+        };
+        setMasks(prev => prev.map(m => m.id === activeMask.id ? {...m, layers: [newLayer]} : m));
+        setActiveTool("select-add");
+    }
+
     function handleExport() {
         if (!imageSize) return;
         const exported = masks.map(m => {
@@ -152,16 +166,21 @@ export default function MaskList() {
                     </div>
 
                     {/* Anchor mode toggle */}
-                    <button
-                        onClick={handleActivateAnchors}
-                        disabled={isAnchorMode || !imageSize}
-                        className={`w-full px-2 py-1 rounded text-sm border transition-colors ${
-                            isAnchorMode
-                                ? "border-emerald-400 text-emerald-400 bg-emerald-400/10 cursor-default"
-                                : "border-white/20 text-white/60 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
-                        }`}>
-                        {isAnchorMode ? "Mode ancres actif" : "Activer les ancres"}
-                    </button>
+                    <div className="flex rounded overflow-hidden border border-white/15">
+                        <button
+                            onClick={handleActivateAnchors}
+                            disabled={isAnchorMode || !imageSize}
+                            className={`flex-1 px-2 py-1 text-xs font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${isAnchorMode ? "bg-emerald-500/20 text-emerald-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
+                            Ancres
+                        </button>
+                        <div className="w-px bg-white/15" />
+                        <button
+                            onClick={handleDeactivateAnchors}
+                            disabled={!isAnchorMode || !imageSize}
+                            className={`flex-1 px-2 py-1 text-xs font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${!isAnchorMode ? "bg-white/10 text-white/60" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
+                            Normal
+                        </button>
+                    </div>
 
                     {/* Hole drawing tool selector — shown only in subtract mode */}
                     {subtractMode ? (
