@@ -12,17 +12,17 @@ export default function AnnotatorPage() {
                 <div className="bg-secondary p-2 rounded-md">Charger une image</div>
                 <div className="bg-secondary p-2 rounded-md">Terminer</div>
             </div>
-            <div className="w-full flex flex-row gap-2 items-stretch h-full">
+            <div className="w-full flex flex-row gap-2 items-stretch flex-1 min-h-0">
                 <div className="flex-none">
                     <Toolbar />
                 </div>
 
-                <div className="flex-1 h-full relative bg-secondary border border-white/20 rounded-md overflow-hidden">
+                <div className="flex-1 relative bg-secondary border border-white/20 rounded-md overflow-hidden">
                     <FilterGammaSelector />
                     <ImageEditor />
                 </div>
 
-                <div className="w-80 h-full bg-secondary border border-white/20 p-2 rounded-md">
+                <div className="w-80 bg-secondary border border-white/20 p-2 rounded-md">
                     <MaskList />
                 </div>
             </div>
