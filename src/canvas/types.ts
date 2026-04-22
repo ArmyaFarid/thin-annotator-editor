@@ -28,8 +28,8 @@ export interface AnnotationObject {
 export type InteractionState =
     | {type: 'idle'}
     | {type: 'bbox-drawing'; start: ImageSpacePoint; current: ImageSpacePoint}
-    | {type: 'freeform-drawing'; points: ImageSpacePoint[]; color: string; width: number}
-    | {type: 'polygon-drawing'; vertices: ImageSpacePoint[]; cursor: ImageSpacePoint | null};
+    | {type: 'freeform-drawing'; points: ImageSpacePoint[]; color: string; width: number; subtract: boolean}
+    | {type: 'polygon-drawing'; vertices: ImageSpacePoint[]; cursor: ImageSpacePoint | null; subtract: boolean};
 
 export interface EngineCallbacks {
     onKeypointAdded(x: number, y: number, label: 0 | 1): void;

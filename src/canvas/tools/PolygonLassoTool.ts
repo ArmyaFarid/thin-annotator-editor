@@ -5,11 +5,24 @@ const CLOSE_THRESHOLD_PX = 15;
 
 export class PolygonLassoTool {
     private vertices: ImageSpacePoint[] = [];
+    private subtract = false;
 
     constructor(
         private readonly dynLayer: DynamicLayer,
         private readonly callbacks: EngineCallbacks,
     ) {}
+
+    setSubtractMode(v: boolean): void {
+        this.subtract = v;
+        if (this.vertices.length > 0) {
+            this.dynLayer.setInteractionState({
+                type: "polygon-drawing",
+                vertices: this.vertices,
+                cursor: null,
+                subtract: this.subtract,
+            });
+        }
+    }
 
     onClick(p: ImageSpacePoint, scale: {x: number; y: number}): void {
         if (this.vertices.length === 0) {
@@ -46,6 +59,7 @@ export class PolygonLassoTool {
             type: "polygon-drawing",
             vertices: this.vertices,
             cursor: p,
+            subtract: this.subtract,
         });
     }
 
@@ -66,6 +80,7 @@ export class PolygonLassoTool {
             type: "polygon-drawing",
             vertices: this.vertices,
             cursor,
+            subtract: this.subtract,
         });
     }
 }

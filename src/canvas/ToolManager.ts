@@ -33,6 +33,11 @@ export class ToolManager {
         this.activeTool = tool;
     }
 
+    setSubtractMode(v: boolean): void {
+        this.freeform.setSubtractMode(v);
+        this.polygon.setSubtractMode(v);
+    }
+
     onMouseDown(p: ImageSpacePoint): void {
         if (this.activeTool === "bounding-box") this.bbox.onMouseDown(p);
         if (this.activeTool === "slic-bbox") this.slicBbox.onMouseDown(p);

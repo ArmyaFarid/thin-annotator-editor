@@ -72,7 +72,7 @@ export class DynamicLayer {
         }
 
         if (this.state.type === "freeform-drawing") {
-            const {points, color, width} = this.state;
+            const {points, color, width, subtract} = this.state;
             if (points.length < 2) return;
 
             ctx.save();
@@ -97,15 +97,31 @@ export class DynamicLayer {
             ctx.lineWidth = width;
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
+            if (subtract) ctx.setLineDash([8, 5]);
             ctx.stroke();
             ctx.restore();
         }
 
         if (this.state.type === "polygon-drawing") {
-            const {vertices, cursor} = this.state;
+            const {vertices, cursor, subtract} = this.state;
             if (vertices.length === 0 || !cursor) return;
 
+            const strokeColor = subtract ? "#EF4444" : "#F59E0B";
+            const fillColor = subtract ? "rgba(239,68,68,0.08)" : "rgba(245,158,11,0.08)";
+
             ctx.save();
+
+            // Semi-transparent fill preview
+            if (vertices.length >= 2) {
+                ctx.beginPath();
+                ctx.moveTo(vertices[0].x * s.x, vertices[0].y * s.y);
+                for (let i = 1; i < vertices.length; i++) {
+                    ctx.lineTo(vertices[i].x * s.x, vertices[i].y * s.y);
+                }
+                ctx.closePath();
+                ctx.fillStyle = fillColor;
+                ctx.fill();
+            }
 
             ctx.beginPath();
             ctx.moveTo(vertices[0].x * s.x, vertices[0].y * s.y);
@@ -113,14 +129,16 @@ export class DynamicLayer {
                 ctx.lineTo(vertices[i].x * s.x, vertices[i].y * s.y);
             }
             ctx.lineTo(cursor.x * s.x, cursor.y * s.y);
-            ctx.strokeStyle = "#F59E0B";
+            ctx.strokeStyle = strokeColor;
             ctx.lineWidth = 2;
+            if (subtract) ctx.setLineDash([8, 5]);
             ctx.stroke();
+            ctx.setLineDash([]);
 
             for (const v of vertices) {
                 ctx.beginPath();
                 ctx.arc(v.x * s.x, v.y * s.y, 4, 0, Math.PI * 2);
-                ctx.fillStyle = "#F59E0B";
+                ctx.fillStyle = strokeColor;
                 ctx.fill();
             }
 
@@ -132,8 +150,9 @@ export class DynamicLayer {
             if (vertices.length >= 3 && distPx < POLYGON_CLOSE_PX) {
                 ctx.beginPath();
                 ctx.arc(first.x * s.x, first.y * s.y, 9, 0, Math.PI * 2);
-                ctx.strokeStyle = "#F59E0B";
+                ctx.strokeStyle = strokeColor;
                 ctx.lineWidth = 3;
+                ctx.setLineDash([]);
                 ctx.stroke();
             }
 

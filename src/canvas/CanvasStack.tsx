@@ -58,6 +58,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     const subtractMode = useAtomValue(subtractModeAtom);
     const subtractModeRef = useRef(subtractMode);
     useEffect(() => { subtractModeRef.current = subtractMode; }, [subtractMode]);
+    useEffect(() => { engineRef.current?.setSubtractMode(subtractMode); }, [subtractMode]);
     const imageSize = useAtomValue(activeImageSizeAtom);
     const imageSizeRef = useRef(imageSize);
     useEffect(() => { imageSizeRef.current = imageSize; }, [imageSize]);

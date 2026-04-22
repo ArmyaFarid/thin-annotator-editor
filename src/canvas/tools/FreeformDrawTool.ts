@@ -6,8 +6,10 @@ const MIN_POINT_DIST_SQ = 1;
 export class FreeformDrawTool {
     private drawing = false;
     private points: ImageSpacePoint[] = [];
+    private subtract = false;
 
     readonly color: string;
+    readonly subtractColor: string;
     readonly strokeWidth: number;
 
     constructor(
@@ -16,7 +18,12 @@ export class FreeformDrawTool {
         options?: {color?: string; strokeWidth?: number},
     ) {
         this.color = options?.color ?? "#f97316";
+        this.subtractColor = "#EF4444";
         this.strokeWidth = options?.strokeWidth ?? 3;
+    }
+
+    setSubtractMode(v: boolean): void {
+        this.subtract = v;
     }
 
     onMouseDown(p: ImageSpacePoint): void {
@@ -25,8 +32,9 @@ export class FreeformDrawTool {
         this.dynLayer.setInteractionState({
             type: "freeform-drawing",
             points: this.points,
-            color: this.color,
+            color: this.subtract ? this.subtractColor : this.color,
             width: this.strokeWidth,
+            subtract: this.subtract,
         });
     }
 
@@ -42,8 +50,9 @@ export class FreeformDrawTool {
         this.dynLayer.setInteractionState({
             type: "freeform-drawing",
             points: this.points,
-            color: this.color,
+            color: this.subtract ? this.subtractColor : this.color,
             width: this.strokeWidth,
+            subtract: this.subtract,
         });
     }
 

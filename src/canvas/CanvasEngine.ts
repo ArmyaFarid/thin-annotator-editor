@@ -62,6 +62,10 @@ export class CanvasEngine {
         this.toolManager.setActiveTool(tool);
     }
 
+    setSubtractMode(v: boolean): void {
+        this.toolManager.setSubtractMode(v);
+    }
+
     setPrompts(prompts: Prompt[]): void {
         this.dataLayer.setPrompts(prompts);
     }
