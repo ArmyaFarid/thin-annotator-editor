@@ -17,11 +17,9 @@ export default function AnnotatorPage() {
                     <Toolbar />
                 </div>
 
-                <div className="flex-1 h-full bg-secondary border border-white/20 rounded-md flex flex-col overflow-hidden">
+                <div className="flex-1 h-full relative bg-secondary border border-white/20 rounded-md overflow-hidden">
                     <FilterGammaSelector />
-                    <div className="flex-1 overflow-hidden">
-                        <ImageEditor />
-                    </div>
+                    <ImageEditor />
                 </div>
 
                 <div className="w-80 h-full bg-secondary border border-white/20 p-2 rounded-md">
