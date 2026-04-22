@@ -9,9 +9,9 @@ export default function AnnotatorPage() {
     return (
         <PageLayout>
             <div className="w-full flex flex-row justify-between items-center">
-                <div className="bg-secondary p-2 rounded-md">Accueil</div>
-                <div className="bg-secondary p-2 rounded-md">Charger une image</div>
-                <div className="bg-secondary p-2 rounded-md">Terminer</div>
+                <button className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">Accueil</button>
+                <button className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">Charger une image</button>
+                <button className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">Terminer</button>
             </div>
             <div className="w-full flex flex-row gap-2 items-stretch flex-1 min-h-0">
                 <div className="flex-none">
