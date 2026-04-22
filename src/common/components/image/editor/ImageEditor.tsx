@@ -222,7 +222,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
     }, [sessionId]);
 
     return (
-        <>
+        <div style={{width: "100%", height: "100%", position: "relative"}}>
             <CanvasStack imageUrl={activeImage?.url} />
             {refineMode !== 0 && activeImage ? (
                 <RefineOverlay
@@ -234,6 +234,6 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
             {slicOverlay !== null && activeImage ? (
                 <SlicOverlay imageUrl={activeImage.url} />
             ) : null}
-        </>
+        </div>
     );
 };

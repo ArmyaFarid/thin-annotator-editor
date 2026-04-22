@@ -15,8 +15,7 @@ export class CanvasEngine {
     private readonly editor: ObjectEditor;
 
     private naturalSize: {w: number; h: number} = {w: 1, h: 1};
-    private displaySize: {w: number; h: number} = {w: 1, h: 1};
-    private viewZoom = 1;
+    private displaySize: {w: number; h: number} = {w: 0, h: 0};
 
     // Set to true when editor consumes a mouseDown so the resulting click is suppressed.
     private editorConsumed = false;
@@ -38,8 +37,9 @@ export class CanvasEngine {
 
     setImage(img: HTMLImageElement): void {
         this.naturalSize = {w: img.naturalWidth, h: img.naturalHeight};
-        const dispW = img.clientWidth;
-        const dispH = img.clientHeight;
+        // Use container size from onResize if available, else fall back to natural size
+        const dispW = this.displaySize.w > 0 ? this.displaySize.w : img.naturalWidth;
+        const dispH = this.displaySize.h > 0 ? this.displaySize.h : img.naturalHeight;
         this.displaySize = {w: dispW, h: dispH};
         this.resizeAll(dispW, dispH);
         this.staticLayer.setImage(img);
@@ -47,8 +47,14 @@ export class CanvasEngine {
 
     onResize(dispW: number, dispH: number): void {
         this.displaySize = {w: dispW, h: dispH};
-        this.resizeAll(dispW, dispH);
-        this.staticLayer.redraw();
+        if (this.naturalSize.w <= 1) return; // image not loaded yet
+        // Canvases stay at natural resolution — only update scale/pxRatio for rendering
+        const scale = this.getScale();
+        const pxRatio = {x: this.naturalSize.w / dispW, y: this.naturalSize.h / dispH};
+        this.dataLayer.setScale(scale);
+        this.dataLayer.setPxRatio(pxRatio);
+        this.dynLayer.setScale(scale);
+        this.dynLayer.setPxRatio(pxRatio);
         this.dataLayer.render();
     }
 
@@ -62,10 +68,6 @@ export class CanvasEngine {
 
     setMasks(masks: Mask[]): void {
         this.dataLayer.setMasks(masks);
-    }
-
-    setViewZoom(zoom: number): void {
-        this.viewZoom = zoom;
     }
 
     setActiveObject(objectId: number, layers: MaskLayer[]): void {
@@ -132,12 +134,14 @@ export class CanvasEngine {
         this.dynLayer.stopLoop();
     }
 
-    private resizeAll(w: number, h: number): void {
+    private resizeAll(dispW: number, dispH: number): void {
         const scale = this.getScale();
-        this.staticLayer.resize(w, h);
-        this.dataLayer.resize(w, h);
+        const pxRatio = {x: this.naturalSize.w / dispW, y: this.naturalSize.h / dispH};
+        // Canvas physical dimensions = natural image resolution for sharp rendering at any zoom
+        this.staticLayer.resize(this.naturalSize.w, this.naturalSize.h);
+        this.dataLayer.resize(this.naturalSize.w, this.naturalSize.h, pxRatio);
         this.dataLayer.setScale(scale);
-        this.dynLayer.resize(w, h);
+        this.dynLayer.resize(this.naturalSize.w, this.naturalSize.h, pxRatio);
         this.dynLayer.setScale(scale);
     }
 
@@ -149,11 +153,13 @@ export class CanvasEngine {
     }
 
     private toImageSpace(e: MouseEvent): ImageSpacePoint {
+        // getBoundingClientRect already includes the CSS zoom transform, so rect.width
+        // = canvas_css_width × viewZoom. Dividing by rect.width * (1/naturalW) converts
+        // any screen position to image space without needing to know viewZoom explicitly.
         const rect = this.dynCanvas.getBoundingClientRect();
-        const scale = this.getScale();
         return {
-            x: (e.clientX - rect.left) / this.viewZoom / scale.x,
-            y: (e.clientY - rect.top) / this.viewZoom / scale.y,
+            x: (e.clientX - rect.left) * this.naturalSize.w / rect.width,
+            y: (e.clientY - rect.top) * this.naturalSize.h / rect.height,
         };
     }
 }

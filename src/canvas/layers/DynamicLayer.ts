@@ -6,6 +6,7 @@ const POLYGON_CLOSE_PX = 15;
 export class DynamicLayer {
     private state: InteractionState = {type: "idle"};
     private scale: Scale = {x: 1, y: 1};
+    private pxRatio: {x: number; y: number} = {x: 1, y: 1};
     private rafId = 0;
     private editor: ObjectEditor | null = null;
 
@@ -15,13 +16,18 @@ export class DynamicLayer {
         this.editor = editor;
     }
 
-    resize(w: number, h: number): void {
+    resize(w: number, h: number, pxRatio?: {x: number; y: number}): void {
         this.canvas.width = w;
         this.canvas.height = h;
+        if (pxRatio) this.pxRatio = pxRatio;
     }
 
     setScale(scale: Scale): void {
         this.scale = scale;
+    }
+
+    setPxRatio(pxRatio: {x: number; y: number}): void {
+        this.pxRatio = pxRatio;
     }
 
     setInteractionState(state: InteractionState): void {
@@ -45,6 +51,8 @@ export class DynamicLayer {
         if (!ctx) return;
 
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        ctx.save();
+        ctx.scale(this.pxRatio.x, this.pxRatio.y);
         const s = this.scale;
 
         if (this.state.type === "bbox-drawing") {
@@ -134,5 +142,7 @@ export class DynamicLayer {
 
         // Editing overlay always renders on top of drawing previews
         this.editor?.render(ctx, this.scale);
+
+        ctx.restore();
     }
 }

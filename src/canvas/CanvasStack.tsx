@@ -26,7 +26,7 @@ interface CanvasStackProps {
 interface View { zoom: number; panX: number; panY: number }
 
 function zoomAt(v: View, cx: number, cy: number, factor: number): View {
-    const newZoom = Math.max(0.25, Math.min(8, v.zoom * factor));
+    const newZoom = Math.max(0.05, Math.min(20, v.zoom * factor));
     return {
         zoom: newZoom,
         panX: cx - (cx - v.panX) * newZoom / v.zoom,
@@ -75,7 +75,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     const currentMaskRef = useRef<number>(currentMask);
     useEffect(() => { currentMaskRef.current = currentMask; }, [currentMask]);
 
-    // Reset view when image changes
+    // Reset view when image changes — handleImageLoad will set the fit zoom after load
     useEffect(() => {
         setView({zoom: 1, panX: 0, panY: 0});
     }, [imageUrl]);
@@ -271,16 +271,20 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
         }
     }, [currentMask, masks]);
 
-    // Sync zoom to engine for coordinate conversion
-    useEffect(() => {
-        engineRef.current?.setViewZoom(view.zoom);
-    }, [view.zoom]);
 
-    // Load image into StaticLayer when URL changes
+    // Load image into StaticLayer when URL changes; compute fit zoom
     const handleImageLoad = useCallback(() => {
         const img = imgRef.current;
+        const container = containerRef.current;
         if (!img || !engineRef.current) return;
         engineRef.current.setImage(img);
+
+        const cw = container?.clientWidth ?? 0;
+        const ch = container?.clientHeight ?? 0;
+        if (cw > 0 && ch > 0 && img.naturalWidth > 0) {
+            const fitZoom = Math.min(cw / img.naturalWidth, ch / img.naturalHeight);
+            setView({zoom: fitZoom, panX: 0, panY: 0});
+        }
     }, []);
 
     // Resize all layers when container changes size
@@ -383,12 +387,14 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     return (
         <div
             ref={containerRef}
-            style={{position: "relative", overflow: "hidden", display: "inline-block", lineHeight: 0}}
+            style={{position: "relative", overflow: "hidden", width: "100%", height: "100%"}}
             onWheel={handleWheel}>
             <div
                 ref={innerRef}
                 style={{
-                    position: "relative",
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
                     display: "inline-block",
                     lineHeight: 0,
                     transform,
@@ -399,7 +405,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                     src={imageUrl}
                     onLoad={handleImageLoad}
                     draggable={false}
-                    style={{display: "block", maxHeight: "700px", width: "auto", userSelect: "none"}}
+                    style={{display: "block", userSelect: "none"}}
                     alt=""
                 />
                 <canvas ref={staticRef} style={{position: "absolute", inset: 0, pointerEvents: "none"}} />

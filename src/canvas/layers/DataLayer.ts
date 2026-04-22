@@ -20,19 +20,25 @@ export class DataLayer {
     private prompts: Prompt[] = [];
     private masks: MaskData[] = [];
     private scale: Scale = {x: 1, y: 1};
+    private pxRatio: {x: number; y: number} = {x: 1, y: 1};
     private maskCache = new Map<number, {obj: Mask; sig: string}>();
     private currentMaskId: number = 0;
 
     constructor(private readonly canvas: HTMLCanvasElement) {}
 
-    resize(w: number, h: number): void {
+    resize(w: number, h: number, pxRatio?: {x: number; y: number}): void {
         this.canvas.width = w;
         this.canvas.height = h;
+        if (pxRatio) this.pxRatio = pxRatio;
         this.render();
     }
 
     setScale(scale: Scale): void {
         this.scale = scale;
+    }
+
+    setPxRatio(pxRatio: {x: number; y: number}): void {
+        this.pxRatio = pxRatio;
     }
 
     setCurrentMaskId(id: number): void {
@@ -66,6 +72,8 @@ export class DataLayer {
         if (!ctx) return;
 
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        ctx.save();
+        ctx.scale(this.pxRatio.x, this.pxRatio.y);
 
         const hasActive = this.currentMaskId !== 0;
         for (const m of this.masks) {
@@ -87,5 +95,7 @@ export class DataLayer {
                 new Keypoint(p.id, p.point_coords[0], p.point_coords[1], label).render(ctx, "idle", this.scale);
             }
         }
+
+        ctx.restore();
     }
 }
