@@ -28,8 +28,8 @@ const styles = stylex.create({
     justifyContent: 'stretch',
     alignItems: 'stretch',
     gap: spacing[2],
-    paddingHorizontal: spacing[0],
-    paddingVertical: spacing[0],
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[2],
     '@media screen and (max-width: 768px)': {
       display: 'flex',
       flexDirection: 'column-reverse',

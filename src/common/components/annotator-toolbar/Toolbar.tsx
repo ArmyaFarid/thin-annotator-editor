@@ -43,7 +43,7 @@ export const Toolbar: React.FC<ToolbarProps> = () => {
     const [activeTool, setActiveTool] = useAnnotatorToolbar();
 
     return (
-        <div className="flex flex-col items-center gap-1 p-2 rounded-xl bg-secondary w-16">
+        <div className="flex flex-col items-center gap-0.5 p-1.5 rounded-xl bg-secondary w-12">
             {TOOLS.map(tool => {
                 const active = activeTool === tool;
                 const Icon = TOOL_ICONS[tool];
@@ -53,16 +53,9 @@ export const Toolbar: React.FC<ToolbarProps> = () => {
                         key={tool}
                         title={TOOL_TITLES[tool]}
                         onClick={() => setActiveTool(tool)}
-                        className={`
-                            flex items-center justify-center
-                            w-12 h-12 rounded-lg
-                            transition-colors
-                            ${active ? "bg-[#2F2F2F] ring-1 ring-[#4FC3F7]/40" : "bg-transparent hover:bg-[#2F2F2F]/60"}
-                        `}>
+                        className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${active ? "bg-[#2F2F2F] ring-1 ring-[#4FC3F7]/40" : "bg-transparent hover:bg-[#2F2F2F]/60"}`}>
                         {Icon ? (
-                            <Icon
-                                className={`w-5 h-5 transition-colors ${active ? "text-[#4FC3F7]" : "text-[#B8B8B8]"}`}
-                            />
+                            <Icon className={`w-4 h-4 transition-colors ${active ? "text-[#4FC3F7]" : "text-[#B8B8B8]"}`} />
                         ) : (
                             <FallbackSquare active={active} />
                         )}
@@ -75,7 +68,7 @@ export const Toolbar: React.FC<ToolbarProps> = () => {
 };
 
 const FallbackSquare: React.FC<{active: boolean}> = ({active}) => (
-    <svg viewBox="0 0 20 20" className={`w-5 h-5 ${active ? "fill-[#4FC3F7]" : "fill-[#B8B8B8]"}`}>
+    <svg viewBox="0 0 20 20" className={`w-4 h-4 ${active ? "fill-[#4FC3F7]" : "fill-[#B8B8B8]"}`}>
         <rect x="2" y="2" width="16" height="16" rx="3" />
     </svg>
 );
