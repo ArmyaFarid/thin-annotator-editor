@@ -1,6 +1,7 @@
 import React from "react";
 import {useAtom} from "jotai";
 import useMineralList from "@/common/components/annotation-panel/useMineralList.ts";
+import {t} from "@/i18n/index.ts";
 import {
     activeImageSizeAtom,
     currentMaskAtom,
@@ -76,7 +77,7 @@ export const AnnotationPanel: React.FC = () => {
             {/* Header */}
             <div className="px-3 py-2 border-b border-white/10 shrink-0">
                 <span className="text-xs font-semibold text-white/60 uppercase tracking-wider">
-                    Panneau d'annotation
+                    {t("annotationPanel")}
                 </span>
             </div>
 
@@ -86,7 +87,7 @@ export const AnnotationPanel: React.FC = () => {
                     <button
                         onClick={() => { setSessionId("START_SESSION"); setEditorOn(true); }}
                         className="w-full rounded-md border border-white/20 py-2 text-sm hover:bg-[#2F2F2F] transition">
-                        Commencer la session
+                        {t("startSession")}
                     </button>
                 ) : null}
 
@@ -101,7 +102,7 @@ export const AnnotationPanel: React.FC = () => {
                             />
                             <input
                                 className="flex-1 bg-transparent border border-white/20 rounded px-2 py-1 text-sm focus:outline-none focus:border-white/40"
-                                placeholder="Nom de la région"
+                                placeholder={t("regionName")}
                                 value={activeMask.label}
                                 onChange={(e) =>
                                     setMasks((prev) =>
@@ -117,7 +118,7 @@ export const AnnotationPanel: React.FC = () => {
                         {/* SAM prompt list */}
                         {prompts.length > 0 ? (
                             <div className="border border-white/10 rounded p-1.5 flex flex-col gap-0.5">
-                                <span className="text-[10px] text-white/40 uppercase tracking-wide px-0.5 mb-0.5">Points SAM</span>
+                                <span className="text-[10px] text-white/40 uppercase tracking-wide px-0.5 mb-0.5">{t("samPoints")}</span>
                                 {prompts.map((p) => (
                                     <div key={p.id} className="flex items-center justify-between gap-1 text-xs">
                                         <span className="text-white/50 shrink-0 w-5 text-center">
@@ -148,7 +149,7 @@ export const AnnotationPanel: React.FC = () => {
                                     disabled={!ready}
                                     className="shrink-0 bg-[#2F2F2F] hover:bg-[#3A3A3A] disabled:opacity-40 disabled:cursor-not-allowed text-sm py-2 rounded transition-colors"
                                     onClick={handleSave}>
-                                    Enregistrer
+                                    {t("save")}
                                 </button>
                             );
                         })()}
@@ -159,7 +160,7 @@ export const AnnotationPanel: React.FC = () => {
                 {currentMask === 0 ? (
                     <>
                         {masks.length === 0 ? (
-                            <p className="text-xs text-white/30 text-center py-4">Aucune annotation</p>
+                            <p className="text-xs text-white/30 text-center py-4">{t("noAnnotation")}</p>
                         ) : (
                             <div className="flex flex-col gap-0.5">
                                 {masks.map((mask) => (
@@ -172,7 +173,7 @@ export const AnnotationPanel: React.FC = () => {
                                             style={{backgroundColor: `rgba(${mask.color.r},${mask.color.g},${mask.color.b},${mask.color.a})`}}
                                         />
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm truncate">{mask.label || "Sans nom"}</p>
+                                            <p className="text-sm truncate">{mask.label || t("unnamed")}</p>
                                             {mask.annotation?.mineralIds.some((id) => id) ? (
                                                 <p className="text-[10px] text-white/40 truncate">
                                                     {mask.annotation.mineralIds
@@ -190,14 +191,14 @@ export const AnnotationPanel: React.FC = () => {
                         <button
                             className="border border-white/20 text-sm py-1.5 rounded hover:bg-[#2F2F2F] transition-colors"
                             onClick={() => setEditorOn(true)}>
-                            + Ajouter une région
+                            {t("addRegion")}
                         </button>
 
                         {masks.length > 0 ? (
                             <button
                                 className="border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 transition-colors"
                                 onClick={handleExport}>
-                                Exporter JSON
+                                {t("exportJson")}
                             </button>
                         ) : null}
                     </>

@@ -4,14 +4,15 @@ import {ImageEditor} from '@/common/components/image/editor/ImageEditor.tsx';
 import {AnnotationPanel} from '@/common/components/annotation-panel/AnnotationPanel.tsx';
 import FilterGammaSelector from '@/common/components/filter-gamma-selector/FilterGammaSelector.tsx';
 import {ZoomPreferenceToggle} from '@/common/components/zoom-preference/ZoomPreferenceToggle.tsx';
+import {t} from "@/i18n/index.ts";
 
 export default function AnnotatorPage() {
     return (
         <PageLayout>
             <div className="w-full flex flex-row justify-between items-center">
-                <button className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">Accueil</button>
-                <button className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">Charger une image</button>
-                <button className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">Terminer</button>
+                <button className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">{t("home")}</button>
+                <button className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">{t("loadImage")}</button>
+                <button className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">{t("finish")}</button>
             </div>
             <div className="w-full flex flex-row gap-2 items-stretch flex-1 min-h-0">
                 <div className="flex-none">

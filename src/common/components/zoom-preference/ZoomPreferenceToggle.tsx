@@ -1,5 +1,6 @@
 import React from "react";
 import usePreserveZoom from "@/canvas/usePreserveZoom.ts";
+import {t} from "@/i18n/index.ts";
 
 export const ZoomPreferenceToggle: React.FC = () => {
     const [preserveZoom, setPreserveZoom] = usePreserveZoom();
@@ -7,14 +8,14 @@ export const ZoomPreferenceToggle: React.FC = () => {
     return (
         <button
             onClick={() => setPreserveZoom(!preserveZoom)}
-            title={preserveZoom ? "Zoom préservé lors du changement d'image (cliquer pour désactiver)" : "Zoom réinitialisé lors du changement d'image (cliquer pour activer la préservation)"}
+            title={preserveZoom ? t("zoomLockedTitle") : t("zoomResetTitle")}
             className={`absolute bottom-2 right-2 z-10 flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium border transition-colors backdrop-blur-sm ${
                 preserveZoom
                     ? "bg-blue-500/10 text-blue-400 border-blue-500/30 hover:bg-blue-500/20"
                     : "bg-white/5 text-muted-foreground border-white/15 hover:bg-white/10 hover:text-foreground"
             }`}>
             <LockIcon locked={preserveZoom} />
-            {preserveZoom ? "Zoom verrouillé" : "Zoom réinitialisé"}
+            {preserveZoom ? t("zoomLocked") : t("zoomReset")}
         </button>
     );
 };
