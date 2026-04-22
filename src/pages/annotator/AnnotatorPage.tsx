@@ -3,6 +3,7 @@ import {Toolbar} from '@/common/components/annotator-toolbar/Toolbar.tsx';
 import {ImageEditor} from '@/common/components/image/editor/ImageEditor.tsx';
 import MaskList from '@/common/components/image/editor/maskView/MaskList.tsx';
 import FilterGammaSelector from '@/common/components/filter-gamma-selector/FilterGammaSelector.tsx';
+import {ZoomPreferenceToggle} from '@/common/components/zoom-preference/ZoomPreferenceToggle.tsx';
 
 export default function AnnotatorPage() {
     return (
@@ -20,6 +21,7 @@ export default function AnnotatorPage() {
                 <div className="flex-1 relative bg-secondary border border-white/20 rounded-md overflow-hidden">
                     <FilterGammaSelector />
                     <ImageEditor />
+                    <ZoomPreferenceToggle />
                 </div>
 
                 <div className="w-80 bg-secondary border border-white/20 p-2 rounded-md">

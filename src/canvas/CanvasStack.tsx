@@ -18,6 +18,7 @@ import {getDistinctColor} from "@/canvas/color.ts";
 import {MASK_FILL_ALPHA} from "@/canvas/mask-style.ts";
 import {douglasPeucker} from "@/canvas/utils/polygonUtils.ts";
 import {simulateSlic} from "@/canvas/utils/slicSimulate.ts";
+import usePreserveZoom from "@/canvas/usePreserveZoom.ts";
 
 interface CanvasStackProps {
     imageUrl: string | undefined;
@@ -63,6 +64,9 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     const imageSizeRef = useRef(imageSize);
     useEffect(() => { imageSizeRef.current = imageSize; }, [imageSize]);
     const setSlicOverlay = useSetAtom(slicOverlayAtom);
+    const [preserveZoom] = usePreserveZoom();
+    const preserveZoomRef = useRef(preserveZoom);
+    useEffect(() => { preserveZoomRef.current = preserveZoom; }, [preserveZoom]);
 
     const [view, setView] = useState<View>({zoom: 1, panX: 0, panY: 0});
     const viewRef = useRef(view);
@@ -76,9 +80,9 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     const currentMaskRef = useRef<number>(currentMask);
     useEffect(() => { currentMaskRef.current = currentMask; }, [currentMask]);
 
-    // Reset view when image changes — handleImageLoad will set the fit zoom after load
+    // Reset view when image changes — skipped when preserveZoom is on
     useEffect(() => {
-        setView({zoom: 1, panX: 0, panY: 0});
+        if (!preserveZoomRef.current) setView({zoom: 1, panX: 0, panY: 0});
     }, [imageUrl]);
 
     // Keyboard shortcut: G → grab tool
@@ -280,13 +284,15 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
         if (!img || !engineRef.current) return;
         engineRef.current.setImage(img);
 
-        const cw = container?.clientWidth ?? 0;
-        const ch = container?.clientHeight ?? 0;
-        if (cw > 0 && ch > 0 && img.naturalWidth > 0) {
-            const fitZoom = Math.min(cw / img.naturalWidth, ch / img.naturalHeight);
-            const panX = (cw - img.naturalWidth * fitZoom) / 2;
-            const panY = (ch - img.naturalHeight * fitZoom) / 2;
-            setView({zoom: fitZoom, panX, panY});
+        if (!preserveZoomRef.current) {
+            const cw = container?.clientWidth ?? 0;
+            const ch = container?.clientHeight ?? 0;
+            if (cw > 0 && ch > 0 && img.naturalWidth > 0) {
+                const fitZoom = Math.min(cw / img.naturalWidth, ch / img.naturalHeight);
+                const panX = (cw - img.naturalWidth * fitZoom) / 2;
+                const panY = (ch - img.naturalHeight * fitZoom) / 2;
+                setView({zoom: fitZoom, panX, panY});
+            }
         }
     }, []);
 

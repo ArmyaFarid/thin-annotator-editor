@@ -91,3 +91,14 @@ export interface SlicOverlayState {
 }
 
 export const slicOverlayAtom = atom<SlicOverlayState | null>(null);
+
+function readLocalBool(key: string, fallback: boolean): boolean {
+    try {
+        const v = localStorage.getItem(key);
+        return v === null ? fallback : v === "true";
+    } catch {
+        return fallback;
+    }
+}
+
+export const preserveZoomAtom = atom<boolean>(readLocalBool("preserveZoom", true));
