@@ -30,11 +30,9 @@ export interface MaskLayer {
     layerKind?: "fill" | "hole";
 }
 
-export type ConfidenceLevel = 1 | 2 | 3;
-
 export interface MineralAnnotation {
-    mineralId: string | null;
-    confidence: ConfidenceLevel | null;
+    // Ordered hypotheses: index 0 = most probable, 2 = least probable. Duplicates allowed.
+    mineralIds: [string | null, string | null, string | null];
     observedColor: string;
     relief: "faible" | "moyen" | "élevé" | null;
     birefringence: "faible" | "moyen" | "élevé" | "très élevé" | null;

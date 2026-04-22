@@ -1,11 +1,10 @@
 import React from "react";
 import {useAtom} from "jotai";
-import {masksAtom, type ConfidenceLevel, type MineralAnnotation} from "@/app/atom.ts";
+import {masksAtom, type MineralAnnotation} from "@/app/atom.ts";
 import useMineralList from "@/common/components/annotation-panel/useMineralList.ts";
 
 const EMPTY_ANNOTATION: MineralAnnotation = {
-    mineralId: null,
-    confidence: null,
+    mineralIds: [null, null, null],
     observedColor: "",
     relief: null,
     birefringence: null,
@@ -20,9 +19,16 @@ interface MineralAnnotationFormProps {
     maskId: number;
 }
 
+const HYPOTHESES = [
+    {label: "1re hypothèse", sublabel: "la plus probable"},
+    {label: "2e hypothèse", sublabel: ""},
+    {label: "3e hypothèse", sublabel: "la moins probable"},
+] as const;
+
 export const MineralAnnotationForm: React.FC<MineralAnnotationFormProps> = ({maskId}) => {
     const [masks, setMasks] = useAtom(masksAtom);
     const minerals = useMineralList();
+    const groups = Array.from(new Set(minerals.map((m) => m.group)));
 
     const mask = masks.find((m) => m.id === maskId);
     const ann: MineralAnnotation = mask?.annotation ?? EMPTY_ANNOTATION;
@@ -30,63 +36,70 @@ export const MineralAnnotationForm: React.FC<MineralAnnotationFormProps> = ({mas
     function update(patch: Partial<MineralAnnotation>) {
         setMasks((prev) =>
             prev.map((m) =>
-                m.id === maskId ? {...m, annotation: {...(m.annotation ?? EMPTY_ANNOTATION), ...patch}} : m,
+                m.id === maskId
+                    ? {...m, annotation: {...(m.annotation ?? EMPTY_ANNOTATION), ...patch}}
+                    : m,
             ),
         );
     }
 
-    const confidenceLevels: {value: ConfidenceLevel; label: string; color: string}[] = [
-        {value: 1, label: "Incertain", color: ann.confidence === 1 ? "bg-yellow-500/20 text-yellow-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"},
-        {value: 2, label: "Probable",  color: ann.confidence === 2 ? "bg-blue-500/20 text-blue-400"   : "text-white/40 hover:text-white/70 hover:bg-white/5"},
-        {value: 3, label: "Certain",   color: ann.confidence === 3 ? "bg-emerald-500/20 text-emerald-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"},
-    ];
+    function setMineralId(index: 0 | 1 | 2, value: string | null) {
+        const next: [string | null, string | null, string | null] = [...ann.mineralIds] as [string | null, string | null, string | null];
+        next[index] = value;
+        update({mineralIds: next});
+    }
 
+    const allFilled = ann.mineralIds.every((id) => id !== null);
     const selectCls = "w-full bg-transparent border border-white/15 rounded px-1.5 py-1 text-xs text-foreground focus:outline-none focus:border-white/30";
     const labelCls = "text-[10px] text-white/40 uppercase tracking-wide";
 
-    // Group minerals for optgroup
-    const groups = Array.from(new Set(minerals.map((m) => m.group)));
+    const mineralOptions = (
+        <>
+            <option value="">— sélectionner —</option>
+            {groups.map((g) => (
+                <optgroup key={g} label={g}>
+                    {minerals.filter((m) => m.group === g).map((m) => (
+                        <option key={m.id} value={m.id}>{m.name}</option>
+                    ))}
+                </optgroup>
+            ))}
+        </>
+    );
 
     return (
         <div className="flex flex-col gap-2 border-t border-white/10 pt-2">
-            <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Annotation minéralogique</span>
+            <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">
+                Annotation minéralogique
+            </span>
 
-            {/* Mineral name */}
-            <div className="flex flex-col gap-0.5">
-                <span className={labelCls}>Minéral</span>
-                <select
-                    value={ann.mineralId ?? ""}
-                    onChange={(e) => update({mineralId: e.target.value || null})}
-                    className={selectCls}>
-                    <option value="">— sélectionner —</option>
-                    {groups.map((g) => (
-                        <optgroup key={g} label={g}>
-                            {minerals.filter((m) => m.group === g).map((m) => (
-                                <option key={m.id} value={m.id}>{m.name}</option>
-                            ))}
-                        </optgroup>
-                    ))}
-                </select>
+            {/* 3 ordered mineral hypotheses */}
+            <div className="flex flex-col gap-1.5">
+                {HYPOTHESES.map((h, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                        <div className="flex flex-col items-center shrink-0 w-5">
+                            <span className={`text-sm font-bold ${ann.mineralIds[i] ? "text-white/70" : "text-white/20"}`}>
+                                {i + 1}
+                            </span>
+                        </div>
+                        <div className="flex-1 flex flex-col gap-0.5">
+                            <span className="text-[10px] text-white/30">{h.label}{h.sublabel ? ` — ${h.sublabel}` : ""}</span>
+                            <select
+                                value={ann.mineralIds[i] ?? ""}
+                                onChange={(e) => setMineralId(i as 0 | 1 | 2, e.target.value || null)}
+                                className={`${selectCls} ${!ann.mineralIds[i] ? "border-white/25 text-white/40" : ""}`}>
+                                {mineralOptions}
+                            </select>
+                        </div>
+                    </div>
+                ))}
+                {!allFilled ? (
+                    <p className="text-[10px] text-yellow-500/70 px-1">
+                        Les 3 hypothèses sont requises avant d'enregistrer.
+                    </p>
+                ) : null}
             </div>
 
-            {/* Confidence */}
-            <div className="flex flex-col gap-0.5">
-                <span className={labelCls}>Confiance</span>
-                <div className="flex rounded overflow-hidden border border-white/15">
-                    {confidenceLevels.map((c, i) => (
-                        <React.Fragment key={c.value}>
-                            {i > 0 ? <div className="w-px bg-white/15" /> : null}
-                            <button
-                                onClick={() => update({confidence: ann.confidence === c.value ? null : c.value})}
-                                className={`flex-1 py-1 text-[10px] font-medium transition-colors ${c.color}`}>
-                                {c.label}
-                            </button>
-                        </React.Fragment>
-                    ))}
-                </div>
-            </div>
-
-            {/* Optical properties row 1 */}
+            {/* Optical properties */}
             <div className="grid grid-cols-2 gap-1.5">
                 <div className="flex flex-col gap-0.5">
                     <span className={labelCls}>Relief</span>
@@ -107,10 +120,6 @@ export const MineralAnnotationForm: React.FC<MineralAnnotationFormProps> = ({mas
                         <option value="très élevé">Très élevé</option>
                     </select>
                 </div>
-            </div>
-
-            {/* Optical properties row 2 */}
-            <div className="grid grid-cols-2 gap-1.5">
                 <div className="flex flex-col gap-0.5">
                     <span className={labelCls}>Clivage</span>
                     <select value={ann.cleavage ?? ""} onChange={(e) => update({cleavage: (e.target.value as MineralAnnotation["cleavage"]) || null})} className={selectCls}>
@@ -130,10 +139,6 @@ export const MineralAnnotationForm: React.FC<MineralAnnotationFormProps> = ({mas
                         <option value="fort">Fort</option>
                     </select>
                 </div>
-            </div>
-
-            {/* Optical properties row 3 */}
-            <div className="grid grid-cols-2 gap-1.5">
                 <div className="flex flex-col gap-0.5">
                     <span className={labelCls}>Système cristallin</span>
                     <select value={ann.crystalSystem ?? ""} onChange={(e) => update({crystalSystem: (e.target.value as MineralAnnotation["crystalSystem"]) || null})} className={selectCls}>
@@ -147,7 +152,7 @@ export const MineralAnnotationForm: React.FC<MineralAnnotationFormProps> = ({mas
                     </select>
                 </div>
                 <div className="flex flex-col gap-0.5">
-                    <span className={labelCls}>Angle d'extinction (°)</span>
+                    <span className={labelCls}>Extinction (°)</span>
                     <input
                         type="text"
                         value={ann.extinctionAngle}
@@ -158,7 +163,6 @@ export const MineralAnnotationForm: React.FC<MineralAnnotationFormProps> = ({mas
                 </div>
             </div>
 
-            {/* Observed color */}
             <div className="flex flex-col gap-0.5">
                 <span className={labelCls}>Couleur observée</span>
                 <input
@@ -170,7 +174,6 @@ export const MineralAnnotationForm: React.FC<MineralAnnotationFormProps> = ({mas
                 />
             </div>
 
-            {/* Notes */}
             <div className="flex flex-col gap-0.5">
                 <span className={labelCls}>Notes</span>
                 <textarea

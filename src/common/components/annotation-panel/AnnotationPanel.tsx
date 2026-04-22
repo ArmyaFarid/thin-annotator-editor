@@ -1,5 +1,6 @@
 import React from "react";
 import {useAtom} from "jotai";
+import useMineralList from "@/common/components/annotation-panel/useMineralList.ts";
 import {
     activeImageSizeAtom,
     currentMaskAtom,
@@ -23,6 +24,10 @@ export const AnnotationPanel: React.FC = () => {
     const [imageSize] = useAtom(activeImageSizeAtom);
 
     const activeMask = currentMask !== 0 ? masks.find((m) => m.id === currentMask) : null;
+    const minerals = useMineralList();
+    function mineralName(id: string | null) {
+        return id ? (minerals.find((m) => m.id === id)?.name ?? id) : null;
+    }
 
     function handleMaskClick(maskId: number) {
         if (!masks.find((m) => m.id === maskId)) return;
@@ -135,11 +140,18 @@ export const AnnotationPanel: React.FC = () => {
                         <MineralAnnotationForm maskId={activeMask.id} />
 
                         {/* Save */}
-                        <button
-                            className="shrink-0 bg-[#2F2F2F] hover:bg-[#3A3A3A] text-sm py-2 rounded transition-colors"
-                            onClick={handleSave}>
-                            Enregistrer
-                        </button>
+                        {(() => {
+                            const ids = activeMask.annotation?.mineralIds;
+                            const ready = ids?.every((id) => id !== null) ?? false;
+                            return (
+                                <button
+                                    disabled={!ready}
+                                    className="shrink-0 bg-[#2F2F2F] hover:bg-[#3A3A3A] disabled:opacity-40 disabled:cursor-not-allowed text-sm py-2 rounded transition-colors"
+                                    onClick={handleSave}>
+                                    Enregistrer
+                                </button>
+                            );
+                        })()}
                     </>
                 ) : null}
 
@@ -161,18 +173,15 @@ export const AnnotationPanel: React.FC = () => {
                                         />
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm truncate">{mask.label || "Sans nom"}</p>
-                                            {mask.annotation?.mineralId ? (
-                                                <p className="text-[10px] text-white/40 truncate">{mask.annotation.mineralId}</p>
+                                            {mask.annotation?.mineralIds.some((id) => id) ? (
+                                                <p className="text-[10px] text-white/40 truncate">
+                                                    {mask.annotation.mineralIds
+                                                        .map((id) => mineralName(id))
+                                                        .filter(Boolean)
+                                                        .join(" › ")}
+                                                </p>
                                             ) : null}
                                         </div>
-                                        {mask.annotation?.confidence ? (
-                                            <span className={`text-[10px] shrink-0 ${
-                                                mask.annotation.confidence === 3 ? "text-emerald-400" :
-                                                mask.annotation.confidence === 2 ? "text-blue-400" : "text-yellow-400"
-                                            }`}>
-                                                {"●".repeat(mask.annotation.confidence)}
-                                            </span>
-                                        ) : null}
                                     </button>
                                 ))}
                             </div>
