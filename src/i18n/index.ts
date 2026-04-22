@@ -3,6 +3,11 @@ export const LANG: "fr" | "en" = "fr";
 
 const T = {
     fr: {
+        // Draft restore banner
+        draftFound: "Des annotations non sauvegardées ont été trouvées.",
+        draftContinue: "Reprendre",
+        draftDiscard: "Ignorer",
+
         // Top bar
         home: "Accueil",
         loadImage: "Charger une image",
@@ -86,6 +91,11 @@ const T = {
         zoomResetTitle: "Zoom réinitialisé lors du changement d'image (cliquer pour activer la préservation)",
     },
     en: {
+        // Draft restore banner
+        draftFound: "Unsaved annotations were found.",
+        draftContinue: "Continue",
+        draftDiscard: "Discard",
+
         // Top bar
         home: "Home",
         loadImage: "Load image",
