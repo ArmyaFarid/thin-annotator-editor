@@ -131,11 +131,19 @@ export default function MaskList() {
 
                     {/* Edit tools */}
                     <div className="flex gap-2">
-                        <button
-                            onClick={() => setSubtractMode(v => !v)}
-                            className={`flex-1 px-2 py-1 rounded text-sm border transition-colors ${subtractMode ? "border-orange-400 text-orange-400 bg-orange-400/10" : "border-white/20 text-white/60 hover:text-white"}`}>
-                            {subtractMode ? "Mode soustraction" : "Mode ajout"}
-                        </button>
+                        <div className="flex flex-1 rounded overflow-hidden border border-white/15">
+                            <button
+                                onClick={() => setSubtractMode(false)}
+                                className={`flex-1 px-2 py-1 text-xs font-medium transition-colors ${!subtractMode ? "bg-blue-500/20 text-blue-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
+                                + Ajout
+                            </button>
+                            <div className="w-px bg-white/15" />
+                            <button
+                                onClick={() => setSubtractMode(true)}
+                                className={`flex-1 px-2 py-1 text-xs font-medium transition-colors ${subtractMode ? "bg-red-500/20 text-red-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
+                                − Soustraction
+                            </button>
+                        </div>
                         <button
                             onClick={() => setRefineMode(currentMask)}
                             className="flex-1 px-2 py-1 rounded text-sm border border-[#4FC3F7]/40 text-[#4FC3F7] hover:bg-[#4FC3F7]/10 transition-colors">
