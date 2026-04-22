@@ -30,6 +30,21 @@ export interface MaskLayer {
     layerKind?: "fill" | "hole";
 }
 
+export type ConfidenceLevel = 1 | 2 | 3;
+
+export interface MineralAnnotation {
+    mineralId: string | null;
+    confidence: ConfidenceLevel | null;
+    observedColor: string;
+    relief: "faible" | "moyen" | "élevé" | null;
+    birefringence: "faible" | "moyen" | "élevé" | "très élevé" | null;
+    cleavage: "aucun" | "indistinct" | "bon" | "parfait" | null;
+    crystalSystem: "cubique" | "tétragonal" | "orthorhombique" | "monoclinique" | "triclinique" | "hexagonal" | null;
+    pleochroism: "aucun" | "faible" | "fort" | null;
+    extinctionAngle: string;
+    notes: string;
+}
+
 export interface Mask {
     id: number;
     label: string;
@@ -37,6 +52,7 @@ export interface Mask {
     point_labels: number[];
     point_coords: [number, number][];
     color: {r: number; g: number; b: number; a: number};
+    annotation?: MineralAnnotation;
 }
 
 export interface Prompt {
