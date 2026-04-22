@@ -27,15 +27,19 @@ export default function MaskList() {
     const imageSize = useAtomValue(activeImageSizeAtom);
 
     function handleMaskClick(maskId: number) {
-        const mask = masks.find(m => m.id === maskId);
-        if (!mask) return;
+        const mask = masks.find((m) => m.id === maskId);
+        if (!mask) {
+            return;
+        }
         setPrompts([]);
         setCurrentMask(maskId);
         setEditorOn(true);
     }
 
     function handleActivateAnchors() {
-        if (!activeMask || !imageSize) return;
+        if (!activeMask || !imageSize) {
+            return;
+        }
         const merged = mergeToCanvas(activeMask, imageSize.w, imageSize.h);
         const rle = canvasToRLE(merged);
         const contours = rleToEditableContours(rle);
@@ -53,12 +57,18 @@ export default function MaskList() {
                 strokeColor: `rgb(${r},${g},${b})`,
             },
         }));
-        setMasks(prev => prev.map(m => m.id === activeMask.id ? {...m, layers: newLayers} : m));
+        setMasks((prev) =>
+            prev.map((m) =>
+                m.id === activeMask.id ? {...m, layers: newLayers} : m,
+            ),
+        );
         setActiveTool("polygon-lasso");
     }
 
     function handleDeactivateAnchors() {
-        if (!activeMask || !imageSize) return;
+        if (!activeMask || !imageSize) {
+            return;
+        }
         const merged = mergeToCanvas(activeMask, imageSize.w, imageSize.h);
         const rle = canvasToRLE(merged);
         const newLayer: MaskLayer = {
@@ -67,13 +77,19 @@ export default function MaskList() {
             layerKind: "fill" as const,
             rleMask: rle,
         };
-        setMasks(prev => prev.map(m => m.id === activeMask.id ? {...m, layers: [newLayer]} : m));
+        setMasks((prev) =>
+            prev.map((m) =>
+                m.id === activeMask.id ? {...m, layers: [newLayer]} : m,
+            ),
+        );
         setActiveTool("select-add");
     }
 
     function handleExport() {
-        if (!imageSize) return;
-        const exported = masks.map(m => {
+        if (!imageSize) {
+            return;
+        }
+        const exported = masks.map((m) => {
             const canvas = mergeToCanvas(m, imageSize.w, imageSize.h);
             const rle = canvasToRLE(canvas);
             return {
@@ -83,7 +99,9 @@ export default function MaskList() {
                 rle,
             };
         });
-        const blob = new Blob([JSON.stringify(exported, null, 2)], {type: "application/json"});
+        const blob = new Blob([JSON.stringify(exported, null, 2)], {
+            type: "application/json",
+        });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
@@ -92,9 +110,11 @@ export default function MaskList() {
         URL.revokeObjectURL(url);
     }
 
-    const activeMask = currentMask !== 0 ? masks.find(m => m.id === currentMask) : null;
+    const activeMask =
+        currentMask !== 0 ? masks.find((m) => m.id === currentMask) : null;
     const isAnchorMode = activeMask
-        ? activeMask.layers.length > 0 && activeMask.layers.every(l => !l.rleMask)
+        ? activeMask.layers.length > 0 &&
+          activeMask.layers.every((l) => !l.rleMask)
         : false;
 
     return (
@@ -133,10 +153,12 @@ export default function MaskList() {
                             className="flex-1 bg-transparent border border-white/20 rounded px-2 py-1 text-sm resize-none"
                             placeholder="Nom du minerai"
                             value={activeMask.label}
-                            onChange={e =>
-                                setMasks(prev =>
-                                    prev.map(m =>
-                                        m.id === activeMask.id ? {...m, label: e.target.value} : m,
+                            onChange={(e) =>
+                                setMasks((prev) =>
+                                    prev.map((m) =>
+                                        m.id === activeMask.id
+                                            ? {...m, label: e.target.value}
+                                            : m,
                                     ),
                                 )
                             }
@@ -178,7 +200,7 @@ export default function MaskList() {
                             onClick={handleDeactivateAnchors}
                             disabled={!isAnchorMode || !imageSize}
                             className={`flex-1 px-2 py-1 text-xs font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${!isAnchorMode ? "bg-white/10 text-white/60" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
-                            Normal
+                            Pas d'ancres
                         </button>
                     </div>
 
@@ -200,19 +222,28 @@ export default function MaskList() {
 
                     {/* Prompt list */}
                     <div className="flex-1 overflow-auto border border-white/10 rounded p-2 text-sm">
-                        {prompts.map(p => (
+                        {prompts.map((p) => (
                             <div
                                 key={p.id}
                                 className="flex items-center justify-between gap-1 border-b border-white/10 py-1">
                                 <span className="text-white/60 shrink-0">
-                                    {p.bbox ? "bbox" : p.point_labels === 1 ? "+" : "−"}
+                                    {p.bbox
+                                        ? "bbox"
+                                        : p.point_labels === 1
+                                          ? "+"
+                                          : "−"}
                                 </span>
                                 <span className="flex-1 text-center">
-                                    ({Math.round(p.point_coords[0])}, {Math.round(p.point_coords[1])})
+                                    ({Math.round(p.point_coords[0])},{" "}
+                                    {Math.round(p.point_coords[1])})
                                 </span>
                                 <button
                                     className="shrink-0 text-white/40 hover:text-red-400 leading-none"
-                                    onClick={() => setPrompts(prev => prev.filter(x => x.id !== p.id))}>
+                                    onClick={() =>
+                                        setPrompts((prev) =>
+                                            prev.filter((x) => x.id !== p.id),
+                                        )
+                                    }>
                                     ×
                                 </button>
                             </div>
@@ -224,13 +255,26 @@ export default function MaskList() {
                         className="mt-2 bg-[#2F2F2F] hover:bg-[#3A3A3A] text-sm py-2 rounded"
                         onClick={() => {
                             if (activeMask && imageSize) {
-                                const merged = mergeToCanvas(activeMask, imageSize.w, imageSize.h);
+                                const merged = mergeToCanvas(
+                                    activeMask,
+                                    imageSize.w,
+                                    imageSize.h,
+                                );
                                 const rle = canvasToRLE(merged);
                                 const layerId = Date.now();
-                                setMasks(prev =>
-                                    prev.map(m =>
+                                setMasks((prev) =>
+                                    prev.map((m) =>
                                         m.id === activeMask.id
-                                            ? {...m, layers: [{id: layerId, rleMask: rle, source: "manual" as const}]}
+                                            ? {
+                                                  ...m,
+                                                  layers: [
+                                                      {
+                                                          id: layerId,
+                                                          rleMask: rle,
+                                                          source: "manual" as const,
+                                                      },
+                                                  ],
+                                              }
                                             : m,
                                     ),
                                 );
@@ -249,7 +293,7 @@ export default function MaskList() {
             {currentMask === 0 ? (
                 <>
                     <div className="flex-1 overflow-auto">
-                        {masks.map(mask => (
+                        {masks.map((mask) => (
                             <button
                                 key={mask.id}
                                 className="w-full flex items-center gap-2 px-2 py-2 rounded hover:bg-[#2F2F2F]"
