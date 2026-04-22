@@ -34,11 +34,7 @@ const styles = stylex.create({
     flex: '1 1 0%',
     display: 'flex',
     flexDirection: 'column',
-    overflowX: 'auto',
-    overflowY: {
-      default: 'auto',
-      '@media screen and (max-width: 768px)': 'auto',
-    },
+    overflow: 'hidden',
   },
   debugActions: {
     display: 'flex',
