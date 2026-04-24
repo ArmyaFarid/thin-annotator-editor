@@ -19,6 +19,7 @@ import {MASK_FILL_ALPHA} from "@/canvas/mask-style.ts";
 import {douglasPeucker} from "@/canvas/utils/polygonUtils.ts";
 import {simulateSlic} from "@/canvas/utils/slicSimulate.ts";
 import usePreserveZoom from "@/canvas/usePreserveZoom.ts";
+import {Minimap} from "@/canvas/Minimap.tsx";
 
 interface CanvasStackProps {
     imageUrl: string | undefined;
@@ -277,32 +278,25 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     }, [currentMask, masks]);
 
 
-    // Load image into StaticLayer when URL changes; compute fit zoom
+    // Load image into StaticLayer when URL changes; reset to 1:1 zoom
     const handleImageLoad = useCallback(() => {
         const img = imgRef.current;
-        const container = containerRef.current;
         if (!img || !engineRef.current) return;
         engineRef.current.setImage(img);
-
         if (!preserveZoomRef.current) {
-            const cw = container?.clientWidth ?? 0;
-            const ch = container?.clientHeight ?? 0;
-            if (cw > 0 && ch > 0 && img.naturalWidth > 0) {
-                const fitZoom = Math.min(cw / img.naturalWidth, ch / img.naturalHeight);
-                const panX = (cw - img.naturalWidth * fitZoom) / 2;
-                const panY = (ch - img.naturalHeight * fitZoom) / 2;
-                setView({zoom: fitZoom, panX, panY});
-            }
+            setView({zoom: 1, panX: 0, panY: 0});
         }
     }, []);
 
     // Resize all layers when container changes size
+    const [containerSize, setContainerSize] = useState({w: 0, h: 0});
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
         const observer = new ResizeObserver(entries => {
             const {width, height} = entries[0].contentRect;
             engineRef.current?.onResize(width, height);
+            setContainerSize({w: width, h: height});
         });
         observer.observe(container);
         return () => observer.disconnect();
@@ -428,6 +422,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                     onContextMenu={e => { e.preventDefault(); engineRef.current?.onContextMenu(); }}
                 />
             </div>
+            <Minimap imageUrl={imageUrl} view={view} containerSize={containerSize} naturalSize={imageSize} />
         </div>
     );
 };
