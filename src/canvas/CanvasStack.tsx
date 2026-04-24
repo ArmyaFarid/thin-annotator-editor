@@ -35,7 +35,7 @@ function zoomAt(v: View, cx: number, cy: number, factor: number): View {
     };
 }
 
-let nextId = 1;
+let nextId = Date.now();
 const genId = () => nextId++;
 
 export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {

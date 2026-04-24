@@ -10,8 +10,6 @@
 
 **Planned Improvements**
 
-### 1. Mask Refinement Mode (Explicit Activation)
-
 Introduce a dedicated **“Refine Mask” mode** that the user must explicitly activate.
 
 * Refinement is **not triggered by simple selection**
