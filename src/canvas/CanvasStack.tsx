@@ -435,7 +435,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 title="Raccourcis clavier (?)"
                 style={{
                     position: "absolute",
-                    bottom: 8,
+                    bottom: 44,
                     right: 8,
                     width: 26,
                     height: 26,
