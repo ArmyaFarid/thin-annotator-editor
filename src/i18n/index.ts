@@ -3,8 +3,9 @@ export const LANG: "fr" | "en" = "fr";
 
 const T = {
     fr: {
-        // Draft restore banner
-        draftFound: "Des annotations non sauvegardées ont été trouvées.",
+        // Draft restore modal
+        draftTitle: "Brouillon détecté",
+        draftFound: "Des annotations non sauvegardées ont été trouvées. Souhaitez-vous les reprendre ou les ignorer ?",
         draftContinue: "Reprendre",
         draftDiscard: "Ignorer",
 
@@ -91,9 +92,10 @@ const T = {
         zoomResetTitle: "Zoom réinitialisé lors du changement d'image (cliquer pour activer la préservation)",
     },
     en: {
-        // Draft restore banner
-        draftFound: "Unsaved annotations were found.",
-        draftContinue: "Continue",
+        // Draft restore modal
+        draftTitle: "Draft found",
+        draftFound: "Unsaved annotations were found. Do you want to restore them or discard them?",
+        draftContinue: "Restore",
         draftDiscard: "Discard",
 
         // Top bar

@@ -6,36 +6,50 @@ import {t} from "@/i18n/index.ts";
 
 export const RestoreDraftBanner: React.FC = () => {
     const [draft] = useState(() => loadDraft());
-    const [dismissed, setDismissed] = useState(false);
+    const [resolved, setResolved] = useState(false);
     const setMasks = useSetAtom(masksAtom);
     const setSessionId = useSetAtom(sessionIdAtom);
 
-    if (!draft || dismissed) return null;
+    if (!draft || resolved) return null;
 
     function handleContinue() {
         setMasks(draft!.masks);
         setSessionId(draft!.sessionId);
-        setDismissed(true);
+        setResolved(true);
     }
 
     function handleDiscard() {
         clearDraft();
-        setDismissed(true);
+        setResolved(true);
     }
 
+    const count = draft.masks.length;
+
     return (
-        <div className="flex items-center gap-3 px-3 py-2 bg-[#2A2A2A] border border-white/15 rounded-md text-xs text-white/70 shrink-0">
-            <span className="flex-1">{t("draftFound")}</span>
-            <button
-                onClick={handleContinue}
-                className="px-2.5 py-1 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30 transition-colors font-medium">
-                {t("draftContinue")}
-            </button>
-            <button
-                onClick={handleDiscard}
-                className="px-2.5 py-1 rounded text-white/40 border border-white/15 hover:bg-white/5 transition-colors">
-                {t("draftDiscard")}
-            </button>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="bg-[#1C1C1C] border border-white/15 rounded-xl shadow-2xl p-7 w-full max-w-sm flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                    <span className="text-sm font-semibold text-white">{t("draftTitle")}</span>
+                    <span className="text-xs text-white/55 leading-relaxed">{t("draftFound")}</span>
+                    {count > 0 ? (
+                        <span className="text-xs text-white/35">
+                            {count} annotation{count > 1 ? "s" : ""}
+                        </span>
+                    ) : null}
+                </div>
+                <div className="flex gap-2">
+                    <button
+                        onClick={handleContinue}
+                        className="flex-1 py-2 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30 transition-colors text-sm font-medium">
+                        {t("draftContinue")}
+                    </button>
+                    <button
+                        onClick={handleDiscard}
+                        className="flex-1 py-2 rounded-lg text-white/50 border border-white/15 hover:bg-white/5 transition-colors text-sm">
+                        {t("draftDiscard")}
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };
