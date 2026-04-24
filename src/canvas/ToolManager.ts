@@ -71,10 +71,20 @@ export class ToolManager {
         if (this.activeTool === "polygon-lasso") this.polygon.onContextMenu();
     }
 
-    private cancelCurrent(): void {
+    // Undo the last polygon vertex. Returns true if consumed.
+    undoVertex(): boolean {
+        if (this.activeTool === "polygon-lasso") return this.polygon.undoVertex();
+        return false;
+    }
+
+    cancel(): void {
         this.bbox.cancel();
         this.slicBbox.cancel();
         this.freeform.cancel();
         this.polygon.cancel();
+    }
+
+    private cancelCurrent(): void {
+        this.cancel();
     }
 }

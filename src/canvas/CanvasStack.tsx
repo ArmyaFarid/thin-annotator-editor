@@ -93,11 +93,35 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     const [showShortcuts, setShowShortcuts] = useAtom(showShortcutsAtom);
     const setMinimapVisible = useSetAtom(minimapVisibleAtom);
 
-    // Keyboard shortcuts for all tools + ? + M
+    // Keyboard shortcuts for all tools + ? + M + Escape/Backspace/Delete
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
             const tag = (e.target as HTMLElement).tagName;
             if (tag === "INPUT" || tag === "TEXTAREA") return;
+
+            if (e.key === "Escape") {
+                engineRef.current?.cancelTool();
+                return;
+            }
+
+            if (e.key === "Backspace") {
+                // Undo last polygon vertex while drawing; otherwise delete selected mask
+                if (engineRef.current?.undoVertex()) return;
+                if (currentMaskRef.current !== 0) {
+                    setMasks(prev => prev.filter(m => m.id !== currentMaskRef.current));
+                    setCurrentMask(0);
+                    setPrompts([]);
+                }
+                return;
+            }
+
+            if (e.key === "Delete" && currentMaskRef.current !== 0) {
+                setMasks(prev => prev.filter(m => m.id !== currentMaskRef.current));
+                setCurrentMask(0);
+                setPrompts([]);
+                return;
+            }
+
             if (e.key === "?") { setShowShortcuts(v => !v); return; }
             if (e.key === "m" || e.key === "M") { setMinimapVisible(v => !v); return; }
             const tool = SHORTCUT_MAP.get(e.key.toLowerCase()) ?? SHORTCUT_MAP.get(e.key);
@@ -105,7 +129,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
         };
         window.addEventListener("keydown", onKeyDown);
         return () => window.removeEventListener("keydown", onKeyDown);
-    }, [setActiveTool, setMinimapVisible, setShowShortcuts]);
+    }, [setActiveTool, setMinimapVisible, setShowShortcuts, setMasks, setCurrentMask, setPrompts]);
 
     const callbacks = useCallback((): EngineCallbacks => ({
         onKeypointAdded(x: number, y: number, label: 0 | 1) {

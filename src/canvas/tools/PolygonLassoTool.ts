@@ -63,6 +63,18 @@ export class PolygonLassoTool {
         });
     }
 
+    // Remove the last placed vertex. Returns true if a vertex was removed.
+    undoVertex(): boolean {
+        if (this.vertices.length === 0) return false;
+        this.vertices = this.vertices.slice(0, -1);
+        if (this.vertices.length === 0) {
+            this.dynLayer.setInteractionState({type: "idle"});
+        } else {
+            this.sync(this.vertices[this.vertices.length - 1]);
+        }
+        return true;
+    }
+
     cancel(): void {
         this.vertices = [];
         this.dynLayer.setInteractionState({type: "idle"});

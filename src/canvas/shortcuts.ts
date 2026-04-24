@@ -26,9 +26,13 @@ export const SHORTCUT_MAP = new Map<string, Tool>(
     SHORTCUT_DEFS.map(d => [d.key, d.tool]),
 );
 
-// Human-readable key badge (= is labelled + because it shares the key)
+// Human-readable key badge
 export function keyLabel(key: string): string {
-    return key === "=" ? "+" : key.toUpperCase();
+    if (key === "=") return "+";
+    if (key === "Escape") return "Esc";
+    if (key === "Backspace") return "⌫";
+    if (key === "Delete") return "Del";
+    return key.toUpperCase();
 }
 
 // ─── Non-tool UI shortcuts (shown in the panel, handled separately) ───────────
@@ -39,6 +43,9 @@ export interface UiShortcutDef {
 }
 
 export const UI_SHORTCUT_DEFS: UiShortcutDef[] = [
-    {key: "m", label: "Minimap", hint: "Afficher / masquer"},
-    {key: "?", label: "Aide",    hint: "Raccourcis clavier"},
+    {key: "m",         label: "Minimap",  hint: "Afficher / masquer"},
+    {key: "?",         label: "Aide",     hint: "Raccourcis clavier"},
+    {key: "Escape",    label: "Annuler",  hint: "Annuler le dessin en cours"},
+    {key: "Backspace", label: "Défaire",  hint: "Dernier point (polygone) / supprimer"},
+    {key: "Delete",    label: "Sup.",     hint: "Supprimer l'objet sélectionné"},
 ];

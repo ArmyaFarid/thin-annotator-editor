@@ -62,6 +62,15 @@ export class CanvasEngine {
         this.toolManager.setActiveTool(tool);
     }
 
+    cancelTool(): void {
+        this.toolManager.cancel();
+    }
+
+    // Undo last polygon vertex. Returns true if a vertex was removed.
+    undoVertex(): boolean {
+        return this.toolManager.undoVertex();
+    }
+
     setSubtractMode(v: boolean): void {
         this.toolManager.setSubtractMode(v);
     }

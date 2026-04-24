@@ -94,7 +94,7 @@ export const AnnotationPanel: React.FC = () => {
                 {/* ===== EDIT MODE ===== */}
                 {currentMask !== 0 && activeMask ? (
                     <>
-                        {/* Mask label + color */}
+                        {/* Mask label + color + delete */}
                         <div className="flex items-center gap-2">
                             <div
                                 className="w-4 h-4 rounded shrink-0"
@@ -110,6 +110,16 @@ export const AnnotationPanel: React.FC = () => {
                                     )
                                 }
                             />
+                            <button
+                                title="Supprimer"
+                                onClick={() => {
+                                    setMasks(prev => prev.filter(m => m.id !== activeMask.id));
+                                    setCurrentMask(0);
+                                    setPrompts([]);
+                                }}
+                                className="shrink-0 w-7 h-7 flex items-center justify-center rounded border border-red-500/30 text-red-400 hover:bg-red-500/15 transition-colors text-base leading-none">
+                                ×
+                            </button>
                         </div>
 
                         {/* Drawing tools */}
