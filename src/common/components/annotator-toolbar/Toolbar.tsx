@@ -1,4 +1,6 @@
 import React from "react";
+import {useAtom} from "jotai";
+import {showShortcutsAtom} from "@/app/atom.ts";
 import SelectAddIcon from "@/assets/icons/select-add.svg?react";
 import SelectRemoveIcon from "@/assets/icons/select-remove.svg?react";
 import BoundingBoxIcon from "@/assets/icons/bounding-box.svg?react";
@@ -51,6 +53,7 @@ interface ToolbarProps {}
 
 export const Toolbar: React.FC<ToolbarProps> = () => {
     const [activeTool, setActiveTool] = useAnnotatorToolbar();
+    const [showShortcuts, setShowShortcuts] = useAtom(showShortcutsAtom);
 
     return (
         <div className="flex flex-col items-center gap-0.5 p-1.5 rounded-xl bg-secondary w-12">
@@ -73,6 +76,13 @@ export const Toolbar: React.FC<ToolbarProps> = () => {
                 );
             })}
             <FilterGammaToolbarPanel />
+            <div className="w-6 h-px bg-white/10 my-0.5" />
+            <button
+                title="Raccourcis clavier (?)"
+                onClick={() => setShowShortcuts(v => !v)}
+                className={`flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold transition-colors ${showShortcuts ? "bg-[#2F2F2F] text-[#4FC3F7] ring-1 ring-[#4FC3F7]/40" : "bg-transparent text-[#B8B8B8] hover:bg-[#2F2F2F]/60"}`}>
+                ?
+            </button>
         </div>
     );
 };

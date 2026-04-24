@@ -30,8 +30,8 @@ export const ShortcutPanel: React.FC<ShortcutPanelProps> = ({visible, onClose}) 
         <div
             style={{
                 position: "absolute",
-                bottom: 76,
-                right: 8,
+                bottom: 8,
+                left: 8,
                 background: "rgba(16,16,16,0.96)",
                 border: "1px solid rgba(255,255,255,0.12)",
                 borderRadius: 8,

@@ -8,6 +8,7 @@ import {
     promptsAtom,
     subtractModeAtom,
     slicOverlayAtom,
+    showShortcutsAtom,
     type Mask,
     type Prompt,
     type PolygonAnnotation,
@@ -88,7 +89,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
         if (!preserveZoomRef.current) setView({zoom: 1, panX: 0, panY: 0});
     }, [imageUrl]);
 
-    const [showShortcuts, setShowShortcuts] = useState(false);
+    const [showShortcuts, setShowShortcuts] = useAtom(showShortcutsAtom);
 
     // Keyboard shortcuts for all tools + ? to toggle the shortcut panel
     useEffect(() => {
@@ -430,29 +431,6 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
             </div>
             <Minimap imageUrl={imageUrl} view={view} containerSize={containerSize} naturalSize={imageSize} />
             <ShortcutPanel visible={showShortcuts} onClose={() => setShowShortcuts(false)} />
-            <button
-                onClick={() => setShowShortcuts(v => !v)}
-                title="Raccourcis clavier (?)"
-                style={{
-                    position: "absolute",
-                    bottom: 44,
-                    right: 8,
-                    width: 26,
-                    height: 26,
-                    borderRadius: 4,
-                    background: showShortcuts ? "rgba(79,195,247,0.15)" : "rgba(255,255,255,0.06)",
-                    border: `1px solid ${showShortcuts ? "rgba(79,195,247,0.4)" : "rgba(255,255,255,0.18)"}`,
-                    color: showShortcuts ? "#4FC3F7" : "rgba(255,255,255,0.45)",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    zIndex: 15,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                }}>
-                ?
-            </button>
         </div>
     );
 };
