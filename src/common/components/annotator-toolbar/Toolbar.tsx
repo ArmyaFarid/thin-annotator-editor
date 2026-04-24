@@ -12,6 +12,7 @@ import {Tool} from "@/app/types.ts";
 import useAnnotatorToolbar from "@/common/components/annotator-toolbar/useAnnotatorToolbar.ts";
 import {TOOLS} from "@/app/AppConfig.tsx";
 import FilterGammaToolbarPanel from "@/common/components/annotator-toolbar/FilterGammaToolbarPanel.tsx";
+import {SHORTCUT_DEFS, keyLabel} from "@/canvas/shortcuts.ts";
 
 const TOOL_ICONS: Record<Tool, React.FC<React.SVGProps<SVGSVGElement>>> = {
     "select-add": SelectAddIcon,
@@ -25,7 +26,7 @@ const TOOL_ICONS: Record<Tool, React.FC<React.SVGProps<SVGSVGElement>>> = {
     "grab": GrabIcon,
 };
 
-const TOOL_TITLES: Record<Tool, string> = {
+const TOOL_BASE_LABELS: Record<Tool, string> = {
     "select-add": "Ajouter un point",
     "select-remove": "Retirer un point",
     "bounding-box": "Boîte englobante",
@@ -34,8 +35,17 @@ const TOOL_TITLES: Record<Tool, string> = {
     "slic-bbox": "Superpixels (SLIC)",
     "zoom-in": "Zoom avant",
     "zoom-out": "Zoom arrière",
-    "grab": "Déplacer (G)",
+    "grab": "Déplacer",
 };
+
+const KEY_BADGE = new Map<Tool, string>(
+    SHORTCUT_DEFS.map(d => [d.tool, keyLabel(d.key)]),
+);
+
+function toolTitle(tool: Tool): string {
+    const k = KEY_BADGE.get(tool);
+    return k ? `${TOOL_BASE_LABELS[tool]} (${k})` : TOOL_BASE_LABELS[tool];
+}
 
 interface ToolbarProps {}
 
@@ -51,7 +61,7 @@ export const Toolbar: React.FC<ToolbarProps> = () => {
                 return (
                     <button
                         key={tool}
-                        title={TOOL_TITLES[tool]}
+                        title={toolTitle(tool)}
                         onClick={() => setActiveTool(tool)}
                         className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${active ? "bg-[#2F2F2F] ring-1 ring-[#4FC3F7]/40" : "bg-transparent hover:bg-[#2F2F2F]/60"}`}>
                         {Icon ? (

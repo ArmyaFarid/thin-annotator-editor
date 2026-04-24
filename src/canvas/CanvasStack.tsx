@@ -20,6 +20,8 @@ import {douglasPeucker} from "@/canvas/utils/polygonUtils.ts";
 import {simulateSlic} from "@/canvas/utils/slicSimulate.ts";
 import usePreserveZoom from "@/canvas/usePreserveZoom.ts";
 import {Minimap} from "@/canvas/Minimap.tsx";
+import {ShortcutPanel} from "@/canvas/ShortcutPanel.tsx";
+import {SHORTCUT_MAP} from "@/canvas/shortcuts.ts";
 
 interface CanvasStackProps {
     imageUrl: string | undefined;
@@ -86,12 +88,16 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
         if (!preserveZoomRef.current) setView({zoom: 1, panX: 0, panY: 0});
     }, [imageUrl]);
 
-    // Keyboard shortcut: G → grab tool
+    const [showShortcuts, setShowShortcuts] = useState(false);
+
+    // Keyboard shortcuts for all tools + ? to toggle the shortcut panel
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
             const tag = (e.target as HTMLElement).tagName;
             if (tag === "INPUT" || tag === "TEXTAREA") return;
-            if (e.key === "g" || e.key === "G") setActiveTool("grab");
+            if (e.key === "?") { setShowShortcuts(v => !v); return; }
+            const tool = SHORTCUT_MAP.get(e.key.toLowerCase()) ?? SHORTCUT_MAP.get(e.key);
+            if (tool) setActiveTool(tool);
         };
         window.addEventListener("keydown", onKeyDown);
         return () => window.removeEventListener("keydown", onKeyDown);
@@ -423,6 +429,30 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 />
             </div>
             <Minimap imageUrl={imageUrl} view={view} containerSize={containerSize} naturalSize={imageSize} />
+            <ShortcutPanel visible={showShortcuts} onClose={() => setShowShortcuts(false)} />
+            <button
+                onClick={() => setShowShortcuts(v => !v)}
+                title="Raccourcis clavier (?)"
+                style={{
+                    position: "absolute",
+                    bottom: 8,
+                    right: 8,
+                    width: 26,
+                    height: 26,
+                    borderRadius: 4,
+                    background: showShortcuts ? "rgba(79,195,247,0.15)" : "rgba(255,255,255,0.06)",
+                    border: `1px solid ${showShortcuts ? "rgba(79,195,247,0.4)" : "rgba(255,255,255,0.18)"}`,
+                    color: showShortcuts ? "#4FC3F7" : "rgba(255,255,255,0.45)",
+                    fontSize: 13,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    zIndex: 15,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                }}>
+                ?
+            </button>
         </div>
     );
 };
