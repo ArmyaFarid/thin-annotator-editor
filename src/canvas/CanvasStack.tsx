@@ -9,6 +9,7 @@ import {
     subtractModeAtom,
     slicOverlayAtom,
     showShortcutsAtom,
+    minimapVisibleAtom,
     type Mask,
     type Prompt,
     type PolygonAnnotation,
@@ -90,19 +91,21 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     }, [imageUrl]);
 
     const [showShortcuts, setShowShortcuts] = useAtom(showShortcutsAtom);
+    const setMinimapVisible = useSetAtom(minimapVisibleAtom);
 
-    // Keyboard shortcuts for all tools + ? to toggle the shortcut panel
+    // Keyboard shortcuts for all tools + ? + M
     useEffect(() => {
         const onKeyDown = (e: KeyboardEvent) => {
             const tag = (e.target as HTMLElement).tagName;
             if (tag === "INPUT" || tag === "TEXTAREA") return;
             if (e.key === "?") { setShowShortcuts(v => !v); return; }
+            if (e.key === "m" || e.key === "M") { setMinimapVisible(v => !v); return; }
             const tool = SHORTCUT_MAP.get(e.key.toLowerCase()) ?? SHORTCUT_MAP.get(e.key);
             if (tool) setActiveTool(tool);
         };
         window.addEventListener("keydown", onKeyDown);
         return () => window.removeEventListener("keydown", onKeyDown);
-    }, [setActiveTool]);
+    }, [setActiveTool, setMinimapVisible, setShowShortcuts]);
 
     const callbacks = useCallback((): EngineCallbacks => ({
         onKeypointAdded(x: number, y: number, label: 0 | 1) {
@@ -429,7 +432,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                     onContextMenu={e => { e.preventDefault(); engineRef.current?.onContextMenu(); }}
                 />
             </div>
-            <Minimap imageUrl={imageUrl} view={view} containerSize={containerSize} naturalSize={imageSize} />
+            <Minimap imageUrl={imageUrl} view={view} containerSize={containerSize} naturalSize={imageSize} onViewChange={setView} />
             <ShortcutPanel visible={showShortcuts} onClose={() => setShowShortcuts(false)} />
         </div>
     );

@@ -1,5 +1,5 @@
 import React from "react";
-import {SHORTCUT_DEFS, keyLabel} from "@/canvas/shortcuts.ts";
+import {SHORTCUT_DEFS, UI_SHORTCUT_DEFS, keyLabel} from "@/canvas/shortcuts.ts";
 
 interface ShortcutPanelProps {
     visible: boolean;
@@ -63,13 +63,15 @@ export const ShortcutPanel: React.FC<ShortcutPanelProps> = ({visible, onClose}) 
                     </div>
                 ))}
 
-                {/* Separator + panel toggle hint */}
-                <div style={{marginTop: 6, paddingTop: 6, borderTop: "1px solid rgba(255,255,255,0.07)"}}>
-                    <div style={{display: "flex", alignItems: "center", gap: 8}}>
-                        <kbd style={KBD_STYLE}>?</kbd>
-                        <span style={{fontSize: 12, color: "rgba(255,255,255,0.78)"}}>Aide</span>
-                        <span style={{fontSize: 11, color: "rgba(255,255,255,0.32)"}}>Afficher / masquer</span>
-                    </div>
+                {/* UI shortcuts (minimap, help…) */}
+                <div style={{marginTop: 6, paddingTop: 6, borderTop: "1px solid rgba(255,255,255,0.07)", display: "flex", flexDirection: "column", gap: 5}}>
+                    {UI_SHORTCUT_DEFS.map(d => (
+                        <div key={d.key} style={{display: "flex", alignItems: "center", gap: 8}}>
+                            <kbd style={KBD_STYLE}>{keyLabel(d.key)}</kbd>
+                            <span style={{fontSize: 12, color: "rgba(255,255,255,0.78)", flexShrink: 0}}>{d.label}</span>
+                            <span style={{fontSize: 11, color: "rgba(255,255,255,0.32)"}}>{d.hint}</span>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>

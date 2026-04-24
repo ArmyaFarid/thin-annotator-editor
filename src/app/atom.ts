@@ -117,3 +117,4 @@ function readLocalBool(key: string, fallback: boolean): boolean {
 
 export const preserveZoomAtom = atom<boolean>(readLocalBool("preserveZoom", true));
 export const showShortcutsAtom = atom<boolean>(false);
+export const minimapVisibleAtom = atom<boolean>(true);

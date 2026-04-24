@@ -30,3 +30,15 @@ export const SHORTCUT_MAP = new Map<string, Tool>(
 export function keyLabel(key: string): string {
     return key === "=" ? "+" : key.toUpperCase();
 }
+
+// ─── Non-tool UI shortcuts (shown in the panel, handled separately) ───────────
+export interface UiShortcutDef {
+    key: string;
+    label: string;
+    hint: string;
+}
+
+export const UI_SHORTCUT_DEFS: UiShortcutDef[] = [
+    {key: "m", label: "Minimap", hint: "Afficher / masquer"},
+    {key: "?", label: "Aide",    hint: "Raccourcis clavier"},
+];
