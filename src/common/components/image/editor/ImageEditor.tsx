@@ -149,8 +149,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
     `;
 
     const [commitSession] = useMutation(StartSessionMutation);
-    const [commitPoints] = useMutation(AddPointsMutation);
-    const [commitComputeSlicMutation] = useMutation(ComputeSlicMutation);
+    const [commitPoints, pointsInFlight] = useMutation(AddPointsMutation);
+    const [commitComputeSlicMutation, slicInFlight] = useMutation(ComputeSlicMutation);
 
     function startSession() {
         if (!activeImage?.path) {
@@ -341,9 +341,19 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
         }
     }, [sessionId]);
 
+    const isLoading = pointsInFlight || slicInFlight;
+
     return (
         <div style={{width: "100%", height: "100%", position: "relative"}}>
             <CanvasStack imageUrl={activeImage?.url} />
+            {isLoading ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/25 pointer-events-none z-10">
+                    <div className="w-7 h-7 rounded-full border-2 border-white/20 border-t-white animate-spin" />
+                    <span className="text-white text-xs font-medium">
+                        {slicInFlight ? "Calcul SLIC..." : "Traitement..."}
+                    </span>
+                </div>
+            ) : null}
             {refineMode !== 0 && activeImage ? (
                 <RefineOverlay
                     imageUrl={activeImage.url}

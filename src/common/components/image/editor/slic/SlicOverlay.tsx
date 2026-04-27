@@ -12,9 +12,16 @@ interface SlicOverlayProps {
 
 interface PanDrag { startX: number; startY: number; startPanX: number; startPanY: number }
 
-function hslColor(index: number, total: number): string {
-    const hue = Math.round((index / total) * 360);
-    return `hsl(${hue}, 80%, 55%)`;
+function hslToRgb(index: number, total: number): [number, number, number] {
+    const h = (index / total) * 360;
+    const s = 0.8;
+    const l = 0.55;
+    const a = s * Math.min(l, 1 - l);
+    const f = (n: number) => {
+        const k = (n + h / 30) % 12;
+        return l - a * Math.max(-1, Math.min(k - 3, Math.min(9 - k, 1)));
+    };
+    return [Math.round(f(0) * 255), Math.round(f(8) * 255), Math.round(f(4) * 255)];
 }
 
 export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
@@ -24,6 +31,7 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     const imageSize = useAtomValue(activeImageSizeAtom);
 
     const [deleted, setDeleted] = useState<Set<number>>(new Set());
+    const [tilesReady, setTilesReady] = useState(false);
     const [zoom, setZoom] = useState(1);
     const [panX, setPanX] = useState(0);
     const [panY, setPanY] = useState(0);
@@ -33,116 +41,106 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     const imgRef = useRef<HTMLImageElement>(null);
     const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
     const labelCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const tilesRef = useRef<Map<number, HTMLCanvasElement>>(new Map());
     const viewRef = useRef({zoom: 1, panX: 0, panY: 0});
     const panDragRef = useRef<PanDrag | null>(null);
 
     useEffect(() => { viewRef.current = {zoom, panX, panY}; }, [zoom, panX, panY]);
 
-    // Build label canvas (R+G = superpixel id, 1-indexed) for hit testing
+    // Decode all RLEs once → build label canvas (hit-test) + pre-render tile per superpixel.
+    // rAF defers heavy work by one frame so the loading overlay paints first.
     useEffect(() => {
-        if (!slicOverlay || !imageSize) return;
-        const {superpixels} = slicOverlay;
-        const {w: iw, h: ih} = imageSize;
+        if (!slicOverlay || !imageSize) {
+            setTilesReady(false);
+            return;
+        }
+        setTilesReady(false);
 
-        const label = document.createElement("canvas");
-        label.width = iw;
-        label.height = ih;
-        const lCtx = label.getContext("2d")!;
-        const lData = lCtx.createImageData(iw, ih);
+        const rafId = requestAnimationFrame(() => {
+            const {superpixels} = slicOverlay;
+            const {w: iw, h: ih} = imageSize;
 
-        for (let si = 0; si < superpixels.length; si++) {
-            const sp = superpixels[si];
-            let decoded: Uint8Array;
-            try {
-                const result = decode([sp.rle]);
-                decoded = result.data as Uint8Array;
-            } catch { continue; }
+            const label = document.createElement("canvas");
+            label.width = iw;
+            label.height = ih;
+            const lCtx = label.getContext("2d")!;
+            const lData = lCtx.createImageData(iw, ih);
+            const tiles = new Map<number, HTMLCanvasElement>();
 
-            const [h, w] = sp.rle.size;
-            const storedId = sp.id + 1; // +1 so id=0 is stored as 1, not confused with background
-            const rHi = (storedId >> 8) & 0xff;
-            const rLo = storedId & 0xff;
+            for (let si = 0; si < superpixels.length; si++) {
+                const sp = superpixels[si];
+                let decoded: Uint8Array;
+                try {
+                    const result = decode([sp.rle]);
+                    decoded = result.data as Uint8Array;
+                } catch { continue; }
 
-            for (let x = 0; x < w; x++) {
-                for (let y = 0; y < h; y++) {
-                    if (decoded[x * h + y] === 1) {
-                        const i = (y * w + x) * 4;
-                        lData.data[i] = rHi;
-                        lData.data[i + 1] = rLo;
-                        lData.data[i + 2] = 0;
-                        lData.data[i + 3] = 255;
+                const [h, w] = sp.rle.size;
+                const storedId = sp.id + 1;
+                const rHi = (storedId >> 8) & 0xff;
+                const rLo = storedId & 0xff;
+                const [cr, cg, cb] = hslToRgb(si, superpixels.length);
+                const rgba = new Uint8ClampedArray(w * h * 4);
+
+                for (let x = 0; x < w; x++) {
+                    for (let y = 0; y < h; y++) {
+                        if (decoded[x * h + y] !== 1) continue;
+
+                        const li = (y * iw + x) * 4;
+                        lData.data[li] = rHi;
+                        lData.data[li + 1] = rLo;
+                        lData.data[li + 3] = 255;
+
+                        const isEdge =
+                            x === 0 || y === 0 || x === w - 1 || y === h - 1 ||
+                            decoded[(x - 1) * h + y] !== 1 ||
+                            decoded[(x + 1) * h + y] !== 1 ||
+                            decoded[x * h + (y - 1)] !== 1 ||
+                            decoded[x * h + (y + 1)] !== 1;
+                        const ti = (y * w + x) * 4;
+                        rgba[ti] = cr;
+                        rgba[ti + 1] = cg;
+                        rgba[ti + 2] = cb;
+                        rgba[ti + 3] = isEdge ? 210 : 28;
                     }
                 }
-            }
-        }
 
-        lCtx.putImageData(lData, 0, 0);
-        labelCanvasRef.current = label;
+                const tile = document.createElement("canvas");
+                tile.width = w;
+                tile.height = h;
+                tile.getContext("2d")!.putImageData(new ImageData(rgba, w, h), 0, 0);
+                tiles.set(sp.id, tile);
+            }
+
+            lCtx.putImageData(lData, 0, 0);
+            labelCanvasRef.current = label;
+            tilesRef.current = tiles;
+            setTilesReady(true);
+        });
+
+        return () => cancelAnimationFrame(rafId);
     }, [slicOverlay, imageSize]);
 
+    // Redraw: just composite pre-rendered tiles — no decoding, no allocation.
+    // tilesReady in deps ensures this re-fires once the rAF build completes.
     const redrawOverlay = useCallback(() => {
-        if (!slicOverlay || !imageSize || !overlayCanvasRef.current) return;
-        const canvas = overlayCanvasRef.current;
-        const ctx = canvas.getContext("2d")!;
+        if (!tilesReady || !slicOverlay || !imageSize || !overlayCanvasRef.current) return;
+        const ctx = overlayCanvasRef.current.getContext("2d")!;
         const {w: iw, h: ih} = imageSize;
-        const {superpixels} = slicOverlay;
-
         ctx.clearRect(0, 0, iw, ih);
-
-        for (let si = 0; si < superpixels.length; si++) {
-            const sp = superpixels[si];
+        for (const sp of slicOverlay.superpixels) {
             if (deleted.has(sp.id)) continue;
-
-            let decoded: Uint8Array;
-            try {
-                const result = decode([sp.rle]);
-                decoded = result.data as Uint8Array;
-            } catch { continue; }
-
-            const [h, w] = sp.rle.size;
-            const color = hslColor(si, superpixels.length);
-            const rgba = new Uint8ClampedArray(w * h * 4);
-            const tempCtx = document.createElement("canvas");
-            tempCtx.width = w;
-            tempCtx.height = h;
-            const tCtx = tempCtx.getContext("2d")!;
-
-            // Parse hsl color to rgba
-            tCtx.fillStyle = color;
-            tCtx.fillRect(0, 0, 1, 1);
-            const [cr, cg, cb] = Array.from(tCtx.getImageData(0, 0, 1, 1).data);
-
-            for (let x = 0; x < w; x++) {
-                for (let y = 0; y < h; y++) {
-                    if (decoded[x * h + y] !== 1) continue;
-                    const isEdge =
-                        x === 0 || y === 0 || x === w - 1 || y === h - 1 ||
-                        decoded[(x - 1) * h + y] !== 1 ||
-                        decoded[(x + 1) * h + y] !== 1 ||
-                        decoded[x * h + (y - 1)] !== 1 ||
-                        decoded[x * h + (y + 1)] !== 1;
-                    const i = (y * w + x) * 4;
-                    rgba[i] = cr;
-                    rgba[i + 1] = cg;
-                    rgba[i + 2] = cb;
-                    rgba[i + 3] = isEdge ? 210 : 28;
-                }
-            }
-
-            const tile = document.createElement("canvas");
-            tile.width = w;
-            tile.height = h;
-            tile.getContext("2d")!.putImageData(new ImageData(rgba, w, h), 0, 0);
-            ctx.drawImage(tile, 0, 0, w, h, 0, 0, iw, ih);
+            const tile = tilesRef.current.get(sp.id);
+            if (!tile) continue;
+            ctx.drawImage(tile, 0, 0, tile.width, tile.height, 0, 0, iw, ih);
         }
-    }, [slicOverlay, imageSize, deleted]);
+    }, [slicOverlay, imageSize, deleted, tilesReady]);
 
     useEffect(() => { redrawOverlay(); }, [redrawOverlay]);
 
-    // Auto-fit zoom when opening
+    // Auto-fit zoom once tiles are ready (container is visible at that point)
     useEffect(() => {
-        if (!slicOverlay || !imageSize) return;
-        setDeleted(new Set());
+        if (!slicOverlay || !imageSize || !tilesReady) return;
         setZoom(1);
         setPanX(0);
         setPanY(0);
@@ -168,7 +166,7 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
             setPanX(cw / 2 - cx * fitZoom);
             setPanY(ch / 2 - cy * fitZoom);
         });
-    }, [slicOverlay]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [slicOverlay, tilesReady]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Scroll-to-zoom (native, non-passive)
     useEffect(() => {
@@ -315,7 +313,14 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
 
     return (
         <div className="fixed inset-0 z-50 bg-black/85 flex flex-col items-center justify-center gap-4 p-4">
-            {/* Toolbar */}
+            {!tilesReady ? (
+                <div className="flex flex-col items-center gap-3">
+                    <div className="w-10 h-10 rounded-full border-2 border-white/20 border-t-[#4FC3F7] animate-spin" />
+                    <span className="text-white text-sm">Préparation des superpixels...</span>
+                </div>
+            ) : null}
+            {/* Toolbar + canvas + actions — hidden while tiles are computing */}
+            <div className={tilesReady ? "contents" : "hidden"}>
             <div className="flex items-center gap-3 bg-[#1a1a1a] border border-white/20 rounded-lg px-4 py-2 flex-wrap">
                 <span className="text-sm font-medium text-white/80">
                     Superpixels SLIC — {slicOverlay.superpixels.length - deleted.size} / {slicOverlay.superpixels.length} conservés
@@ -394,6 +399,7 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                     Appliquer ({slicOverlay.superpixels.length - deleted.size})
                 </button>
             </div>
+            </div>{/* end tilesReady wrapper */}
         </div>
     );
 };
