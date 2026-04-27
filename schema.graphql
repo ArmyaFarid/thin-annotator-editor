@@ -220,6 +220,7 @@ type Mutation {
   ): CancelPropagateInVideo!
   startSessionImage(input: StartSessionInput!): StartSession!
   addPointsImage(input: AddPointsImageInput!): RLEMaskListOnFrame!
+  computeSlicImage(input: SlicImageInput!): RLEMaskListOnFrame!
 }
 
 """
@@ -304,4 +305,10 @@ input AddPointsImageInput {
   labels: [Int!]!
   points: [[Float!]!]!
   bboxes: [[Float!]!]!
+}
+
+input SlicImageInput {
+  sessionId: String!
+  imagePath: String!
+  bbox: [Float!]!
 }

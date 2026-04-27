@@ -43,6 +43,7 @@ module.exports = {
     },
   },
   rules: {
+    'prettier/prettier': 'warn',
     'no-console': 'warn',
     curly: 'warn',
     'react/jsx-no-useless-fragment': 'warn',

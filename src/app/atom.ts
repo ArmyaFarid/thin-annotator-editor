@@ -1,6 +1,6 @@
-import {atom} from 'jotai';
-import {Tool} from '@/app/types.ts';
-import type {ImageSpacePoint} from '@/canvas/types.ts';
+import {atom} from "jotai";
+import {Tool} from "@/app/types.ts";
+import type {ImageSpacePoint} from "@/canvas/types.ts";
 
 export interface RLEMask {
     counts: string;
@@ -37,7 +37,14 @@ export interface MineralAnnotation {
     relief: "faible" | "moyen" | "élevé" | null;
     birefringence: "faible" | "moyen" | "élevé" | "très élevé" | null;
     cleavage: "aucun" | "indistinct" | "bon" | "parfait" | null;
-    crystalSystem: "cubique" | "tétragonal" | "orthorhombique" | "monoclinique" | "triclinique" | "hexagonal" | null;
+    crystalSystem:
+        | "cubique"
+        | "tétragonal"
+        | "orthorhombique"
+        | "monoclinique"
+        | "triclinique"
+        | "hexagonal"
+        | null;
     pleochroism: "aucun" | "faible" | "fort" | null;
     extinctionAngle: string;
     notes: string;
@@ -61,8 +68,14 @@ export interface Prompt {
     bbox?: Box;
 }
 
-export const activeToolAtom = atom<Tool>('select-add');
+export interface SlicPrompt {
+    type: string;
+    bbox: Box;
+}
+
+export const activeToolAtom = atom<Tool>("select-add");
 export const promptsAtom = atom<Prompt[]>([]);
+export const slicPromptsAtom = atom<SlicPrompt | undefined>(undefined);
 export const masksAtom = atom<Mask[]>([]);
 export const currentMaskAtom = atom<number>(0);
 export const editorOnAtom = atom<boolean>(false);
@@ -115,6 +128,8 @@ function readLocalBool(key: string, fallback: boolean): boolean {
     }
 }
 
-export const preserveZoomAtom = atom<boolean>(readLocalBool("preserveZoom", true));
+export const preserveZoomAtom = atom<boolean>(
+    readLocalBool("preserveZoom", true),
+);
 export const showShortcutsAtom = atom<boolean>(false);
 export const minimapVisibleAtom = atom<boolean>(true);
