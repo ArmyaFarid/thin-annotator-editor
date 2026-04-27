@@ -23,7 +23,7 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     const setCurrentMask = useSetAtom(currentMaskAtom);
     const imageSize = useAtomValue(activeImageSizeAtom);
 
-    const [selected, setSelected] = useState<Set<number>>(new Set());
+    const [deleted, setDeleted] = useState<Set<number>>(new Set());
     const [zoom, setZoom] = useState(1);
     const [panX, setPanX] = useState(0);
     const [panY, setPanY] = useState(0);
@@ -59,9 +59,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
             } catch { continue; }
 
             const [h, w] = sp.rle.size;
-            const id = sp.id;
-            const rHi = (id >> 8) & 0xff;
-            const rLo = id & 0xff;
+            const storedId = sp.id + 1; // +1 so id=0 is stored as 1, not confused with background
+            const rHi = (storedId >> 8) & 0xff;
+            const rLo = storedId & 0xff;
 
             for (let x = 0; x < w; x++) {
                 for (let y = 0; y < h; y++) {
@@ -91,7 +91,7 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
 
         for (let si = 0; si < superpixels.length; si++) {
             const sp = superpixels[si];
-            if (!selected.has(sp.id)) continue;
+            if (deleted.has(sp.id)) continue;
 
             let decoded: Uint8Array;
             try {
@@ -114,13 +114,18 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
 
             for (let x = 0; x < w; x++) {
                 for (let y = 0; y < h; y++) {
-                    if (decoded[x * h + y] === 1) {
-                        const i = (y * w + x) * 4;
-                        rgba[i] = cr;
-                        rgba[i + 1] = cg;
-                        rgba[i + 2] = cb;
-                        rgba[i + 3] = 153;
-                    }
+                    if (decoded[x * h + y] !== 1) continue;
+                    const isEdge =
+                        x === 0 || y === 0 || x === w - 1 || y === h - 1 ||
+                        decoded[(x - 1) * h + y] !== 1 ||
+                        decoded[(x + 1) * h + y] !== 1 ||
+                        decoded[x * h + (y - 1)] !== 1 ||
+                        decoded[x * h + (y + 1)] !== 1;
+                    const i = (y * w + x) * 4;
+                    rgba[i] = cr;
+                    rgba[i + 1] = cg;
+                    rgba[i + 2] = cb;
+                    rgba[i + 3] = isEdge ? 210 : 28;
                 }
             }
 
@@ -130,14 +135,14 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
             tile.getContext("2d")!.putImageData(new ImageData(rgba, w, h), 0, 0);
             ctx.drawImage(tile, 0, 0, w, h, 0, 0, iw, ih);
         }
-    }, [slicOverlay, imageSize, selected]);
+    }, [slicOverlay, imageSize, deleted]);
 
     useEffect(() => { redrawOverlay(); }, [redrawOverlay]);
 
     // Auto-fit zoom when opening
     useEffect(() => {
         if (!slicOverlay || !imageSize) return;
-        setSelected(new Set());
+        setDeleted(new Set());
         setZoom(1);
         setPanX(0);
         setPanY(0);
@@ -194,8 +199,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         const iy = Math.floor((e.clientY - rect.top) * (imageSize.h / rect.height));
         if (ix < 0 || iy < 0 || ix >= imageSize.w || iy >= imageSize.h) return null;
         const px = label.getContext("2d")!.getImageData(ix, iy, 1, 1).data;
-        const id = (px[0] << 8) | px[1];
-        return id > 0 ? id : null;
+        if (px[3] === 0) return null; // background — no superpixel written here
+        const id = ((px[0] << 8) | px[1]) - 1; // undo the +1 offset applied at build time
+        return id;
     }
 
     function handleOverlayMouseDown(e: React.MouseEvent) {
@@ -209,9 +215,10 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         if (e.button !== 0) return;
         const id = getSuperpixelAt(e);
         if (id === null) return;
-        setSelected(prev => {
+        setDeleted(prev => {
+            if (prev.has(id)) return prev;
             const next = new Set(prev);
-            if (next.has(id)) next.delete(id); else next.add(id);
+            next.add(id);
             return next;
         });
     }
@@ -231,8 +238,11 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     }
 
     function handleApply() {
-        if (!slicOverlay || !imageSize || selected.size === 0) return;
-        const {superpixels, targetMaskId} = slicOverlay;
+        if (!slicOverlay || !imageSize) return;
+        const remaining = slicOverlay.superpixels.filter(sp => !deleted.has(sp.id));
+        if (remaining.length === 0) return;
+        const {superpixels: _, targetMaskId} = slicOverlay;
+        const superpixels = remaining;
         const {w: iw, h: ih} = imageSize;
 
         const mergeCanvas = document.createElement("canvas");
@@ -241,7 +251,6 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         const mCtx = mergeCanvas.getContext("2d")!;
 
         for (const sp of superpixels) {
-            if (!selected.has(sp.id)) continue;
             let decoded: Uint8Array;
             try {
                 const result = decode([sp.rle]);
@@ -309,18 +318,14 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
             {/* Toolbar */}
             <div className="flex items-center gap-3 bg-[#1a1a1a] border border-white/20 rounded-lg px-4 py-2 flex-wrap">
                 <span className="text-sm font-medium text-white/80">
-                    Superpixels SLIC — {selected.size} sélectionné{selected.size !== 1 ? "s" : ""}
+                    Superpixels SLIC — {slicOverlay.superpixels.length - deleted.size} / {slicOverlay.superpixels.length} conservés
                 </span>
                 <div className="w-px h-5 bg-white/20" />
                 <button
-                    onClick={() => setSelected(new Set(slicOverlay.superpixels.map(s => s.id)))}
-                    className="px-3 py-1 rounded text-sm text-white/60 hover:text-white transition-colors">
-                    Tout sélectionner
-                </button>
-                <button
-                    onClick={() => setSelected(new Set())}
-                    className="px-3 py-1 rounded text-sm text-white/60 hover:text-white transition-colors">
-                    Tout désélectionner
+                    onClick={() => setDeleted(new Set())}
+                    disabled={deleted.size === 0}
+                    className="px-3 py-1 rounded text-sm text-white/60 hover:text-white transition-colors disabled:opacity-30">
+                    Réinitialiser
                 </button>
                 <div className="w-px h-5 bg-white/20" />
                 <span className="text-xs text-white/50">Zoom:</span>
@@ -376,7 +381,7 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
 
             {/* Actions */}
             <div className="flex items-center gap-3">
-                <span className="text-xs text-white/30">Cliquer pour sélectionner · Molette: zoom · Clic molette: déplacer</span>
+                <span className="text-xs text-white/30">Cliquer pour supprimer un superpixel · Molette: zoom · Clic molette: déplacer</span>
                 <button
                     onClick={() => setSlicOverlay(null)}
                     className="px-5 py-2 rounded-lg border border-white/20 text-sm hover:bg-white/10 transition-colors">
@@ -384,9 +389,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                 </button>
                 <button
                     onClick={handleApply}
-                    disabled={selected.size === 0}
+                    disabled={slicOverlay.superpixels.length - deleted.size === 0}
                     className="px-5 py-2 rounded-lg bg-[#4FC3F7] text-black font-medium text-sm hover:bg-[#4FC3F7]/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                    Appliquer ({selected.size})
+                    Appliquer ({slicOverlay.superpixels.length - deleted.size})
                 </button>
             </div>
         </div>

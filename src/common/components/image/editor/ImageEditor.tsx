@@ -1,6 +1,6 @@
 import React, {useEffect, useRef, useState} from "react";
 import {graphql, useLazyLoadQuery, useMutation} from "react-relay";
-import {useAtomValue, useSetAtom} from "jotai";
+import {useAtom, useAtomValue, useSetAtom} from "jotai";
 import {toast} from "sonner";
 import {CanvasStack} from "@/canvas/CanvasStack.tsx";
 import usePrompts from "@/common/components/image/editor/usePrompts.ts";
@@ -15,6 +15,7 @@ import {
     refineModeAtom,
     activeImageSizeAtom,
     slicOverlayAtom,
+    type SlicSuperpixel,
 } from "@/app/atom.ts";
 import {RefineOverlay} from "@/common/components/image/editor/refine/RefineOverlay.tsx";
 import {SlicOverlay} from "@/common/components/image/editor/slic/SlicOverlay.tsx";
@@ -48,7 +49,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
     const maskCounter = useRef(1);
     const refineMode = useAtomValue(refineModeAtom);
     const setImageSize = useSetAtom(activeImageSizeAtom);
-    const slicOverlay = useAtomValue(slicOverlayAtom);
+    const [slicOverlay, setSlicOverlay] = useAtom(slicOverlayAtom);
 
     useLazyLoadQuery<ImageEditorImgQuery>(
         graphql`
@@ -279,6 +280,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
     }
 
     function sendSlicPrompt() {
+        if (!slicPrompt) return;
         if (!sessionId) {
             startSession();
             return;
@@ -301,7 +303,22 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
                 },
             },
             onCompleted: (res: any) => {
-                console.log(res);
+                const list: any[] = res?.computeSlicImage?.rleMaskList ?? [];
+                const superpixels: SlicSuperpixel[] = list.map((item) => ({
+                    id: item.objectId,
+                    rle: item.rleMask,
+                }));
+                if (superpixels.length === 0) return;
+                setSlicOverlay({
+                    bbox: {
+                        x: Math.round(slicPrompt.bbox.left),
+                        y: Math.round(slicPrompt.bbox.top),
+                        w: Math.round(slicPrompt.bbox.width),
+                        h: Math.round(slicPrompt.bbox.height),
+                    },
+                    superpixels,
+                    targetMaskId: currentMask,
+                });
             },
         });
     }

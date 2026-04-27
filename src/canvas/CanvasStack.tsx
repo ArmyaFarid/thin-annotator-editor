@@ -7,7 +7,6 @@ import {
     masksAtom,
     promptsAtom,
     subtractModeAtom,
-    slicOverlayAtom,
     showShortcutsAtom,
     minimapVisibleAtom,
     type Mask,
@@ -20,7 +19,6 @@ import type {EngineCallbacks, ImageSpacePoint} from "@/canvas/types.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
 import {MASK_FILL_ALPHA} from "@/canvas/mask-style.ts";
 import {douglasPeucker} from "@/canvas/utils/polygonUtils.ts";
-import {simulateSlic} from "@/canvas/utils/slicSimulate.ts";
 import usePreserveZoom from "@/canvas/usePreserveZoom.ts";
 import {Minimap} from "@/canvas/Minimap.tsx";
 import {ShortcutPanel} from "@/canvas/ShortcutPanel.tsx";
@@ -80,7 +78,6 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     useEffect(() => {
         imageSizeRef.current = imageSize;
     }, [imageSize]);
-    const setSlicOverlay = useSetAtom(slicOverlayAtom);
     const [preserveZoom] = usePreserveZoom();
     const preserveZoomRef = useRef(preserveZoom);
     useEffect(() => {
@@ -219,13 +216,6 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 setSlicPrompts({
                     type: "slic-bounding-box",
                     bbox: {left: x, top: y, width: w, height: h},
-                });
-
-                const superpixels = simulateSlic(x, y, w, h, size.w, size.h);
-                setSlicOverlay({
-                    bbox: {x, y, w, h},
-                    superpixels,
-                    targetMaskId: currentMaskRef.current,
                 });
             },
             onFreeformPathAdded(points: ImageSpacePoint[]) {
@@ -427,7 +417,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 );
             },
         }),
-        [setPrompts, setMasks, setCurrentMask, setSlicOverlay],
+        [setPrompts, setMasks, setCurrentMask],
     );
 
     // Mount engine once
