@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<177a19662f7e5635ec5ddd056c5d7d93>>
+ * @generated SignedSource<<dcd729c5c239560ea4333f7fbeff766c>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -12,6 +12,7 @@ import { ConcreteRequest, Mutation } from 'relay-runtime';
 export type StartSessionInput = {
   pairsCode: string;
   path: string;
+  sampleId: string;
 };
 export type ImageEditorStartSessionMutation$variables = {
   input: StartSessionInput;

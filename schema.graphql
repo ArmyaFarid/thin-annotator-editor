@@ -4,28 +4,6 @@ Indicates an Input Object is a OneOf Input Object.
 directive @oneOf on INPUT_OBJECT
 
 type Query {
-  defaultVideo: Video!
-  videos(
-    """
-    Returns the items in the list that come before the specified cursor.
-    """
-    before: String = null
-
-    """
-    Returns the items in the list that come after the specified cursor.
-    """
-    after: String = null
-
-    """
-    Returns the first n items from the list.
-    """
-    first: Int = null
-
-    """
-    Returns the items in the list that come after the specified cursor.
-    """
-    last: Int = null
-  ): VideoConnection!
   defaultImage: Image!
   images(
     """
@@ -51,17 +29,17 @@ type Query {
   defaultPairs: ThinSectionImagePairs!
 }
 
-type Video implements Node {
+type Image implements Node {
   """
   The Globally Unique ID of this object
   """
   id: ID!
   path: String!
-  posterPath: String
   width: Int!
   height: Int!
+  thumbnailPath: String
   url: String!
-  posterUrl: String!
+  thumbnailUrl: String
 }
 
 """
@@ -77,7 +55,7 @@ interface Node {
 """
 A connection to a list of items.
 """
-type VideoConnection {
+type ImageConnection {
   """
   Pagination data for this connection
   """
@@ -86,7 +64,7 @@ type VideoConnection {
   """
   Contains the nodes in this connection
   """
-  edges: [VideoEdge!]!
+  edges: [ImageEdge!]!
 }
 
 """
@@ -112,49 +90,6 @@ type PageInfo {
   When paginating forwards, the cursor to continue.
   """
   endCursor: String
-}
-
-"""
-An edge in a connection.
-"""
-type VideoEdge {
-  """
-  A cursor for use in pagination
-  """
-  cursor: String!
-
-  """
-  The item at the end of the edge
-  """
-  node: Video!
-}
-
-type Image implements Node {
-  """
-  The Globally Unique ID of this object
-  """
-  id: ID!
-  path: String!
-  width: Int!
-  height: Int!
-  thumbnailPath: String
-  url: String!
-  thumbnailUrl: String
-}
-
-"""
-A connection to a list of items.
-"""
-type ImageConnection {
-  """
-  Pagination data for this connection
-  """
-  pageInfo: PageInfo!
-
-  """
-  Contains the nodes in this connection
-  """
-  edges: [ImageEdge!]!
 }
 
 """
@@ -204,29 +139,10 @@ enum PolarizedFilterType {
 }
 
 type Mutation {
-  uploadVideo(
-    file: Upload!
-    startTimeSec: Float = null
-    durationTimeSec: Float = null
-  ): Video!
-  startSession(input: StartSessionInput!): StartSession!
-  closeSession(input: CloseSessionInput!): CloseSession!
-  addPoints(input: AddPointsInput!): RLEMaskListOnFrame!
-  removeObject(input: RemoveObjectInput!): [RLEMaskListOnFrame!]!
-  clearPointsInFrame(input: ClearPointsInFrameInput!): RLEMaskListOnFrame!
-  clearPointsInVideo(input: ClearPointsInVideoInput!): ClearPointsInVideo!
-  cancelPropagateInVideo(
-    input: CancelPropagateInVideoInput!
-  ): CancelPropagateInVideo!
   startSessionImage(input: StartSessionInput!): StartSession!
   addPointsImage(input: AddPointsImageInput!): RLEMaskListOnFrame!
   computeSlicImage(input: SlicImageInput!): RLEMaskListOnFrame!
 }
-
-"""
-Represents a file upload.
-"""
-scalar Upload
 
 type StartSession {
   sessionId: String!
@@ -235,14 +151,7 @@ type StartSession {
 input StartSessionInput {
   path: String!
   pairsCode: ID!
-}
-
-type CloseSession {
-  success: Boolean!
-}
-
-input CloseSessionInput {
-  sessionId: String!
+  sampleId: String!
 }
 
 type RLEMaskListOnFrame {
@@ -261,46 +170,10 @@ type RLEMask {
   order: String!
 }
 
-input AddPointsInput {
-  sessionId: String!
-  frameIndex: Int!
-  clearOldPoints: Boolean!
-  objectId: Int!
-  labels: [Int!]!
-  points: [[Float!]!]!
-  bboxes: [[Float!]!]!
-}
-
-input RemoveObjectInput {
-  sessionId: String!
-  objectId: Int!
-}
-
-input ClearPointsInFrameInput {
-  sessionId: String!
-  frameIndex: Int!
-  objectId: Int!
-}
-
-type ClearPointsInVideo {
-  success: Boolean!
-}
-
-input ClearPointsInVideoInput {
-  sessionId: String!
-}
-
-type CancelPropagateInVideo {
-  success: Boolean!
-}
-
-input CancelPropagateInVideoInput {
-  sessionId: String!
-}
-
 input AddPointsImageInput {
   sessionId: String!
   imagePath: String!
+  imageId: ID!
   objectId: Int!
   labels: [Int!]!
   points: [[Float!]!]!
@@ -310,5 +183,6 @@ input AddPointsImageInput {
 input SlicImageInput {
   sessionId: String!
   imagePath: String!
+  imageId: ID!
   bbox: [Float!]!
 }

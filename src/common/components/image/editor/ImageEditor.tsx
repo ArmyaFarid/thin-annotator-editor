@@ -29,6 +29,7 @@ interface RLEMask {
 }
 
 type ActiveImage = {
+    id: string;
     path: string;
     url: string;
     width: number;
@@ -70,12 +71,14 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
             query ImageEditorDefaultPairsQuery {
                 defaultPairs {
                     id
+                    sampleId
                     polarizedFilterTypes
                     gammas
                     acquiredImages {
                         polarizedFilterType
                         gamma
                         image {
+                            id
                             path
                             url
                             width
@@ -98,6 +101,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
     }, [pairsData]);
 
     useEffect(() => {
+        console.log(pairsData);
         const match = pairsData.defaultPairs.acquiredImages.find(
             (a) =>
                 a.polarizedFilterType === activeFilterGammaCombination.filter &&
@@ -109,6 +113,11 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
             setImageSize({w: img.width, h: img.height});
         }
     }, [activeFilterGammaCombination, pairsData]);
+
+    useEffect(() => {
+        console.log("active image****");
+        console.log(activeImage);
+    }, [activeImage]);
 
     const StartSessionMutation = graphql`
         mutation ImageEditorStartSessionMutation($input: StartSessionInput!) {
@@ -150,7 +159,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
 
     const [commitSession] = useMutation(StartSessionMutation);
     const [commitPoints, pointsInFlight] = useMutation(AddPointsMutation);
-    const [commitComputeSlicMutation, slicInFlight] = useMutation(ComputeSlicMutation);
+    const [commitComputeSlicMutation, slicInFlight] =
+        useMutation(ComputeSlicMutation);
 
     function startSession() {
         if (!activeImage?.path) {
@@ -162,6 +172,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
                 input: {
                     path: activeImage.path,
                     pairsCode: pairsData.defaultPairs.id,
+                    sampleId: pairsData.defaultPairs.sampleId,
                 },
             },
             onCompleted: (res: any) => {
@@ -200,6 +211,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
                 input: {
                     sessionId,
                     imagePath: activeImage?.path,
+                    imageId: activeImage?.id,
                     objectId: 1,
                     points: pointPrompts.map((p) => p.point_coords),
                     labels: pointPrompts.map((p) => p.point_labels),
@@ -280,7 +292,9 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
     }
 
     function sendSlicPrompt() {
-        if (!slicPrompt) return;
+        if (!slicPrompt) {
+            return;
+        }
         if (!sessionId) {
             startSession();
             return;
@@ -299,6 +313,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
                 input: {
                     sessionId,
                     imagePath: activeImage?.path,
+                    imageId: activeImage?.id,
                     bbox,
                 },
             },
@@ -308,7 +323,9 @@ export const ImageEditor: React.FC<ImageEditorProps> = () => {
                     id: item.objectId,
                     rle: item.rleMask,
                 }));
-                if (superpixels.length === 0) return;
+                if (superpixels.length === 0) {
+                    return;
+                }
                 setSlicOverlay({
                     bbox: {
                         x: Math.round(slicPrompt.bbox.left),

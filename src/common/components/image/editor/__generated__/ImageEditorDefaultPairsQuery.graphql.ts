@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<c8c822cf2f217ee76c242bf7eeb227f6>>
+ * @generated SignedSource<<bd931757fed484847742b0dc829fb9b7>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -17,6 +17,7 @@ export type ImageEditorDefaultPairsQuery$data = {
       readonly gamma: number | null | undefined;
       readonly image: {
         readonly height: number;
+        readonly id: string;
         readonly path: string;
         readonly url: string;
         readonly width: number;
@@ -26,6 +27,7 @@ export type ImageEditorDefaultPairsQuery$data = {
     readonly gammas: ReadonlyArray<number | null | undefined>;
     readonly id: string;
     readonly polarizedFilterTypes: ReadonlyArray<PolarizedFilterType>;
+    readonly sampleId: string;
   };
 };
 export type ImageEditorDefaultPairsQuery = {
@@ -41,103 +43,94 @@ var v0 = {
   "name": "id",
   "storageKey": null
 },
-v1 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "polarizedFilterTypes",
-  "storageKey": null
-},
-v2 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "gammas",
-  "storageKey": null
-},
-v3 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "polarizedFilterType",
-  "storageKey": null
-},
-v4 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "gamma",
-  "storageKey": null
-},
-v5 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "path",
-  "storageKey": null
-},
-v6 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "url",
-  "storageKey": null
-},
-v7 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "width",
-  "storageKey": null
-},
-v8 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "height",
-  "storageKey": null
-};
-return {
-  "fragment": {
-    "argumentDefinitions": [],
-    "kind": "Fragment",
-    "metadata": null,
-    "name": "ImageEditorDefaultPairsQuery",
+v1 = [
+  {
+    "alias": null,
+    "args": null,
+    "concreteType": "ThinSectionImagePairs",
+    "kind": "LinkedField",
+    "name": "defaultPairs",
+    "plural": false,
     "selections": [
+      (v0/*: any*/),
       {
         "alias": null,
         "args": null,
-        "concreteType": "ThinSectionImagePairs",
+        "kind": "ScalarField",
+        "name": "sampleId",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "polarizedFilterTypes",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
+        "name": "gammas",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "concreteType": "AcquiredImage",
         "kind": "LinkedField",
-        "name": "defaultPairs",
-        "plural": false,
+        "name": "acquiredImages",
+        "plural": true,
         "selections": [
-          (v0/*: any*/),
-          (v1/*: any*/),
-          (v2/*: any*/),
           {
             "alias": null,
             "args": null,
-            "concreteType": "AcquiredImage",
+            "kind": "ScalarField",
+            "name": "polarizedFilterType",
+            "storageKey": null
+          },
+          {
+            "alias": null,
+            "args": null,
+            "kind": "ScalarField",
+            "name": "gamma",
+            "storageKey": null
+          },
+          {
+            "alias": null,
+            "args": null,
+            "concreteType": "Image",
             "kind": "LinkedField",
-            "name": "acquiredImages",
-            "plural": true,
+            "name": "image",
+            "plural": false,
             "selections": [
-              (v3/*: any*/),
-              (v4/*: any*/),
+              (v0/*: any*/),
               {
                 "alias": null,
                 "args": null,
-                "concreteType": "Image",
-                "kind": "LinkedField",
-                "name": "image",
-                "plural": false,
-                "selections": [
-                  (v5/*: any*/),
-                  (v6/*: any*/),
-                  (v7/*: any*/),
-                  (v8/*: any*/)
-                ],
+                "kind": "ScalarField",
+                "name": "path",
+                "storageKey": null
+              },
+              {
+                "alias": null,
+                "args": null,
+                "kind": "ScalarField",
+                "name": "url",
+                "storageKey": null
+              },
+              {
+                "alias": null,
+                "args": null,
+                "kind": "ScalarField",
+                "name": "width",
+                "storageKey": null
+              },
+              {
+                "alias": null,
+                "args": null,
+                "kind": "ScalarField",
+                "name": "height",
                 "storageKey": null
               }
             ],
@@ -147,6 +140,16 @@ return {
         "storageKey": null
       }
     ],
+    "storageKey": null
+  }
+];
+return {
+  "fragment": {
+    "argumentDefinitions": [],
+    "kind": "Fragment",
+    "metadata": null,
+    "name": "ImageEditorDefaultPairsQuery",
+    "selections": (v1/*: any*/),
     "type": "Query",
     "abstractKey": null
   },
@@ -155,63 +158,19 @@ return {
     "argumentDefinitions": [],
     "kind": "Operation",
     "name": "ImageEditorDefaultPairsQuery",
-    "selections": [
-      {
-        "alias": null,
-        "args": null,
-        "concreteType": "ThinSectionImagePairs",
-        "kind": "LinkedField",
-        "name": "defaultPairs",
-        "plural": false,
-        "selections": [
-          (v0/*: any*/),
-          (v1/*: any*/),
-          (v2/*: any*/),
-          {
-            "alias": null,
-            "args": null,
-            "concreteType": "AcquiredImage",
-            "kind": "LinkedField",
-            "name": "acquiredImages",
-            "plural": true,
-            "selections": [
-              (v3/*: any*/),
-              (v4/*: any*/),
-              {
-                "alias": null,
-                "args": null,
-                "concreteType": "Image",
-                "kind": "LinkedField",
-                "name": "image",
-                "plural": false,
-                "selections": [
-                  (v5/*: any*/),
-                  (v6/*: any*/),
-                  (v7/*: any*/),
-                  (v8/*: any*/),
-                  (v0/*: any*/)
-                ],
-                "storageKey": null
-              }
-            ],
-            "storageKey": null
-          }
-        ],
-        "storageKey": null
-      }
-    ]
+    "selections": (v1/*: any*/)
   },
   "params": {
-    "cacheID": "fbc9a087a803686462979e1fac62da79",
+    "cacheID": "cc4570126c2a0996345ca87c33bca0bd",
     "id": null,
     "metadata": {},
     "name": "ImageEditorDefaultPairsQuery",
     "operationKind": "query",
-    "text": "query ImageEditorDefaultPairsQuery {\n  defaultPairs {\n    id\n    polarizedFilterTypes\n    gammas\n    acquiredImages {\n      polarizedFilterType\n      gamma\n      image {\n        path\n        url\n        width\n        height\n        id\n      }\n    }\n  }\n}\n"
+    "text": "query ImageEditorDefaultPairsQuery {\n  defaultPairs {\n    id\n    sampleId\n    polarizedFilterTypes\n    gammas\n    acquiredImages {\n      polarizedFilterType\n      gamma\n      image {\n        id\n        path\n        url\n        width\n        height\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "7c76b7a49c10d5b1638ce3f860bd38f7";
+(node as any).hash = "75e11c3d9cd4e2c47ef82a6af2abe002";
 
 export default node;

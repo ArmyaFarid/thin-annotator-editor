@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<f4f76bfaaa9bc4f8a79d033e8842a840>>
+ * @generated SignedSource<<2e6f3764472ee06e1d272e32c8c34a06>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -11,6 +11,7 @@
 import { ConcreteRequest, Mutation } from 'relay-runtime';
 export type SlicImageInput = {
   bbox: ReadonlyArray<number>;
+  imageId: string;
   imagePath: string;
   sessionId: string;
 };
