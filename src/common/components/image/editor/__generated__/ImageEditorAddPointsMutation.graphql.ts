@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<d602a73f865ff1efcf93b2851a572127>>
+ * @generated SignedSource<<310b0caa6a15972fbeb8377b0c61ccdf>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -16,7 +16,6 @@ export type AddPointsImageInput = {
   labels: ReadonlyArray<number>;
   objectId: number;
   points: ReadonlyArray<ReadonlyArray<number>>;
-  sessionId: string;
 };
 export type ImageEditorAddPointsMutation$variables = {
   input: AddPointsImageInput;

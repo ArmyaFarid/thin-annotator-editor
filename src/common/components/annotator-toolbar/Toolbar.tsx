@@ -1,6 +1,6 @@
 import React from "react";
 import {useAtom} from "jotai";
-import {showShortcutsAtom} from "@/app/atom.ts";
+import {borderOnlyAtom, showShortcutsAtom} from "@/app/atom.ts";
 import SelectAddIcon from "@/assets/icons/select-add.svg?react";
 import SelectRemoveIcon from "@/assets/icons/select-remove.svg?react";
 import BoundingBoxIcon from "@/assets/icons/bounding-box.svg?react";
@@ -54,6 +54,7 @@ interface ToolbarProps {}
 export const Toolbar: React.FC<ToolbarProps> = () => {
     const [activeTool, setActiveTool] = useAnnotatorToolbar();
     const [showShortcuts, setShowShortcuts] = useAtom(showShortcutsAtom);
+    const [borderOnly, setBorderOnly] = useAtom(borderOnlyAtom);
 
     return (
         <div className="flex flex-col items-center gap-0.5 p-1.5 rounded-xl bg-secondary w-12">
@@ -78,6 +79,12 @@ export const Toolbar: React.FC<ToolbarProps> = () => {
             <FilterGammaToolbarPanel />
             <div className="w-6 h-px bg-white/10 my-0.5" />
             <button
+                title={borderOnly ? "Afficher le remplissage" : "Afficher contours seulement"}
+                onClick={() => setBorderOnly(v => !v)}
+                className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${borderOnly ? "bg-[#2F2F2F] ring-1 ring-emerald-500/50" : "bg-transparent hover:bg-[#2F2F2F]/60"}`}>
+                <BorderOnlyIcon active={borderOnly} />
+            </button>
+            <button
                 title="Raccourcis clavier (?)"
                 onClick={() => setShowShortcuts(v => !v)}
                 className={`flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold transition-colors ${showShortcuts ? "bg-[#2F2F2F] text-[#4FC3F7] ring-1 ring-[#4FC3F7]/40" : "bg-transparent text-[#B8B8B8] hover:bg-[#2F2F2F]/60"}`}>
@@ -92,3 +99,14 @@ const FallbackSquare: React.FC<{active: boolean}> = ({active}) => (
         <rect x="2" y="2" width="16" height="16" rx="3" />
     </svg>
 );
+
+function BorderOnlyIcon({active}: {active: boolean}) {
+    return (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="transition-colors">
+            <rect x="2" y="2" width="12" height="12" rx="2" stroke={active ? "#34d399" : "#B8B8B8"} strokeWidth="2" />
+            {active ? null : (
+                <rect x="5" y="5" width="6" height="6" rx="1" fill="#B8B8B8" opacity="0.4" />
+            )}
+        </svg>
+    );
+}

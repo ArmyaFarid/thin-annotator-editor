@@ -23,6 +23,7 @@ export class DataLayer {
     private pxRatio: {x: number; y: number} = {x: 1, y: 1};
     private maskCache = new Map<number, {obj: Mask; sig: string}>();
     private currentMaskId: number = 0;
+    private borderOnly = false;
 
     constructor(private readonly canvas: HTMLCanvasElement) {}
 
@@ -46,6 +47,14 @@ export class DataLayer {
         this.render();
     }
 
+    setBorderOnly(b: boolean): void {
+        this.borderOnly = b;
+        for (const entry of this.maskCache.values()) {
+            entry.obj.setBorderOnly(b);
+        }
+        this.render();
+    }
+
     setPrompts(prompts: Prompt[]): void {
         this.prompts = prompts;
         this.render();
@@ -60,7 +69,9 @@ export class DataLayer {
             const sig = maskSig(m);
             const entry = this.maskCache.get(m.id);
             if (!entry || entry.sig !== sig) {
-                this.maskCache.set(m.id, {obj: new Mask(m.id, m.layers, m.color), sig});
+                const obj = new Mask(m.id, m.layers, m.color);
+                obj.setBorderOnly(this.borderOnly);
+                this.maskCache.set(m.id, {obj, sig});
             }
         }
         this.masks = masks;

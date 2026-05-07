@@ -3,6 +3,7 @@ import {useAtom, useAtomValue, useSetAtom} from "jotai";
 import {
     activeToolAtom,
     activeImageSizeAtom,
+    borderOnlyAtom,
     currentMaskAtom,
     masksAtom,
     promptsAtom,
@@ -83,6 +84,11 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     useEffect(() => {
         preserveZoomRef.current = preserveZoom;
     }, [preserveZoom]);
+
+    const borderOnly = useAtomValue(borderOnlyAtom);
+    useEffect(() => {
+        engineRef.current?.setBorderOnly(borderOnly);
+    }, [borderOnly]);
 
     const [view, setView] = useState<View>({zoom: 1, panX: 0, panY: 0});
     const viewRef = useRef(view);
@@ -466,15 +472,25 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
         }
     }, [currentMask, masks]);
 
-    // Load image into StaticLayer when URL changes; reset to 1:1 zoom
+    // First load always fits to container regardless of preserveZoom preference
+    const firstLoadRef = useRef(true);
+
     const handleImageLoad = useCallback(() => {
         const img = imgRef.current;
+        const container = containerRef.current;
         if (!img || !engineRef.current) {
             return;
         }
         engineRef.current.setImage(img);
-        if (!preserveZoomRef.current) {
-            setView({zoom: 1, panX: 0, panY: 0});
+        const isFirst = firstLoadRef.current;
+        firstLoadRef.current = false;
+        if (!preserveZoomRef.current || isFirst) {
+            const cw = container?.clientWidth ?? img.naturalWidth;
+            const ch = container?.clientHeight ?? img.naturalHeight;
+            const fitZoom = Math.min(cw / img.naturalWidth, ch / img.naturalHeight, 1);
+            const panX = (cw - img.naturalWidth * fitZoom) / 2;
+            const panY = (ch - img.naturalHeight * fitZoom) / 2;
+            setView({zoom: fitZoom, panX, panY});
         }
     }, []);
 

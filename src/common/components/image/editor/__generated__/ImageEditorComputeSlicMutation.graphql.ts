@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<2e6f3764472ee06e1d272e32c8c34a06>>
+ * @generated SignedSource<<ed38d92d2ed93dbceb4907ff216cb8b9>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -13,7 +13,6 @@ export type SlicImageInput = {
   bbox: ReadonlyArray<number>;
   imageId: string;
   imagePath: string;
-  sessionId: string;
 };
 export type ImageEditorComputeSlicMutation$variables = {
   input: SlicImageInput;

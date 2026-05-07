@@ -5,7 +5,8 @@
       "Bash(npm run *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(grep *)"
+      "Bash(grep *)",
+      "Bash(yarn tsc *)"
     ]
   }
 }

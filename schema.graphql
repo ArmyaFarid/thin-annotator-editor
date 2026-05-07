@@ -173,7 +173,6 @@ type RLEMask {
 }
 
 input AddPointsImageInput {
-  sessionId: String!
   imagePath: String!
   imageId: ID!
   objectId: Int!
@@ -183,7 +182,6 @@ input AddPointsImageInput {
 }
 
 input SlicImageInput {
-  sessionId: String!
   imagePath: String!
   imageId: ID!
   bbox: [Float!]!

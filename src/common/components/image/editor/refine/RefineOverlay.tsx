@@ -38,6 +38,9 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
     const [panY, setPanY] = useState(0);
     const [isPanning, setIsPanning] = useState(false);
 
+    const [borderOnly, setBorderOnly] = useState(false);
+    const borderOnlyRef = useRef(false);
+
     const containerRef = useRef<HTMLDivElement>(null);
     const imgRef = useRef<HTMLImageElement>(null);
     const displayCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -58,18 +61,49 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
         const colorBuf = colorBufferRef.current;
         if (!display || !working || !colorBuf || !targetMask) return;
 
-        const cCtx = colorBuf.getContext("2d")!;
-        cCtx.clearRect(0, 0, imageW, imageH);
-        cCtx.drawImage(working, 0, 0);
-        cCtx.globalCompositeOperation = "source-in";
         const {r, g, b} = targetMask.color;
-        cCtx.fillStyle = `rgba(${r},${g},${b},0.6)`;
-        cCtx.fillRect(0, 0, imageW, imageH);
-        cCtx.globalCompositeOperation = "source-over";
-
         const ctx = display.getContext("2d")!;
         ctx.clearRect(0, 0, imageW, imageH);
-        ctx.drawImage(colorBuf, 0, 0);
+
+        if (borderOnlyRef.current) {
+            // Build colored full mask
+            const cCtx = colorBuf.getContext("2d")!;
+            cCtx.clearRect(0, 0, imageW, imageH);
+            cCtx.drawImage(working, 0, 0);
+            cCtx.globalCompositeOperation = "source-in";
+            cCtx.fillStyle = `rgba(${r},${g},${b},0.85)`;
+            cCtx.fillRect(0, 0, imageW, imageH);
+            cCtx.globalCompositeOperation = "source-over";
+
+            // Compute eroded (interior) mask via 4-direction intersection
+            const eroded = document.createElement("canvas");
+            eroded.width = imageW;
+            eroded.height = imageH;
+            const eCtx = eroded.getContext("2d")!;
+            eCtx.drawImage(working, 0, 0);
+            eCtx.globalCompositeOperation = "destination-in";
+            const t = 3;
+            eCtx.drawImage(working, t, 0);
+            eCtx.drawImage(working, -t, 0);
+            eCtx.drawImage(working, 0, t);
+            eCtx.drawImage(working, 0, -t);
+            eCtx.globalCompositeOperation = "source-over";
+
+            // Draw full mask then subtract interior → only border remains
+            ctx.drawImage(colorBuf, 0, 0);
+            ctx.globalCompositeOperation = "destination-out";
+            ctx.drawImage(eroded, 0, 0);
+            ctx.globalCompositeOperation = "source-over";
+        } else {
+            const cCtx = colorBuf.getContext("2d")!;
+            cCtx.clearRect(0, 0, imageW, imageH);
+            cCtx.drawImage(working, 0, 0);
+            cCtx.globalCompositeOperation = "source-in";
+            cCtx.fillStyle = `rgba(${r},${g},${b},0.6)`;
+            cCtx.fillRect(0, 0, imageW, imageH);
+            cCtx.globalCompositeOperation = "source-over";
+            ctx.drawImage(colorBuf, 0, 0);
+        }
     }, [targetMask, imageW, imageH]);
 
     // Init working canvas + auto-zoom when entering refine mode
@@ -118,6 +152,11 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
             setPanY(newPanY);
         });
     }, [refineMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    useEffect(() => {
+        borderOnlyRef.current = borderOnly;
+        redrawDisplay();
+    }, [borderOnly, redrawDisplay]);
 
     // Scroll-to-zoom (native, non-passive to allow preventDefault)
     useEffect(() => {
@@ -241,7 +280,7 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
     const canvasCursor = isPanning ? "grabbing" : (tool === "erase" ? "cell" : "crosshair");
 
     return (
-        <div className="fixed inset-0 z-50 bg-black/85 flex flex-col items-center justify-center gap-4 p-4">
+        <div className="fixed inset-0 z-50 bg-black/60 flex flex-col items-center justify-center gap-4 p-4">
             {/* Toolbar */}
             <div className="flex items-center gap-3 bg-[#1a1a1a] border border-white/20 rounded-lg px-4 py-2 flex-wrap">
                 <span className="text-sm font-medium text-white/80">
@@ -285,6 +324,12 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
                     className="w-24"
                 />
                 <span className="text-xs text-white/60 w-12">{Math.round(zoom * 100)}%</span>
+                <div className="w-px h-5 bg-white/20" />
+                <button
+                    onClick={() => setBorderOnly(!borderOnly)}
+                    className={`px-3 py-1 rounded text-sm transition-colors ${borderOnly ? "bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/40" : "text-white/60 hover:text-white"}`}>
+                    Contours
+                </button>
             </div>
 
             {/* Image + overlay canvas */}

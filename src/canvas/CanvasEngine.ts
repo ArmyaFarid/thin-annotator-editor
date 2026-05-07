@@ -75,6 +75,10 @@ export class CanvasEngine {
         this.toolManager.setSubtractMode(v);
     }
 
+    setBorderOnly(b: boolean): void {
+        this.dataLayer.setBorderOnly(b);
+    }
+
     setPrompts(prompts: Prompt[]): void {
         this.dataLayer.setPrompts(prompts);
     }

@@ -10,9 +10,15 @@ export class Mask implements AnnotationObject {
     readonly kind = "mask";
 
     private readonly rleCanvasCache = new Map<number, HTMLCanvasElement>();
+    private readonly rleBorderOnlyCache = new Map<number, HTMLCanvasElement>();
     private readonly rleDataCache = new Map<number, Uint8Array>();
     // Separate cache for alpha-only shape canvases used by hole compositing
     private readonly rleAlphaCache = new Map<number, HTMLCanvasElement>();
+    private borderOnly = false;
+
+    setBorderOnly(b: boolean): void {
+        this.borderOnly = b;
+    }
 
     constructor(
         public readonly id: number,
@@ -203,7 +209,8 @@ export class Mask implements AnnotationObject {
     }
 
     private getLayerCanvas(layer: MaskLayer): HTMLCanvasElement | null {
-        if (this.rleCanvasCache.has(layer.id)) return this.rleCanvasCache.get(layer.id)!;
+        const cache = this.borderOnly ? this.rleBorderOnlyCache : this.rleCanvasCache;
+        if (cache.has(layer.id)) return cache.get(layer.id)!;
         if (!layer.rleMask) return null;
 
         const data = this.getLayerData(layer);
@@ -235,7 +242,7 @@ export class Mask implements AnnotationObject {
                     rgbaData[targetIndex + 1] = Math.max(0, g * darkenFactor);
                     rgbaData[targetIndex + 2] = Math.max(0, b * darkenFactor);
                     rgbaData[targetIndex + 3] = 255;
-                } else {
+                } else if (!this.borderOnly) {
                     rgbaData[targetIndex]     = r;
                     rgbaData[targetIndex + 1] = g;
                     rgbaData[targetIndex + 2] = b;
@@ -248,7 +255,7 @@ export class Mask implements AnnotationObject {
         canvas.width = maskW;
         canvas.height = maskH;
         canvas.getContext("2d")!.putImageData(new ImageData(rgbaData, maskW, maskH), 0, 0);
-        this.rleCanvasCache.set(layer.id, canvas);
+        cache.set(layer.id, canvas);
         return canvas;
     }
 
