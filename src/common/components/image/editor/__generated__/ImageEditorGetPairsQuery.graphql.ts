@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<bd931757fed484847742b0dc829fb9b7>>
+ * @generated SignedSource<<cec8b0bbaca047f265e30e6e823e7b00>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -10,9 +10,12 @@
 
 import { ConcreteRequest, Query } from 'relay-runtime';
 export type PolarizedFilterType = "OTHER" | "PPL" | "XPL" | "XPL_GAMMA" | "%future added value";
-export type ImageEditorDefaultPairsQuery$variables = Record<PropertyKey, never>;
-export type ImageEditorDefaultPairsQuery$data = {
-  readonly defaultPairs: {
+export type ImageEditorGetPairsQuery$variables = {
+  pairsCode: string;
+  sampleId: string;
+};
+export type ImageEditorGetPairsQuery$data = {
+  readonly getPairs: {
     readonly acquiredImages: ReadonlyArray<{
       readonly gamma: number | null | undefined;
       readonly image: {
@@ -30,29 +33,52 @@ export type ImageEditorDefaultPairsQuery$data = {
     readonly sampleId: string;
   };
 };
-export type ImageEditorDefaultPairsQuery = {
-  response: ImageEditorDefaultPairsQuery$data;
-  variables: ImageEditorDefaultPairsQuery$variables;
+export type ImageEditorGetPairsQuery = {
+  response: ImageEditorGetPairsQuery$data;
+  variables: ImageEditorGetPairsQuery$variables;
 };
 
 const node: ConcreteRequest = (function(){
-var v0 = {
+var v0 = [
+  {
+    "defaultValue": null,
+    "kind": "LocalArgument",
+    "name": "pairsCode"
+  },
+  {
+    "defaultValue": null,
+    "kind": "LocalArgument",
+    "name": "sampleId"
+  }
+],
+v1 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
   "name": "id",
   "storageKey": null
 },
-v1 = [
+v2 = [
   {
     "alias": null,
-    "args": null,
+    "args": [
+      {
+        "kind": "Variable",
+        "name": "pairsCode",
+        "variableName": "pairsCode"
+      },
+      {
+        "kind": "Variable",
+        "name": "sampleId",
+        "variableName": "sampleId"
+      }
+    ],
     "concreteType": "ThinSectionImagePairs",
     "kind": "LinkedField",
-    "name": "defaultPairs",
+    "name": "getPairs",
     "plural": false,
     "selections": [
-      (v0/*: any*/),
+      (v1/*: any*/),
       {
         "alias": null,
         "args": null,
@@ -104,7 +130,7 @@ v1 = [
             "name": "image",
             "plural": false,
             "selections": [
-              (v0/*: any*/),
+              (v1/*: any*/),
               {
                 "alias": null,
                 "args": null,
@@ -145,32 +171,32 @@ v1 = [
 ];
 return {
   "fragment": {
-    "argumentDefinitions": [],
+    "argumentDefinitions": (v0/*: any*/),
     "kind": "Fragment",
     "metadata": null,
-    "name": "ImageEditorDefaultPairsQuery",
-    "selections": (v1/*: any*/),
+    "name": "ImageEditorGetPairsQuery",
+    "selections": (v2/*: any*/),
     "type": "Query",
     "abstractKey": null
   },
   "kind": "Request",
   "operation": {
-    "argumentDefinitions": [],
+    "argumentDefinitions": (v0/*: any*/),
     "kind": "Operation",
-    "name": "ImageEditorDefaultPairsQuery",
-    "selections": (v1/*: any*/)
+    "name": "ImageEditorGetPairsQuery",
+    "selections": (v2/*: any*/)
   },
   "params": {
-    "cacheID": "cc4570126c2a0996345ca87c33bca0bd",
+    "cacheID": "be98d10266fe62b65c7b5b2275fe0922",
     "id": null,
     "metadata": {},
-    "name": "ImageEditorDefaultPairsQuery",
+    "name": "ImageEditorGetPairsQuery",
     "operationKind": "query",
-    "text": "query ImageEditorDefaultPairsQuery {\n  defaultPairs {\n    id\n    sampleId\n    polarizedFilterTypes\n    gammas\n    acquiredImages {\n      polarizedFilterType\n      gamma\n      image {\n        id\n        path\n        url\n        width\n        height\n      }\n    }\n  }\n}\n"
+    "text": "query ImageEditorGetPairsQuery(\n  $pairsCode: String!\n  $sampleId: String!\n) {\n  getPairs(pairsCode: $pairsCode, sampleId: $sampleId) {\n    id\n    sampleId\n    polarizedFilterTypes\n    gammas\n    acquiredImages {\n      polarizedFilterType\n      gamma\n      image {\n        id\n        path\n        url\n        width\n        height\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "75e11c3d9cd4e2c47ef82a6af2abe002";
+(node as any).hash = "06a720a8f1fbdca4f43fe7a7b165b838";
 
 export default node;

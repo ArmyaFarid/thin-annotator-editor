@@ -27,6 +27,7 @@ type Query {
     last: Int = null
   ): ImageConnection!
   defaultPairs: ThinSectionImagePairs!
+  getPairs(pairsCode: String!, sampleId: String!): ThinSectionImagePairs!
 }
 
 type Image implements Node {
@@ -142,6 +143,7 @@ type Mutation {
   startSessionImage(input: StartSessionInput!): StartSession!
   addPointsImage(input: AddPointsImageInput!): RLEMaskListOnFrame!
   computeSlicImage(input: SlicImageInput!): RLEMaskListOnFrame!
+  saveAnnotations(input: AddPointsImageInput!): SaveAnnotationsResult!
 }
 
 type StartSession {
@@ -185,4 +187,8 @@ input SlicImageInput {
   imagePath: String!
   imageId: ID!
   bbox: [Float!]!
+}
+
+type SaveAnnotationsResult {
+  success: Boolean!
 }

@@ -3,6 +3,22 @@ export const LANG: "fr" | "en" = "fr";
 
 const T = {
     fr: {
+        // Home page
+        appTitle: "Outil d'annotation",
+        appSubtitle: "Sélectionnez un dossier de lame mince pour commencer",
+        openFolder: "Ouvrir un dossier",
+        picking: "Chargement...",
+
+        // Restore annotations modal
+        restoreTitle: "Annotations sauvegardées trouvées",
+        restoreFound: "Ce projet contient des annotations sauvegardées. Voulez-vous les restaurer ?",
+        restoreYes: "Restaurer",
+        restoreNo: "Ignorer",
+
+        // Save project
+        saveProject: "Sauvegarder",
+        saving: "Sauvegarde...",
+
         // Draft restore modal
         draftTitle: "Brouillon détecté",
         draftFound: "Des annotations non sauvegardées ont été trouvées. Souhaitez-vous les reprendre ou les ignorer ?",
@@ -92,6 +108,22 @@ const T = {
         zoomResetTitle: "Zoom réinitialisé lors du changement d'image (cliquer pour activer la préservation)",
     },
     en: {
+        // Home page
+        appTitle: "Annotation Tool",
+        appSubtitle: "Select a thin section folder to begin",
+        openFolder: "Open folder",
+        picking: "Loading...",
+
+        // Restore annotations modal
+        restoreTitle: "Saved annotations found",
+        restoreFound: "This project has saved annotations. Do you want to restore them?",
+        restoreYes: "Restore",
+        restoreNo: "Ignore",
+
+        // Save project
+        saveProject: "Save project",
+        saving: "Saving...",
+
         // Draft restore modal
         draftTitle: "Draft found",
         draftFound: "Unsaved annotations were found. Do you want to restore them or discard them?",

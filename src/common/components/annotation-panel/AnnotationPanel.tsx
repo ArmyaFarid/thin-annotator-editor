@@ -1,6 +1,8 @@
 import React from "react";
 import {useAtom} from "jotai";
+import {toast} from "sonner";
 import useMineralList from "@/common/components/annotation-panel/useMineralList.ts";
+import useSaveAnnotations from "@/common/components/annotation-panel/useSaveAnnotations.ts";
 import {t} from "@/i18n/index.ts";
 import {
     activeImageSizeAtom,
@@ -8,7 +10,6 @@ import {
     editorOnAtom,
     masksAtom,
     promptsAtom,
-    sessionIdAtom,
     subtractModeAtom,
 } from "@/app/atom.ts";
 import {mergeToCanvas, canvasToRLE} from "@/canvas/utils/maskMerge.ts";
@@ -20,12 +21,18 @@ export const AnnotationPanel: React.FC = () => {
     const [prompts, setPrompts] = useAtom(promptsAtom);
     const [currentMask, setCurrentMask] = useAtom(currentMaskAtom);
     const [, setEditorOn] = useAtom(editorOnAtom);
-    const [sessionId, setSessionId] = useAtom(sessionIdAtom);
     const [, setSubtractMode] = useAtom(subtractModeAtom);
     const [imageSize] = useAtom(activeImageSizeAtom);
 
     const activeMask = currentMask !== 0 ? masks.find((m) => m.id === currentMask) : null;
     const minerals = useMineralList();
+    const [saveAnnotations, {saving}] = useSaveAnnotations();
+
+    async function handleSaveProject() {
+        const ok = await saveAnnotations();
+        if (ok) toast.success("Projet sauvegardé");
+        else toast.error("Échec de la sauvegarde");
+    }
     function mineralName(id: string | null) {
         return id ? (minerals.find((m) => m.id === id)?.name ?? id) : null;
     }
@@ -83,14 +90,6 @@ export const AnnotationPanel: React.FC = () => {
 
             <div className="flex-1 overflow-y-auto flex flex-col gap-2 p-2 min-h-0">
                 {/* Session start */}
-                {!sessionId ? (
-                    <button
-                        onClick={() => { setSessionId("START_SESSION"); setEditorOn(true); }}
-                        className="w-full rounded-md border border-white/20 py-2 text-sm hover:bg-[#2F2F2F] transition">
-                        {t("startSession")}
-                    </button>
-                ) : null}
-
                 {/* ===== EDIT MODE ===== */}
                 {currentMask !== 0 && activeMask ? (
                     <>
@@ -205,11 +204,19 @@ export const AnnotationPanel: React.FC = () => {
                         </button>
 
                         {masks.length > 0 ? (
-                            <button
-                                className="border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 transition-colors"
-                                onClick={handleExport}>
-                                {t("exportJson")}
-                            </button>
+                            <div className="flex gap-1.5">
+                                <button
+                                    disabled={saving}
+                                    className="flex-1 border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                    onClick={handleSaveProject}>
+                                    {saving ? t("saving") : t("saveProject")}
+                                </button>
+                                <button
+                                    className="flex-1 border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 transition-colors"
+                                    onClick={handleExport}>
+                                    {t("exportJson")}
+                                </button>
+                            </div>
                         ) : null}
                     </>
                 ) : null}

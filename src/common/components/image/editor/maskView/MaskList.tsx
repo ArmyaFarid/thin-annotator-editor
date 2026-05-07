@@ -7,7 +7,6 @@ import {
     type MaskLayer,
     promptsAtom,
     refineModeAtom,
-    sessionIdAtom,
     subtractModeAtom,
     activeImageSizeAtom,
 } from "@/app/atom.ts";
@@ -20,7 +19,6 @@ export default function MaskList() {
     const [prompts, setPrompts] = useAtom(promptsAtom);
     const [currentMask, setCurrentMask] = useAtom(currentMaskAtom);
     const [, setEditorOn] = useAtom(editorOnAtom);
-    const [sessionId, setSessionId] = useAtom(sessionIdAtom);
     const [, setRefineMode] = useAtom(refineModeAtom);
     const [subtractMode, setSubtractMode] = useAtom(subtractModeAtom);
     const [activeTool, setActiveTool] = useAtom(activeToolAtom);
@@ -119,25 +117,6 @@ export default function MaskList() {
 
     return (
         <div className="h-full w-full flex flex-col bg-secondary border border-white/20 rounded-md p-2 gap-2">
-            {!sessionId ? (
-                <button
-                    onClick={() => {
-                        setSessionId("START_SESSION");
-                        setEditorOn(true);
-                    }}
-                    className="
-                        w-full mt-3
-                        rounded-md
-                        border border-white/20
-                        py-2
-                        text-sm
-                        hover:bg-[#2F2F2F]
-                        transition
-                    ">
-                    Commencer la session
-                </button>
-            ) : null}
-
             {/* ===== EDIT MODE ===== */}
             {currentMask !== 0 && activeMask ? (
                 <>

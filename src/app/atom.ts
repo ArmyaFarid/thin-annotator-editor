@@ -79,7 +79,6 @@ export const slicPromptsAtom = atom<SlicPrompt | undefined>(undefined);
 export const masksAtom = atom<Mask[]>([]);
 export const currentMaskAtom = atom<number>(0);
 export const editorOnAtom = atom<boolean>(false);
-export const sessionIdAtom = atom<string | undefined>(undefined);
 
 export type FilterGammaCombination = {
     filter: string | null;
@@ -133,3 +132,13 @@ export const preserveZoomAtom = atom<boolean>(
 );
 export const showShortcutsAtom = atom<boolean>(false);
 export const minimapVisibleAtom = atom<boolean>(true);
+
+export interface ActivePair {
+    pairsCode: string;
+    sampleId: string;
+}
+
+export const activePairAtom = atom<ActivePair | null>(null);
+
+export const pendingAnnotationsAtom = atom<Mask[] | null>(null);
+

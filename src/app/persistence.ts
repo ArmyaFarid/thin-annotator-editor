@@ -4,15 +4,14 @@ const STORAGE_KEY = "sam2_annotation_draft";
 
 interface DraftState {
     masks: Mask[];
-    sessionId: string | undefined;
 }
 
-export function saveDraft(masks: Mask[], sessionId: string | undefined): void {
+export function saveDraft(masks: Mask[]): void {
     try {
-        if (masks.length === 0 && !sessionId) {
+        if (masks.length === 0) {
             localStorage.removeItem(STORAGE_KEY);
         } else {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({masks, sessionId}));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({masks}));
         }
     } catch {}
 }

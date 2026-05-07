@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import {useSetAtom} from "jotai";
-import {masksAtom, sessionIdAtom} from "@/app/atom.ts";
+import {masksAtom} from "@/app/atom.ts";
 import {loadDraft, clearDraft} from "@/app/persistence.ts";
 import {t} from "@/i18n/index.ts";
 
@@ -8,13 +8,11 @@ export const RestoreDraftBanner: React.FC = () => {
     const [draft] = useState(() => loadDraft());
     const [resolved, setResolved] = useState(false);
     const setMasks = useSetAtom(masksAtom);
-    const setSessionId = useSetAtom(sessionIdAtom);
 
     if (!draft || resolved) return null;
 
     function handleContinue() {
         setMasks(draft!.masks);
-        setSessionId(draft!.sessionId);
         setResolved(true);
     }
 

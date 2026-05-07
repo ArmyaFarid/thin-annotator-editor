@@ -26,6 +26,7 @@ import AppSuspenseFallback from '@/app/AppSuspenseFallback';
 import RelayEnvironmentProvider from '@/graphql/RelayEnvironmentProvider';
 import RootLayout from '@/layouts/RootLayout';
 import AnnotatorPage from '@/pages/annotator/AnnotatorPageWrapper.tsx';
+import HomePage from '@/pages/home/home-page.tsx';
 import PageNotFoundPage from '@/routes/PageNotFoundPage';
 import useSettingsContext from '@/settings/useSettingsContext';
 import {Route, Routes} from 'react-router-dom';
@@ -49,7 +50,8 @@ function AppRoutes() {
     <>
       <Routes>
         <Route element={<RootLayout />}>
-          <Route index={true} element={<AnnotatorPage />} />
+          <Route index={true} element={<HomePage />} />
+          <Route path="annotate/:pairsCode/:sampleId" element={<AnnotatorPage />} />
           <Route path="*" element={<PageNotFoundPage />} />
         </Route>
       </Routes>

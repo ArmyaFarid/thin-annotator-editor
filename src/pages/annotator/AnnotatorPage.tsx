@@ -1,23 +1,59 @@
-import PageLayout from '@/layouts/PageLayout.tsx';
-import {Toolbar} from '@/common/components/annotator-toolbar/Toolbar.tsx';
-import {ImageEditor} from '@/common/components/image/editor/ImageEditor.tsx';
-import {AnnotationPanel} from '@/common/components/annotation-panel/AnnotationPanel.tsx';
-import FilterGammaSelector from '@/common/components/filter-gamma-selector/FilterGammaSelector.tsx';
-import {ZoomPreferenceToggle} from '@/common/components/zoom-preference/ZoomPreferenceToggle.tsx';
-import {RestoreDraftBanner} from '@/common/components/restore-draft/RestoreDraftBanner.tsx';
-import useAutosaveDraft from '@/app/useAutosaveDraft.ts';
+import {useEffect} from "react";
+import {useNavigate, useParams} from "react-router-dom";
+import {useAtom} from "jotai";
+import {ChevronLeftIcon} from "@heroicons/react/24/outline";
+import PageLayout from "@/layouts/PageLayout.tsx";
+import {Toolbar} from "@/common/components/annotator-toolbar/Toolbar.tsx";
+import {ImageEditor} from "@/common/components/image/editor/ImageEditor.tsx";
+import {AnnotationPanel} from "@/common/components/annotation-panel/AnnotationPanel.tsx";
+import FilterGammaSelector from "@/common/components/filter-gamma-selector/FilterGammaSelector.tsx";
+import {ZoomPreferenceToggle} from "@/common/components/zoom-preference/ZoomPreferenceToggle.tsx";
+import {RestoreDraftBanner} from "@/common/components/restore-draft/RestoreDraftBanner.tsx";
+import {RestoreAnnotationsModal} from "@/common/components/restore-annotations/RestoreAnnotationsModal.tsx";
+import useAutosaveDraft from "@/app/useAutosaveDraft.ts";
+import useLoadAnnotations from "@/pages/annotator/useLoadAnnotations.ts";
+import {activePairAtom} from "@/app/atom.ts";
 import {t} from "@/i18n/index.ts";
 
 export default function AnnotatorPage() {
     useAutosaveDraft();
+    const navigate = useNavigate();
+    const {pairsCode: urlPairsCode, sampleId: urlSampleId} = useParams<{
+        pairsCode: string;
+        sampleId: string;
+    }>();
+    const [activePair, setActivePair] = useAtom(activePairAtom);
+
+    // URL is source of truth — sync into atom so other consumers stay in sync
+    useEffect(() => {
+        if (urlPairsCode && urlSampleId) {
+            setActivePair({pairsCode: urlPairsCode, sampleId: urlSampleId});
+        }
+    }, [urlPairsCode, urlSampleId]);
+
+    // URL params take priority; fall back to atom (e.g. after a page refresh on /annotate)
+    const pairsCode = urlPairsCode || activePair?.pairsCode || "";
+    const sampleId = urlSampleId || activePair?.sampleId || "";
+
+    useLoadAnnotations(pairsCode, sampleId);
 
     return (
         <PageLayout>
             <RestoreDraftBanner />
+            <RestoreAnnotationsModal />
             <div className="w-full flex flex-row justify-between items-center">
-                <button className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">{t("home")}</button>
-                <button className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">{t("loadImage")}</button>
-                <button className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">{t("finish")}</button>
+                <button
+                    onClick={() => navigate("/")}
+                    className="flex items-center gap-1 bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    <ChevronLeftIcon className="w-3 h-3" />
+                    {t("home")}
+                </button>
+                <span className="text-xs text-white/40 font-mono">
+                    {pairsCode} / {sampleId}
+                </span>
+                <button className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    {t("finish")}
+                </button>
             </div>
             <div className="w-full flex flex-row gap-2 items-stretch flex-1 min-h-0">
                 <div className="flex-none">
@@ -26,7 +62,7 @@ export default function AnnotatorPage() {
 
                 <div className="flex-1 relative bg-secondary border border-white/20 rounded-md overflow-hidden">
                     <FilterGammaSelector />
-                    <ImageEditor />
+                    <ImageEditor pairsCode={pairsCode} sampleId={sampleId} />
                     <ZoomPreferenceToggle />
                 </div>
 
