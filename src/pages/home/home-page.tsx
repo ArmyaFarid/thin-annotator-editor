@@ -16,7 +16,7 @@ export default function HomePage() {
         const result = await pickFolder();
         if (!result) return;
 
-        clearDraft();
+        clearDraft(result.pairsCode, result.sampleId);
         setActivePair({pairsCode: result.pairsCode, sampleId: result.sampleId});
         setPendingAnnotations(result.annotations ?? null);
         navigate(`/annotate/${result.pairsCode}/${result.sampleId}`, {state: {source: "pick-folder"}});

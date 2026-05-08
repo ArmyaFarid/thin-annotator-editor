@@ -42,7 +42,7 @@ export default function AnnotatorPage() {
 
     return (
         <PageLayout>
-            <RestoreDraftBanner onDiscard={refetchAnnotations} />
+            <RestoreDraftBanner pairsCode={pairsCode} sampleId={sampleId} onDiscard={refetchAnnotations} />
             <RestoreAnnotationsModal />
             <div className="w-full flex flex-row justify-between items-center">
                 <button

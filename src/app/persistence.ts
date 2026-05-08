@@ -1,24 +1,27 @@
 import type {Mask} from "@/app/atom.ts";
 
-const STORAGE_KEY = "sam2_annotation_draft";
-
 interface DraftState {
     masks: Mask[];
 }
 
-export function saveDraft(masks: Mask[]): void {
+function draftKey(pairsCode: string, sampleId: string): string {
+    return `sam2_annotation_draft:${pairsCode}/${sampleId}`;
+}
+
+export function saveDraft(pairsCode: string, sampleId: string, masks: Mask[]): void {
     try {
+        const key = draftKey(pairsCode, sampleId);
         if (masks.length === 0) {
-            localStorage.removeItem(STORAGE_KEY);
+            localStorage.removeItem(key);
         } else {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({masks}));
+            localStorage.setItem(key, JSON.stringify({masks}));
         }
     } catch {}
 }
 
-export function loadDraft(): DraftState | null {
+export function loadDraft(pairsCode: string, sampleId: string): DraftState | null {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(draftKey(pairsCode, sampleId));
         if (!raw) return null;
         const parsed = JSON.parse(raw) as DraftState;
         if (!Array.isArray(parsed.masks) || parsed.masks.length === 0) return null;
@@ -28,8 +31,8 @@ export function loadDraft(): DraftState | null {
     }
 }
 
-export function clearDraft(): void {
+export function clearDraft(pairsCode: string, sampleId: string): void {
     try {
-        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(draftKey(pairsCode, sampleId));
     } catch {}
 }

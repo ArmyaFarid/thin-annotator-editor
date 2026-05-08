@@ -28,7 +28,7 @@ export default function useLoadAnnotations(pairsCode: string, sampleId: string, 
         if (skip) return;
         if (!pairsCode || !sampleId) return;
         if (pending !== null || masks.length > 0) return;
-        if (loadDraft() !== null) return; // localStorage is more recent than backend save
+        if (loadDraft(pairsCode, sampleId) !== null) return; // localStorage is more recent than backend save
         fetchAnnotations();
     }, [pairsCode, sampleId, skip]);
 

@@ -5,11 +5,13 @@ import {loadDraft, clearDraft} from "@/app/persistence.ts";
 import {t} from "@/i18n/index.ts";
 
 interface RestoreDraftBannerProps {
+    pairsCode: string;
+    sampleId: string;
     onDiscard?: () => void;
 }
 
-export const RestoreDraftBanner: React.FC<RestoreDraftBannerProps> = ({onDiscard}) => {
-    const [draft] = useState(() => loadDraft());
+export const RestoreDraftBanner: React.FC<RestoreDraftBannerProps> = ({pairsCode, sampleId, onDiscard}) => {
+    const [draft] = useState(() => loadDraft(pairsCode, sampleId));
     const [resolved, setResolved] = useState(false);
     const setMasks = useSetAtom(masksAtom);
 
@@ -21,7 +23,7 @@ export const RestoreDraftBanner: React.FC<RestoreDraftBannerProps> = ({onDiscard
     }
 
     function handleDiscard() {
-        clearDraft();
+        clearDraft(pairsCode, sampleId);
         setResolved(true);
         onDiscard?.();
     }
