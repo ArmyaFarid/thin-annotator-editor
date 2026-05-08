@@ -1,5 +1,5 @@
 import {useEffect} from "react";
-import {useNavigate, useParams} from "react-router-dom";
+import {useLocation, useNavigate, useParams} from "react-router-dom";
 import {useAtom} from "jotai";
 import {ChevronLeftIcon} from "@heroicons/react/24/outline";
 import PageLayout from "@/layouts/PageLayout.tsx";
@@ -18,6 +18,7 @@ import {t} from "@/i18n/index.ts";
 export default function AnnotatorPage() {
     useAutosaveDraft();
     const navigate = useNavigate();
+    const location = useLocation();
     const {pairsCode: urlPairsCode, sampleId: urlSampleId} = useParams<{
         pairsCode: string;
         sampleId: string;
@@ -35,11 +36,13 @@ export default function AnnotatorPage() {
     const pairsCode = urlPairsCode || activePair?.pairsCode || "";
     const sampleId = urlSampleId || activePair?.sampleId || "";
 
-    useLoadAnnotations(pairsCode, sampleId);
+    // pick-folder already loaded annotations into the atom — skip both restores
+    const isPickFolder = (location.state as {source?: string} | null)?.source === "pick-folder";
+    const refetchAnnotations = useLoadAnnotations(pairsCode, sampleId, isPickFolder);
 
     return (
         <PageLayout>
-            <RestoreDraftBanner />
+            <RestoreDraftBanner onDiscard={refetchAnnotations} />
             <RestoreAnnotationsModal />
             <div className="w-full flex flex-row justify-between items-center">
                 <button

@@ -19,7 +19,7 @@ export default function HomePage() {
         clearDraft();
         setActivePair({pairsCode: result.pairsCode, sampleId: result.sampleId});
         setPendingAnnotations(result.annotations ?? null);
-        navigate(`/annotate/${result.pairsCode}/${result.sampleId}`);
+        navigate(`/annotate/${result.pairsCode}/${result.sampleId}`, {state: {source: "pick-folder"}});
     }
 
     return (

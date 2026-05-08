@@ -4,7 +4,11 @@ import {masksAtom} from "@/app/atom.ts";
 import {loadDraft, clearDraft} from "@/app/persistence.ts";
 import {t} from "@/i18n/index.ts";
 
-export const RestoreDraftBanner: React.FC = () => {
+interface RestoreDraftBannerProps {
+    onDiscard?: () => void;
+}
+
+export const RestoreDraftBanner: React.FC<RestoreDraftBannerProps> = ({onDiscard}) => {
     const [draft] = useState(() => loadDraft());
     const [resolved, setResolved] = useState(false);
     const setMasks = useSetAtom(masksAtom);
@@ -19,6 +23,7 @@ export const RestoreDraftBanner: React.FC = () => {
     function handleDiscard() {
         clearDraft();
         setResolved(true);
+        onDiscard?.();
     }
 
     const count = draft.masks.length;
