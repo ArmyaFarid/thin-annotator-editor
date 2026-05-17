@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {useAtom, useAtomValue, useSetAtom} from "jotai";
+import {toast} from "sonner";
 import {
     activeToolAtom,
     activeImageSizeAtom,
@@ -24,6 +25,9 @@ import usePreserveZoom from "@/canvas/usePreserveZoom.ts";
 import {Minimap} from "@/canvas/Minimap.tsx";
 import {ShortcutPanel} from "@/canvas/ShortcutPanel.tsx";
 import {SHORTCUT_MAP} from "@/canvas/shortcuts.ts";
+
+// ≤100 superpixels — backend: n_segments = w·h/400
+const MAX_SLIC_BBOX_AREA = 40_000;
 
 interface CanvasStackProps {
     imageUrl: string | undefined;
@@ -216,6 +220,13 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
             onSlicBboxAdded(x: number, y: number, w: number, h: number) {
                 const size = imageSizeRef.current;
                 if (!size) {
+                    return;
+                }
+
+                if (w * h > MAX_SLIC_BBOX_AREA) {
+                    toast.error("Zone SLIC trop grande", {
+                        description: "Réduisez la sélection (max 100 superpixels).",
+                    });
                     return;
                 }
 
