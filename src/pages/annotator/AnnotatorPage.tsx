@@ -1,6 +1,7 @@
-import {useEffect} from "react";
+import {useEffect, useState} from "react";
 import {useLocation, useNavigate, useParams} from "react-router-dom";
 import {useAtom} from "jotai";
+import {toast} from "sonner";
 import {ChevronLeftIcon} from "@heroicons/react/24/outline";
 import PageLayout from "@/layouts/PageLayout.tsx";
 import {Toolbar} from "@/common/components/annotator-toolbar/Toolbar.tsx";
@@ -12,6 +13,7 @@ import {RestoreDraftBanner} from "@/common/components/restore-draft/RestoreDraft
 import {RestoreAnnotationsModal} from "@/common/components/restore-annotations/RestoreAnnotationsModal.tsx";
 import useAutosaveDraft from "@/app/useAutosaveDraft.ts";
 import useLoadAnnotations from "@/pages/annotator/useLoadAnnotations.ts";
+import useSaveAnnotations from "@/common/components/annotation-panel/useSaveAnnotations.ts";
 import {activePairAtom} from "@/app/atom.ts";
 import {t} from "@/i18n/index.ts";
 
@@ -40,21 +42,64 @@ export default function AnnotatorPage() {
     const isPickFolder = (location.state as {source?: string} | null)?.source === "pick-folder";
     const refetchAnnotations = useLoadAnnotations(pairsCode, sampleId, isPickFolder);
 
+    const [showFinishModal, setShowFinishModal] = useState(false);
+    const [saveAnnotations, {saving}] = useSaveAnnotations();
+
+    async function handleSaveAndLeave() {
+        const ok = await saveAnnotations();
+        if (ok) {
+            toast.success("Projet sauvegardé");
+            navigate("/");
+        } else {
+            toast.error("Échec de la sauvegarde");
+        }
+    }
+
     return (
         <PageLayout>
             <RestoreDraftBanner pairsCode={pairsCode} sampleId={sampleId} onDiscard={refetchAnnotations} />
             <RestoreAnnotationsModal />
+            {showFinishModal ? (
+                <div
+                    onClick={() => setShowFinishModal(false)}
+                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-[#1C1C1C] border border-white/15 rounded-xl shadow-2xl p-7 w-full max-w-sm flex flex-col gap-4">
+                        <div className="flex flex-col gap-1.5">
+                            <span className="text-sm font-semibold text-white">{t("finishTitle")}</span>
+                            <span className="text-xs text-white/55 leading-relaxed">{t("finishConfirm")}</span>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={handleSaveAndLeave}
+                                disabled={saving}
+                                className="flex-1 py-2 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm font-medium">
+                                {saving ? t("saving") : t("finishSave")}
+                            </button>
+                            <button
+                                onClick={() => navigate("/")}
+                                disabled={saving}
+                                className="flex-1 py-2 rounded-lg text-white/50 border border-white/15 hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm">
+                                {t("finishDiscard")}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
             <div className="w-full flex flex-row justify-between items-center">
                 <button
-                    onClick={() => navigate("/")}
+                    onClick={() => setShowFinishModal(true)}
                     className="flex items-center gap-1 bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">
                     <ChevronLeftIcon className="w-3 h-3" />
-                    {t("home")}
+                    {t("openNewProject")}
                 </button>
                 <span className="text-xs text-white/40 font-mono">
                     {pairsCode} / {sampleId}
                 </span>
-                <button className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">
+                <button
+                    onClick={() => setShowFinishModal(true)}
+                    className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">
                     {t("finish")}
                 </button>
             </div>

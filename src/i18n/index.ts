@@ -28,9 +28,13 @@ const T = {
         draftDiscard: "Ignorer",
 
         // Top bar
-        home: "Accueil",
+        openNewProject: "Ouvrir un nouveau projet",
         loadImage: "Charger une image",
         finish: "Terminer",
+        finishTitle: "Terminer le projet",
+        finishConfirm: "Voulez-vous enregistrer les modifications avant de quitter ?",
+        finishSave: "Enregistrer et quitter",
+        finishDiscard: "Quitter sans enregistrer",
 
         // Annotation panel
         annotationPanel: "Panneau d'annotation",
@@ -135,9 +139,13 @@ const T = {
         draftDiscard: "Discard",
 
         // Top bar
-        home: "Home",
+        openNewProject: "Open a new project",
         loadImage: "Load image",
         finish: "Finish",
+        finishTitle: "Finish project",
+        finishConfirm: "Do you want to save your changes before leaving?",
+        finishSave: "Save and leave",
+        finishDiscard: "Leave without saving",
 
         // Annotation panel
         annotationPanel: "Annotation panel",
