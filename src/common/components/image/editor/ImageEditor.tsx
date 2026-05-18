@@ -17,7 +17,6 @@ import {
 } from "@/app/atom.ts";
 import {RefineOverlay} from "@/common/components/image/editor/refine/RefineOverlay.tsx";
 import {SlicOverlay} from "@/common/components/image/editor/slic/SlicOverlay.tsx";
-import type {ImageEditorImgQuery} from "@/common/components/image/editor/__generated__/ImageEditorImgQuery.graphql.ts";
 import type {ImageEditorGetPairsQuery} from "@/common/components/image/editor/__generated__/ImageEditorGetPairsQuery.graphql.ts";
 import useSlicPrompts from "@/common/components/image/editor/useSlicPrompts.ts";
 
@@ -39,7 +38,10 @@ interface ImageEditorProps {
     sampleId: string;
 }
 
-export const ImageEditor: React.FC<ImageEditorProps> = ({pairsCode, sampleId}) => {
+export const ImageEditor: React.FC<ImageEditorProps> = ({
+    pairsCode,
+    sampleId,
+}) => {
     const [activeImage, setActiveImage] = useState<ActiveImage | null>(null);
     const [activeFilterGammaCombination] = useFilterGamma();
     const [, setConfig] = useFilterGammaConfig();
@@ -52,23 +54,12 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({pairsCode, sampleId}) =
     const setImageSize = useSetAtom(activeImageSizeAtom);
     const [slicOverlay, setSlicOverlay] = useAtom(slicOverlayAtom);
 
-    useLazyLoadQuery<ImageEditorImgQuery>(
-        graphql`
-            query ImageEditorImgQuery {
-                defaultImage {
-                    path
-                    url
-                    height
-                    width
-                }
-            }
-        `,
-        {},
-    );
-
     const pairsData = useLazyLoadQuery<ImageEditorGetPairsQuery>(
         graphql`
-            query ImageEditorGetPairsQuery($pairsCode: String!, $sampleId: String!) {
+            query ImageEditorGetPairsQuery(
+                $pairsCode: String!
+                $sampleId: String!
+            ) {
                 getPairs(pairsCode: $pairsCode, sampleId: $sampleId) {
                     id
                     sampleId
@@ -144,7 +135,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({pairsCode, sampleId}) =
     `;
 
     const [commitPoints, pointsInFlight] = useMutation(AddPointsMutation);
-    const [commitComputeSlicMutation, slicInFlight] = useMutation(ComputeSlicMutation);
+    const [commitComputeSlicMutation, slicInFlight] =
+        useMutation(ComputeSlicMutation);
 
     function sendPrompt() {
         const bboxes: [number, number, number, number][] = prompts
@@ -170,7 +162,9 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({pairsCode, sampleId}) =
             onCompleted: (res: any) => {
                 const firstMask = res?.addPointsImage?.rleMaskList?.[0]
                     ?.rleMask as RLEMask | undefined;
-                if (!firstMask) return;
+                if (!firstMask) {
+                    return;
+                }
 
                 const coords = pointPrompts.map((p) => p.point_coords);
                 const labels = pointPrompts.map((p) => p.point_labels);
@@ -178,14 +172,23 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({pairsCode, sampleId}) =
 
                 if (currentMask === 0) {
                     const id = Date.now();
-                    const color = getDistinctColor(maskCounter.current, MASK_FILL_ALPHA);
+                    const color = getDistinctColor(
+                        maskCounter.current,
+                        MASK_FILL_ALPHA,
+                    );
                     maskCounter.current += 1;
                     setMasks((prev) => [
                         ...prev,
                         {
                             id,
                             label: `Lame ${maskCounter.current - 1}`,
-                            layers: [{id: layerId, rleMask: firstMask, source: "sam" as const}],
+                            layers: [
+                                {
+                                    id: layerId,
+                                    rleMask: firstMask,
+                                    source: "sam" as const,
+                                },
+                            ],
                             point_coords: coords,
                             point_labels: labels,
                             color,
@@ -195,14 +198,32 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({pairsCode, sampleId}) =
                 } else {
                     setMasks((prev) =>
                         prev.map((m) => {
-                            if (m.id !== currentMask) return m;
-                            const hasSam = m.layers.some((l) => l.source === "sam");
+                            if (m.id !== currentMask) {
+                                return m;
+                            }
+                            const hasSam = m.layers.some(
+                                (l) => l.source === "sam",
+                            );
                             const layers = hasSam
                                 ? m.layers.map((l) =>
-                                      l.source === "sam" ? {...l, rleMask: firstMask} : l,
+                                      l.source === "sam"
+                                          ? {...l, rleMask: firstMask}
+                                          : l,
                                   )
-                                : [{id: layerId, rleMask: firstMask, source: "sam" as const}, ...m.layers];
-                            return {...m, layers, point_coords: coords, point_labels: labels};
+                                : [
+                                      {
+                                          id: layerId,
+                                          rleMask: firstMask,
+                                          source: "sam" as const,
+                                      },
+                                      ...m.layers,
+                                  ];
+                            return {
+                                ...m,
+                                layers,
+                                point_coords: coords,
+                                point_labels: labels,
+                            };
                         }),
                     );
                 }
@@ -211,7 +232,9 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({pairsCode, sampleId}) =
     }
 
     function sendSlicPrompt() {
-        if (!slicPrompt) return;
+        if (!slicPrompt) {
+            return;
+        }
 
         const bbox: [number, number, number, number] | null = slicPrompt.bbox
             ? [
@@ -236,7 +259,9 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({pairsCode, sampleId}) =
                     id: item.objectId,
                     rle: item.rleMask,
                 }));
-                if (superpixels.length === 0) return;
+                if (superpixels.length === 0) {
+                    return;
+                }
                 setSlicOverlay({
                     bbox: {
                         x: Math.round(slicPrompt.bbox.left),
@@ -252,11 +277,15 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({pairsCode, sampleId}) =
     }
 
     useEffect(() => {
-        if (prompts.length > 0) sendPrompt();
+        if (prompts.length > 0) {
+            sendPrompt();
+        }
     }, [prompts]);
 
     useEffect(() => {
-        if (slicPrompt) sendSlicPrompt();
+        if (slicPrompt) {
+            sendSlicPrompt();
+        }
     }, [slicPrompt]);
 
     const isLoading = pointsInFlight || slicInFlight;
