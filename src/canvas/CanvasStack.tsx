@@ -521,14 +521,23 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
         return () => observer.disconnect();
     }, []);
 
-    // Scroll-to-zoom
-    const handleWheel = useCallback((e: React.WheelEvent) => {
-        e.preventDefault();
-        const rect = containerRef.current!.getBoundingClientRect();
-        const cx = e.clientX - rect.left;
-        const cy = e.clientY - rect.top;
-        const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
-        setView((v) => zoomAt(v, cx, cy, factor));
+    // Scroll-to-zoom — native non-passive listener so preventDefault works
+    // (React attaches wheel handlers as passive, which forbids preventDefault)
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) {
+            return;
+        }
+        const onWheel = (e: WheelEvent) => {
+            e.preventDefault();
+            const rect = container.getBoundingClientRect();
+            const cx = e.clientX - rect.left;
+            const cy = e.clientY - rect.top;
+            const factor = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+            setView((v) => zoomAt(v, cx, cy, factor));
+        };
+        container.addEventListener("wheel", onWheel, {passive: false});
+        return () => container.removeEventListener("wheel", onWheel);
     }, []);
 
     // Unified mouse handlers — distinguish pan drag from canvas interactions
@@ -633,8 +642,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 overflow: "hidden",
                 width: "100%",
                 height: "100%",
-            }}
-            onWheel={handleWheel}>
+            }}>
             <div
                 ref={innerRef}
                 style={{
