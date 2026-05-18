@@ -1,8 +1,13 @@
 import React from "react";
 import {useAtom} from "jotai";
-import {masksAtom, type MineralAnnotation} from "@/app/atom.ts";
-import useMineralList from "@/common/components/annotation-panel/useMineralList.ts";
-import {t} from "@/i18n/index.ts";
+import {
+    masksAtom,
+    type MineralAnnotation,
+    type AnnotationOption,
+    type MineralOption,
+} from "@/app/atom.ts";
+import useAnnotationOptions from "@/common/components/annotation-panel/useAnnotationOptions.ts";
+import {t, LANG} from "@/i18n/index.ts";
 
 const EMPTY_ANNOTATION: MineralAnnotation = {
     mineralIds: [null, null, null],
@@ -16,20 +21,72 @@ const EMPTY_ANNOTATION: MineralAnnotation = {
     notes: "",
 };
 
-interface MineralAnnotationFormProps {
-    maskId: number;
-}
-
 const HYPOTHESES = [
     {label: () => t("hypothesis1"), sublabel: () => t("mostProbable")},
     {label: () => t("hypothesis2"), sublabel: () => ""},
     {label: () => t("hypothesis3"), sublabel: () => t("leastProbable")},
 ] as const;
 
+const selectCls =
+    "w-full bg-transparent border border-white/15 rounded px-1.5 py-1 text-xs text-foreground focus:outline-none focus:border-white/30";
+
+// A stored value with no matching option still shows — as its raw value.
+function isOrphan(value: string | null, options: AnnotationOption[]): boolean {
+    return value != null && value !== "" && !options.some((o) => o.value === value);
+}
+
+interface PropertySelectProps {
+    value: string | null;
+    options: AnnotationOption[];
+    onChange: (value: string | null) => void;
+}
+
+const PropertySelect: React.FC<PropertySelectProps> = ({value, options, onChange}) => (
+    <select
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value || null)}
+        className={selectCls}>
+        <option value="">—</option>
+        {options.map((o) => (
+            <option key={o.value} value={o.value}>{o.label[LANG]}</option>
+        ))}
+        {isOrphan(value, options) ? <option value={value!}>{value}</option> : null}
+    </select>
+);
+
+interface MineralSelectProps {
+    value: string | null;
+    groups: AnnotationOption[];
+    minerals: MineralOption[];
+    onChange: (value: string | null) => void;
+}
+
+const MineralSelect: React.FC<MineralSelectProps> = ({value, groups, minerals, onChange}) => (
+    <select
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value || null)}
+        className={`${selectCls} ${!value ? "border-white/25 text-white/40" : ""}`}>
+        <option value="">{t("selectMineral")}</option>
+        {groups.map((g) => (
+            <optgroup key={g.value} label={g.label[LANG]}>
+                {minerals
+                    .filter((m) => m.group === g.value)
+                    .map((m) => (
+                        <option key={m.value} value={m.value}>{m.label[LANG]}</option>
+                    ))}
+            </optgroup>
+        ))}
+        {isOrphan(value, minerals) ? <option value={value!}>{value}</option> : null}
+    </select>
+);
+
+interface MineralAnnotationFormProps {
+    maskId: number;
+}
+
 export const MineralAnnotationForm: React.FC<MineralAnnotationFormProps> = ({maskId}) => {
     const [masks, setMasks] = useAtom(masksAtom);
-    const minerals = useMineralList();
-    const groups = Array.from(new Set(minerals.map((m) => m.group)));
+    const options = useAnnotationOptions();
 
     const mask = masks.find((m) => m.id === maskId);
     const ann: MineralAnnotation = mask?.annotation ?? EMPTY_ANNOTATION;
@@ -53,7 +110,7 @@ export const MineralAnnotationForm: React.FC<MineralAnnotationFormProps> = ({mas
                 const annotation = {...(m.annotation ?? EMPTY_ANNOTATION), mineralIds: next};
                 // First hypothesis always names the mask
                 if (index === 0 && value) {
-                    const name = minerals.find((mi) => mi.id === value)?.name;
+                    const name = options.minerals.find((mi) => mi.value === value)?.label[LANG];
                     if (name) return {...m, annotation, label: name};
                 }
                 return {...m, annotation};
@@ -62,21 +119,7 @@ export const MineralAnnotationForm: React.FC<MineralAnnotationFormProps> = ({mas
     }
 
     const allFilled = ann.mineralIds.every((id) => id !== null);
-    const selectCls = "w-full bg-transparent border border-white/15 rounded px-1.5 py-1 text-xs text-foreground focus:outline-none focus:border-white/30";
     const labelCls = "text-[10px] text-white/40 uppercase tracking-wide";
-
-    const mineralOptions = (
-        <>
-            <option value="">{t("selectMineral")}</option>
-            {groups.map((g) => (
-                <optgroup key={g} label={g}>
-                    {minerals.filter((m) => m.group === g).map((m) => (
-                        <option key={m.id} value={m.id}>{m.name}</option>
-                    ))}
-                </optgroup>
-            ))}
-        </>
-    );
 
     return (
         <div className="flex flex-col gap-2 border-t border-white/10 pt-2">
@@ -95,12 +138,12 @@ export const MineralAnnotationForm: React.FC<MineralAnnotationFormProps> = ({mas
                         </div>
                         <div className="flex-1 flex flex-col gap-0.5">
                             <span className="text-[10px] text-white/30">{h.label()}{h.sublabel() ? ` — ${h.sublabel()}` : ""}</span>
-                            <select
-                                value={ann.mineralIds[i] ?? ""}
-                                onChange={(e) => setMineralId(i as 0 | 1 | 2, e.target.value || null)}
-                                className={`${selectCls} ${!ann.mineralIds[i] ? "border-white/25 text-white/40" : ""}`}>
-                                {mineralOptions}
-                            </select>
+                            <MineralSelect
+                                value={ann.mineralIds[i]}
+                                groups={options.mineralGroups}
+                                minerals={options.minerals}
+                                onChange={(v) => setMineralId(i as 0 | 1 | 2, v)}
+                            />
                         </div>
                     </div>
                 ))}
@@ -113,53 +156,23 @@ export const MineralAnnotationForm: React.FC<MineralAnnotationFormProps> = ({mas
             <div className="grid grid-cols-2 gap-1.5">
                 <div className="flex flex-col gap-0.5">
                     <span className={labelCls}>{t("relief")}</span>
-                    <select value={ann.relief ?? ""} onChange={(e) => update({relief: (e.target.value as MineralAnnotation["relief"]) || null})} className={selectCls}>
-                        <option value="">—</option>
-                        <option value="faible">{t("reliefLow")}</option>
-                        <option value="moyen">{t("reliefMedium")}</option>
-                        <option value="élevé">{t("reliefHigh")}</option>
-                    </select>
+                    <PropertySelect value={ann.relief} options={options.properties.relief} onChange={(v) => update({relief: v})} />
                 </div>
                 <div className="flex flex-col gap-0.5">
                     <span className={labelCls}>{t("birefringence")}</span>
-                    <select value={ann.birefringence ?? ""} onChange={(e) => update({birefringence: (e.target.value as MineralAnnotation["birefringence"]) || null})} className={selectCls}>
-                        <option value="">—</option>
-                        <option value="faible">{t("birefLow")}</option>
-                        <option value="moyen">{t("birefMedium")}</option>
-                        <option value="élevé">{t("birefHigh")}</option>
-                        <option value="très élevé">{t("birefVeryHigh")}</option>
-                    </select>
+                    <PropertySelect value={ann.birefringence} options={options.properties.birefringence} onChange={(v) => update({birefringence: v})} />
                 </div>
                 <div className="flex flex-col gap-0.5">
                     <span className={labelCls}>{t("cleavage")}</span>
-                    <select value={ann.cleavage ?? ""} onChange={(e) => update({cleavage: (e.target.value as MineralAnnotation["cleavage"]) || null})} className={selectCls}>
-                        <option value="">—</option>
-                        <option value="aucun">{t("cleavageNone")}</option>
-                        <option value="indistinct">{t("cleavageIndistinct")}</option>
-                        <option value="bon">{t("cleavageGood")}</option>
-                        <option value="parfait">{t("cleavagePerfect")}</option>
-                    </select>
+                    <PropertySelect value={ann.cleavage} options={options.properties.cleavage} onChange={(v) => update({cleavage: v})} />
                 </div>
                 <div className="flex flex-col gap-0.5">
                     <span className={labelCls}>{t("pleochroism")}</span>
-                    <select value={ann.pleochroism ?? ""} onChange={(e) => update({pleochroism: (e.target.value as MineralAnnotation["pleochroism"]) || null})} className={selectCls}>
-                        <option value="">—</option>
-                        <option value="aucun">{t("pleochNone")}</option>
-                        <option value="faible">{t("pleochWeak")}</option>
-                        <option value="fort">{t("pleochStrong")}</option>
-                    </select>
+                    <PropertySelect value={ann.pleochroism} options={options.properties.pleochroism} onChange={(v) => update({pleochroism: v})} />
                 </div>
                 <div className="flex flex-col gap-0.5">
                     <span className={labelCls}>{t("crystalSystem")}</span>
-                    <select value={ann.crystalSystem ?? ""} onChange={(e) => update({crystalSystem: (e.target.value as MineralAnnotation["crystalSystem"]) || null})} className={selectCls}>
-                        <option value="">—</option>
-                        <option value="cubique">{t("cubic")}</option>
-                        <option value="tétragonal">{t("tetragonal")}</option>
-                        <option value="orthorhombique">{t("orthorhombic")}</option>
-                        <option value="monoclinique">{t("monoclinic")}</option>
-                        <option value="triclinique">{t("triclinic")}</option>
-                        <option value="hexagonal">{t("hexagonal")}</option>
-                    </select>
+                    <PropertySelect value={ann.crystalSystem} options={options.properties.crystalSystem} onChange={(v) => update({crystalSystem: v})} />
                 </div>
                 <div className="flex flex-col gap-0.5">
                     <span className={labelCls}>{t("extinction")}</span>

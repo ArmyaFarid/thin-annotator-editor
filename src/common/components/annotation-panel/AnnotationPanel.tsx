@@ -1,9 +1,9 @@
 import React from "react";
 import {useAtom} from "jotai";
 import {toast} from "sonner";
-import useMineralList from "@/common/components/annotation-panel/useMineralList.ts";
+import useAnnotationOptions from "@/common/components/annotation-panel/useAnnotationOptions.ts";
 import useSaveAnnotations from "@/common/components/annotation-panel/useSaveAnnotations.ts";
-import {t} from "@/i18n/index.ts";
+import {t, LANG} from "@/i18n/index.ts";
 import {
     activeImageSizeAtom,
     currentMaskAtom,
@@ -25,7 +25,7 @@ export const AnnotationPanel: React.FC = () => {
     const [imageSize] = useAtom(activeImageSizeAtom);
 
     const activeMask = currentMask !== 0 ? masks.find((m) => m.id === currentMask) : null;
-    const minerals = useMineralList();
+    const options = useAnnotationOptions();
     const [saveAnnotations, {saving}] = useSaveAnnotations();
 
     async function handleSaveProject() {
@@ -34,7 +34,8 @@ export const AnnotationPanel: React.FC = () => {
         else toast.error("Échec de la sauvegarde");
     }
     function mineralName(id: string | null) {
-        return id ? (minerals.find((m) => m.id === id)?.name ?? id) : null;
+        if (!id) return null;
+        return options.minerals.find((m) => m.value === id)?.label[LANG] ?? id;
     }
 
     function handleMaskClick(maskId: number) {

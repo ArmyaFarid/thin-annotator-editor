@@ -1,6 +1,7 @@
 import {atom} from "jotai";
 import {Tool} from "@/app/types.ts";
 import type {ImageSpacePoint} from "@/canvas/types.ts";
+import defaultAnnotationOptions from "@/data/annotation-options.json";
 
 export interface RLEMask {
     counts: string;
@@ -34,21 +35,48 @@ export interface MineralAnnotation {
     // Ordered hypotheses: index 0 = most probable, 2 = least probable. Duplicates allowed.
     mineralIds: [string | null, string | null, string | null];
     observedColor: string;
-    relief: "faible" | "moyen" | "élevé" | null;
-    birefringence: "faible" | "moyen" | "élevé" | "très élevé" | null;
-    cleavage: "aucun" | "indistinct" | "bon" | "parfait" | null;
-    crystalSystem:
-        | "cubique"
-        | "tétragonal"
-        | "orthorhombique"
-        | "monoclinique"
-        | "triclinique"
-        | "hexagonal"
-        | null;
-    pleochroism: "aucun" | "faible" | "fort" | null;
+    // The 5 fields below store an option `value` from AnnotationOptions.
+    // Plain string (not a union) because the option lists are backend-driven.
+    relief: string | null;
+    birefringence: string | null;
+    cleavage: string | null;
+    crystalSystem: string | null;
+    pleochroism: string | null;
     extinctionAngle: string;
     notes: string;
 }
+
+export interface LocalizedLabel {
+    fr: string;
+    en: string;
+}
+
+export interface AnnotationOption {
+    value: string;
+    label: LocalizedLabel;
+}
+
+export interface MineralOption extends AnnotationOption {
+    group: string;
+}
+
+export interface AnnotationOptions {
+    version: number;
+    mineralGroups: AnnotationOption[];
+    minerals: MineralOption[];
+    properties: {
+        relief: AnnotationOption[];
+        birefringence: AnnotationOption[];
+        cleavage: AnnotationOption[];
+        pleochroism: AnnotationOption[];
+        crystalSystem: AnnotationOption[];
+    };
+}
+
+// Bundled fallback — replaced at runtime by GET /api/annotation-options
+export const annotationOptionsAtom = atom<AnnotationOptions>(
+    defaultAnnotationOptions as AnnotationOptions,
+);
 
 export interface Mask {
     id: number;

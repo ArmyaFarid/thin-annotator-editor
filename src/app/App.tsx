@@ -29,11 +29,13 @@ import AnnotatorPage from '@/pages/annotator/AnnotatorPageWrapper.tsx';
 import HomePage from '@/pages/home/home-page.tsx';
 import PageNotFoundPage from '@/routes/PageNotFoundPage';
 import useSettingsContext from '@/settings/useSettingsContext';
+import useLoadAnnotationOptions from '@/app/useLoadAnnotationOptions.ts';
 import {Route, Routes} from 'react-router-dom';
 import {Toaster} from 'sonner';
 
 export default function AppWrapper() {
   const {settings} = useSettingsContext();
+  useLoadAnnotationOptions();
   return (
     <RelayEnvironmentProvider
       endpoint={settings.videoAPIEndpoint}
