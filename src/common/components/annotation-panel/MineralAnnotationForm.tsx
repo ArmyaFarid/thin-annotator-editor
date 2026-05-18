@@ -47,7 +47,18 @@ export const MineralAnnotationForm: React.FC<MineralAnnotationFormProps> = ({mas
     function setMineralId(index: 0 | 1 | 2, value: string | null) {
         const next: [string | null, string | null, string | null] = [...ann.mineralIds] as [string | null, string | null, string | null];
         next[index] = value;
-        update({mineralIds: next});
+        setMasks((prev) =>
+            prev.map((m) => {
+                if (m.id !== maskId) return m;
+                const annotation = {...(m.annotation ?? EMPTY_ANNOTATION), mineralIds: next};
+                // First hypothesis always names the mask
+                if (index === 0 && value) {
+                    const name = minerals.find((mi) => mi.id === value)?.name;
+                    if (name) return {...m, annotation, label: name};
+                }
+                return {...m, annotation};
+            }),
+        );
     }
 
     const allFilled = ann.mineralIds.every((id) => id !== null);
