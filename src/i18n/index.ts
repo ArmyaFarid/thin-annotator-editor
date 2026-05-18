@@ -8,6 +8,8 @@ const T = {
         appSubtitle: "Sélectionnez un dossier de lame mince pour commencer",
         openFolder: "Ouvrir un dossier",
         picking: "Chargement...",
+        importFailed: "Échec de l'import du projet",
+        noImagesInFolder: "Aucune image dans ce dossier. Sélectionnez un dossier de projet valide.",
 
         // Restore annotations modal
         restoreTitle: "Annotations sauvegardées trouvées",
@@ -113,6 +115,8 @@ const T = {
         appSubtitle: "Select a thin section folder to begin",
         openFolder: "Open folder",
         picking: "Loading...",
+        importFailed: "Failed to import project",
+        noImagesInFolder: "No image in this folder. Please select a valid project folder.",
 
         // Restore annotations modal
         restoreTitle: "Saved annotations found",

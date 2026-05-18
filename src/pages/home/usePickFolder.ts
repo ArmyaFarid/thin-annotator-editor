@@ -1,11 +1,13 @@
 import {useState} from "react";
 import {IMAGE_API_ENDPOINT} from "@/app/AppConfig.tsx";
 import type {Mask} from "@/app/atom.ts";
+import {t} from "@/i18n/index.ts";
 
 interface PickFolderResult {
     pairsCode: string;
     sampleId: string;
     annotations: Mask[] | null;
+    image_count: number;
 }
 
 type State = [
@@ -25,9 +27,14 @@ export default function usePickFolder(): State {
                 method: "POST",
             });
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return (await res.json()) as PickFolderResult;
-        } catch (e) {
-            setError(e instanceof Error ? e.message : "Erreur inconnue");
+            const data = (await res.json()) as PickFolderResult;
+            if (data.image_count === 0) {
+                setError(t("noImagesInFolder"));
+                return null;
+            }
+            return data;
+        } catch {
+            setError(t("importFailed"));
             return null;
         } finally {
             setLoading(false);
