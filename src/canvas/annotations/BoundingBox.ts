@@ -11,12 +11,12 @@ export class BoundingBox implements AnnotationObject {
         public readonly h: number,
     ) {}
 
-    render(ctx: CanvasRenderingContext2D, state: RenderState, scale: Scale): void {
+    render(ctx: CanvasRenderingContext2D, state: RenderState, scale: Scale, zoom: number): void {
         const dispX = this.x * scale.x;
         const dispY = this.y * scale.y;
         const dispW = this.w * scale.x;
         const dispH = this.h * scale.y;
-        const lineW = 1 / Math.min(scale.x, scale.y);
+        const lineW = 1 / Math.min(scale.x, scale.y) / zoom;
 
         ctx.save();
 

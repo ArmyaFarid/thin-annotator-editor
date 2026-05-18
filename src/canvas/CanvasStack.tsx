@@ -467,6 +467,11 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
         engineRef.current?.setMasks(masks);
     }, [masks]);
 
+    // Sync zoom → layers (keeps tool widgets a constant on-screen size)
+    useEffect(() => {
+        engineRef.current?.setZoom(view.zoom);
+    }, [view.zoom]);
+
     // Sync active object → editor + DataLayer dimming
     useEffect(() => {
         const engine = engineRef.current;

@@ -20,11 +20,11 @@ export class FreeformPath implements AnnotationObject {
         public readonly strokeWidth: number,
     ) {}
 
-    render(ctx: CanvasRenderingContext2D, state: RenderState, _scale: Scale): void {
+    render(ctx: CanvasRenderingContext2D, state: RenderState, _scale: Scale, zoom: number): void {
         if (this.points.length < 2) return;
 
         const scale = _scale;
-        const visualWidth = MASK_STROKE_WIDTH + (state === "hovered" ? 1.5 : 0);
+        const visualWidth = (MASK_STROKE_WIDTH + (state === "hovered" ? 1.5 : 0)) / zoom;
 
         ctx.save();
         ctx.beginPath();

@@ -26,12 +26,12 @@ export class Mask implements AnnotationObject {
         public readonly color: Color,
     ) {}
 
-    render(ctx: CanvasRenderingContext2D, state: RenderState, scale: Scale): void {
+    render(ctx: CanvasRenderingContext2D, state: RenderState, scale: Scale, zoom: number): void {
         // Skeleton mode: active mask whose layers are all polygons (post-contour-extraction)
         const isSkeletonMode = state === "active" && this.layers.length > 0
             && this.layers.every(l => l.canvasShape && !l.rleMask);
         if (isSkeletonMode) {
-            this.renderSkeleton(ctx, scale);
+            this.renderSkeleton(ctx, scale, zoom);
             return;
         }
 
@@ -51,7 +51,7 @@ export class Mask implements AnnotationObject {
                     ctx.drawImage(src, 0, 0, w, h, 0, 0, w * scale.x, h * scale.y);
                 } else if (layer.canvasShape) {
                     const s = layer.canvasShape;
-                    new Polygon(s.id, s.vertices, s.fillColor, s.strokeColor).render(ctx, state, scale);
+                    new Polygon(s.id, s.vertices, s.fillColor, s.strokeColor).render(ctx, state, scale, zoom);
                 }
             }
             ctx.restore();
@@ -106,7 +106,7 @@ export class Mask implements AnnotationObject {
                     }
                 } else if (layer.canvasShape) {
                     const s = layer.canvasShape;
-                    new Polygon(s.id, s.vertices, s.fillColor, s.strokeColor).render(offCtx, state, scale);
+                    new Polygon(s.id, s.vertices, s.fillColor, s.strokeColor).render(offCtx, state, scale, zoom);
                 }
             }
         }
@@ -119,7 +119,7 @@ export class Mask implements AnnotationObject {
         ctx.restore();
     }
 
-    private renderSkeleton(ctx: CanvasRenderingContext2D, scale: Scale): void {
+    private renderSkeleton(ctx: CanvasRenderingContext2D, scale: Scale, zoom: number): void {
         const {r, g, b} = this.color;
         ctx.save();
         ctx.filter = "drop-shadow(0 0 4px rgba(255,255,255,0.7))";
@@ -142,12 +142,12 @@ export class Mask implements AnnotationObject {
                 ctx.fillStyle = `rgba(${r},${g},${b},0.15)`;
                 ctx.fill();
                 ctx.strokeStyle = `rgba(${r},${g},${b},1)`;
-                ctx.lineWidth = 1.5;
+                ctx.lineWidth = 1.5 / zoom;
                 ctx.stroke();
             } else {
                 ctx.strokeStyle = "rgba(255,140,50,0.9)";
-                ctx.lineWidth = 1.5;
-                ctx.setLineDash([5, 3]);
+                ctx.lineWidth = 1.5 / zoom;
+                ctx.setLineDash([5 / zoom, 3 / zoom]);
                 ctx.stroke();
                 ctx.setLineDash([]);
             }

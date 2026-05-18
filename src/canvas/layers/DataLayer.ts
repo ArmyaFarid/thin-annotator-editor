@@ -21,6 +21,7 @@ export class DataLayer {
     private masks: MaskData[] = [];
     private scale: Scale = {x: 1, y: 1};
     private pxRatio: {x: number; y: number} = {x: 1, y: 1};
+    private zoom = 1;
     private maskCache = new Map<number, {obj: Mask; sig: string}>();
     private currentMaskId: number = 0;
     private borderOnly = false;
@@ -40,6 +41,11 @@ export class DataLayer {
 
     setPxRatio(pxRatio: {x: number; y: number}): void {
         this.pxRatio = pxRatio;
+    }
+
+    setZoom(zoom: number): void {
+        this.zoom = zoom;
+        this.render();
     }
 
     setCurrentMaskId(id: number): void {
@@ -94,16 +100,16 @@ export class DataLayer {
             const state = isActive ? "active" : "idle";
             ctx.save();
             if (hasActive && !isActive) ctx.globalAlpha = 0.3;
-            entry.obj.render(ctx, state, this.scale);
+            entry.obj.render(ctx, state, this.scale, this.zoom);
             ctx.restore();
         }
 
         for (const p of this.prompts) {
             if (p.bbox) {
-                new BoundingBox(p.id, p.bbox.left, p.bbox.top, p.bbox.width, p.bbox.height).render(ctx, "idle", this.scale);
+                new BoundingBox(p.id, p.bbox.left, p.bbox.top, p.bbox.width, p.bbox.height).render(ctx, "idle", this.scale, this.zoom);
             } else {
                 const label = p.point_labels === 1 ? 1 : 0;
-                new Keypoint(p.id, p.point_coords[0], p.point_coords[1], label).render(ctx, "idle", this.scale);
+                new Keypoint(p.id, p.point_coords[0], p.point_coords[1], label).render(ctx, "idle", this.scale, this.zoom);
             }
         }
 

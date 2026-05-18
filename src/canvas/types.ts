@@ -20,7 +20,9 @@ export interface Scale {
 export interface AnnotationObject {
     readonly id: number;
     readonly kind: string;
-    render(ctx: CanvasRenderingContext2D, state: RenderState, scale: Scale): void;
+    // zoom = current view zoom; widget sizes are divided by it to stay
+    // constant on screen (the canvas stack is CSS-scaled by zoom).
+    render(ctx: CanvasRenderingContext2D, state: RenderState, scale: Scale, zoom: number): void;
     hitTest(x: number, y: number): boolean;
     getBounds(): Rect;
 }

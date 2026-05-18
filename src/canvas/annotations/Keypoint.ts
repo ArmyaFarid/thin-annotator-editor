@@ -10,11 +10,13 @@ export class Keypoint implements AnnotationObject {
         public readonly label: 0 | 1,
     ) {}
 
-    render(ctx: CanvasRenderingContext2D, state: RenderState, scale: Scale): void {
+    render(ctx: CanvasRenderingContext2D, state: RenderState, scale: Scale, zoom: number): void {
         const dispX = this.x * scale.x;
         const dispY = this.y * scale.y;
         const color = this.label === 1 ? "#22c55e" : "#ef4444";
-        const radius = state === "hovered" || state === "active" ? 5 : 4;
+        const radius = (state === "hovered" || state === "active" ? 5 : 4) / zoom;
+        const lineW = 1.5 / zoom;
+        const arm = 3 / zoom;
 
         ctx.save();
 
@@ -24,18 +26,18 @@ export class Keypoint implements AnnotationObject {
         ctx.fill();
 
         ctx.strokeStyle = color;
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = lineW;
         ctx.stroke();
 
         ctx.strokeStyle = color;
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = lineW;
         ctx.lineCap = "round";
         ctx.beginPath();
-        ctx.moveTo(dispX - 3, dispY);
-        ctx.lineTo(dispX + 3, dispY);
+        ctx.moveTo(dispX - arm, dispY);
+        ctx.lineTo(dispX + arm, dispY);
         if (this.label === 1) {
-            ctx.moveTo(dispX, dispY - 3);
-            ctx.lineTo(dispX, dispY + 3);
+            ctx.moveTo(dispX, dispY - arm);
+            ctx.lineTo(dispX, dispY + arm);
         }
         ctx.stroke();
 

@@ -58,6 +58,12 @@ export class CanvasEngine {
         this.dataLayer.render();
     }
 
+    setZoom(zoom: number): void {
+        this.dataLayer.setZoom(zoom);
+        this.dynLayer.setZoom(zoom);
+        this.editor.setZoom(zoom);
+    }
+
     setActiveTool(tool: Tool): void {
         this.toolManager.setActiveTool(tool);
     }

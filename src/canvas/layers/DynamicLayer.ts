@@ -7,6 +7,7 @@ export class DynamicLayer {
     private state: InteractionState = {type: "idle"};
     private scale: Scale = {x: 1, y: 1};
     private pxRatio: {x: number; y: number} = {x: 1, y: 1};
+    private zoom = 1;
     private rafId = 0;
     private editor: ObjectEditor | null = null;
 
@@ -28,6 +29,10 @@ export class DynamicLayer {
 
     setPxRatio(pxRatio: {x: number; y: number}): void {
         this.pxRatio = pxRatio;
+    }
+
+    setZoom(zoom: number): void {
+        this.zoom = zoom;
     }
 
     setInteractionState(state: InteractionState): void {
@@ -54,6 +59,8 @@ export class DynamicLayer {
         ctx.save();
         ctx.scale(this.pxRatio.x, this.pxRatio.y);
         const s = this.scale;
+        // Widget sizes are divided by zoom so they stay constant on screen.
+        const z = this.zoom;
 
         if (this.state.type === "bbox-drawing") {
             const {start, current} = this.state;
@@ -66,8 +73,8 @@ export class DynamicLayer {
             ctx.fillStyle = "rgba(79,195,247,0.1)";
             ctx.fillRect(x, y, w, h);
             ctx.strokeStyle = "#4FC3F7";
-            ctx.lineWidth = 2;
-            ctx.setLineDash([6, 3]);
+            ctx.lineWidth = 2 / z;
+            ctx.setLineDash([6 / z, 3 / z]);
             ctx.strokeRect(x, y, w, h);
             ctx.restore();
         }
@@ -129,14 +136,14 @@ export class DynamicLayer {
                 }
                 ctx.lineTo(cursor.x * s.x, cursor.y * s.y);
                 ctx.strokeStyle = strokeColor;
-                ctx.lineWidth = 2;
-                if (subtract) ctx.setLineDash([8, 5]);
+                ctx.lineWidth = 2 / z;
+                if (subtract) ctx.setLineDash([8 / z, 5 / z]);
                 ctx.stroke();
                 ctx.setLineDash([]);
 
                 for (const v of vertices) {
                     ctx.beginPath();
-                    ctx.arc(v.x * s.x, v.y * s.y, 4, 0, Math.PI * 2);
+                    ctx.arc(v.x * s.x, v.y * s.y, 4 / z, 0, Math.PI * 2);
                     ctx.fillStyle = strokeColor;
                     ctx.fill();
                 }
@@ -146,11 +153,11 @@ export class DynamicLayer {
                     (cursor.x - first.x) * s.x,
                     (cursor.y - first.y) * s.y,
                 );
-                if (vertices.length >= 3 && distPx < POLYGON_CLOSE_PX) {
+                if (vertices.length >= 3 && distPx < POLYGON_CLOSE_PX / z) {
                     ctx.beginPath();
-                    ctx.arc(first.x * s.x, first.y * s.y, 9, 0, Math.PI * 2);
+                    ctx.arc(first.x * s.x, first.y * s.y, 9 / z, 0, Math.PI * 2);
                     ctx.strokeStyle = strokeColor;
-                    ctx.lineWidth = 3;
+                    ctx.lineWidth = 3 / z;
                     ctx.setLineDash([]);
                     ctx.stroke();
                 }

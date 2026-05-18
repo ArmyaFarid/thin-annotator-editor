@@ -32,10 +32,10 @@ export class Polygon implements AnnotationObject {
         public readonly strokeColor: string,
     ) {}
 
-    render(ctx: CanvasRenderingContext2D, state: RenderState, scale: Scale): void {
+    render(ctx: CanvasRenderingContext2D, state: RenderState, scale: Scale, zoom: number): void {
         if (this.vertices.length < 2) return;
 
-        const visualWidth = MASK_STROKE_WIDTH + (state === "hovered" ? 1.5 : 0);
+        const visualWidth = (MASK_STROKE_WIDTH + (state === "hovered" ? 1.5 : 0)) / zoom;
 
         ctx.save();
         ctx.beginPath();
