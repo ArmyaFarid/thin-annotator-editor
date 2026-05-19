@@ -6,7 +6,8 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(grep *)",
-      "Bash(yarn tsc *)"
+      "Bash(yarn tsc *)",
+      "Bash(echo \"EXIT: $?\")"
     ]
   }
 }
