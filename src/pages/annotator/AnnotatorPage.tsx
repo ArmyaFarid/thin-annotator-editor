@@ -48,7 +48,7 @@ export default function AnnotatorPage() {
     );
 
     const [showFinishModal, setShowFinishModal] = useState(false);
-    const [saveAnnotations, {saving}] = useSaveProject();
+    const [saveAnnotations, {savingProject}] = useSaveProject();
 
     async function handleSaveAndLeave() {
         const ok = await saveAnnotations();
@@ -86,13 +86,13 @@ export default function AnnotatorPage() {
                         <div className="flex gap-2">
                             <button
                                 onClick={handleSaveAndLeave}
-                                disabled={saving}
+                                disabled={savingProject}
                                 className="flex-1 py-2 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm font-medium">
-                                {saving ? t("saving") : t("finishSave")}
+                                {savingProject ? t("saving") : t("finishSave")}
                             </button>
                             <button
                                 onClick={() => navigate("/")}
-                                disabled={saving}
+                                disabled={savingProject}
                                 className="flex-1 py-2 rounded-lg text-white/50 border border-white/15 hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm">
                                 {t("finishDiscard")}
                             </button>

@@ -15,15 +15,12 @@ import {
 import {mergeToCanvas, canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {MaskEditTools} from "@/common/components/annotation-panel/MaskEditTools.tsx";
 import {MineralAnnotationForm} from "@/common/components/annotation-panel/MineralAnnotationForm.tsx";
-import useFilterGamma from "@/common/components/filter-gamma-selector/useFilterGamma.ts";
-import useActiveImage from "@/common/components/image/editor/useActiveImage.ts";
+import useSaveAnnotation from "@/common/components/annotation-panel/useSaveAnnotation.ts";
 
 export const AnnotationPanel: React.FC = () => {
     const [masks, setMasks] = useAtom(masksAtom);
     const [prompts, setPrompts] = useAtom(promptsAtom);
     const [currentMask, setCurrentMask] = useAtom(currentMaskAtom);
-    const [combination, _] = useFilterGamma();
-    const [activeImage, setActiveImage] = useActiveImage();
     const [, setEditorOn] = useAtom(editorOnAtom);
     const [, setSubtractMode] = useAtom(subtractModeAtom);
     const [imageSize] = useAtom(activeImageSizeAtom);
@@ -31,16 +28,27 @@ export const AnnotationPanel: React.FC = () => {
     const activeMask =
         currentMask !== 0 ? masks.find((m) => m.id === currentMask) : null;
     const options = useAnnotationOptions();
-    const [saveAnnotations, {saving}] = useSaveProject();
+    const [saveProject, {saving: isSavingProject}] = useSaveProject();
+    const [saveAnnotation, {saving: isSavingAnnotation}] = useSaveAnnotation();
 
     async function handleSaveProject() {
-        const ok = await saveAnnotations();
+        const ok = await saveProject();
         if (ok) {
             toast.success("Projet sauvegardé");
         } else {
             toast.error("Échec de la sauvegarde");
         }
     }
+
+    async function handleSaveAnnotation() {
+        const ok = await saveAnnotation();
+        if (ok) {
+            toast.success("Projet sauvegardé");
+        } else {
+            toast.error("Échec de la sauvegarde");
+        }
+    }
+
     function mineralName(id: string | null) {
         if (!id) {
             return null;
@@ -109,81 +117,6 @@ export const AnnotationPanel: React.FC = () => {
         a.download = "annotations.json";
         a.click();
         URL.revokeObjectURL(url);
-    }
-
-    function downloadJson(data: unknown, filename = "annotations.json") {
-        const blob = new Blob([JSON.stringify(data, null, 2)], {
-            type: "application/json",
-        });
-
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        a.click();
-
-        URL.revokeObjectURL(url);
-    }
-
-    function saveCurrentImageAnnotation() {
-        if (!imageSize) {
-            return;
-        }
-
-        const filename = activeImage.path.split(/[\\/]/).pop();
-        const image = {
-            id: 1,
-            file_name: filename,
-            width: imageSize.w,
-            height: imageSize.h,
-        };
-
-        const metadata = {
-            lightning_modality: combination.filter,
-            gamma:
-                combination.filter === 1
-                    ? "add"
-                    : combination.filter === -1
-                      ? "sous"
-                      : "na",
-            rotation: 45,
-        };
-
-        const license = {
-            name: "Attribution-NonCommercial",
-            url: "http://creativecommons.org/licenses/by-nc/2.0/",
-        };
-
-        const annotations = masks.map((m) => {
-            const canvas = mergeToCanvas(m, imageSize.w, imageSize.h);
-            const rle = canvasToRLE(canvas);
-            const {mineralIds, ...annotationWithoutMineralIds} =
-                m.annotation ?? {};
-            return {
-                id: m.id,
-                // annotation: m.annotation,
-                segmentation: rle,
-                mineralIds,
-                ...annotationWithoutMineralIds,
-            };
-        });
-
-        const all = {
-            metadata,
-            license,
-            image,
-            annotations,
-        };
-
-        console.log(all);
-        console.log(activeImage);
-        // return;
-
-        downloadJson(
-            all,
-            filename.replace(/\.[^/.]+$/, "") + "-annotation.json",
-        );
     }
 
     return (
@@ -351,10 +284,12 @@ export const AnnotationPanel: React.FC = () => {
                         {masks.length > 0 ? (
                             <div className="flex gap-1.5">
                                 <button
-                                    disabled={saving}
+                                    disabled={isSavingProject}
                                     className="flex-1 border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                                     onClick={handleSaveProject}>
-                                    {saving ? t("saving") : t("saveProject")}
+                                    {isSavingProject
+                                        ? t("saving")
+                                        : t("saveProject")}
                                 </button>
                                 <button
                                     className="flex-1 border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 transition-colors"
@@ -362,9 +297,12 @@ export const AnnotationPanel: React.FC = () => {
                                     {t("exportJson")}
                                 </button>
                                 <button
+                                    disabled={isSavingAnnotation}
                                     className="flex-1 border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 transition-colors"
-                                    onClick={saveCurrentImageAnnotation}>
-                                    Save Annotation
+                                    onClick={handleSaveAnnotation}>
+                                    {isSavingAnnotation
+                                        ? t("saving")
+                                        : t("saveAnnotation")}
                                 </button>
                             </div>
                         ) : null}

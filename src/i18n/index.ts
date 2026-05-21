@@ -9,21 +9,25 @@ const T = {
         openFolder: "Ouvrir un dossier",
         picking: "Chargement...",
         importFailed: "Échec de l'import du projet",
-        noImagesInFolder: "Aucune image dans ce dossier. Sélectionnez un dossier de projet valide.",
+        noImagesInFolder:
+            "Aucune image dans ce dossier. Sélectionnez un dossier de projet valide.",
 
         // Restore annotations modal
         restoreTitle: "Annotations sauvegardées trouvées",
-        restoreFound: "Ce projet contient des annotations sauvegardées. Voulez-vous les restaurer ?",
+        restoreFound:
+            "Ce projet contient des annotations sauvegardées. Voulez-vous les restaurer ?",
         restoreYes: "Restaurer",
         restoreNo: "Ignorer",
 
         // Save project
         saveProject: "Sauvegarder",
+        saveAnnotation: "Enregistrer l'annotation",
         saving: "Sauvegarde...",
 
         // Draft restore modal
         draftTitle: "Brouillon détecté",
-        draftFound: "Des annotations non sauvegardées ont été trouvées. Souhaitez-vous les reprendre ou les ignorer ?",
+        draftFound:
+            "Des annotations non sauvegardées ont été trouvées. Souhaitez-vous les reprendre ou les ignorer ?",
         draftContinue: "Reprendre",
         draftDiscard: "Ignorer",
 
@@ -32,7 +36,8 @@ const T = {
         loadImage: "Charger une image",
         finish: "Terminer",
         finishTitle: "Terminer le projet",
-        finishConfirm: "Voulez-vous enregistrer les modifications avant de quitter ?",
+        finishConfirm:
+            "Voulez-vous enregistrer les modifications avant de quitter ?",
         finishSave: "Enregistrer et quitter",
         finishDiscard: "Quitter sans enregistrer",
 
@@ -64,7 +69,8 @@ const T = {
         mostProbable: "la plus probable",
         leastProbable: "la moins probable",
         selectMineral: "— sélectionner —",
-        hypothesesRequired: "Les 3 hypothèses sont requises avant d'enregistrer.",
+        hypothesesRequired:
+            "Les 3 hypothèses sont requises avant d'enregistrer.",
         relief: "Relief",
         birefringence: "Biréfringence",
         cleavage: "Clivage",
@@ -110,8 +116,10 @@ const T = {
         // Zoom preference toggle
         zoomLocked: "Zoom verrouillé",
         zoomReset: "Zoom réinitialisé",
-        zoomLockedTitle: "Zoom préservé lors du changement d'image (cliquer pour désactiver)",
-        zoomResetTitle: "Zoom réinitialisé lors du changement d'image (cliquer pour activer la préservation)",
+        zoomLockedTitle:
+            "Zoom préservé lors du changement d'image (cliquer pour désactiver)",
+        zoomResetTitle:
+            "Zoom réinitialisé lors du changement d'image (cliquer pour activer la préservation)",
     },
     en: {
         // Home page
@@ -120,21 +128,25 @@ const T = {
         openFolder: "Open folder",
         picking: "Loading...",
         importFailed: "Failed to import project",
-        noImagesInFolder: "No image in this folder. Please select a valid project folder.",
+        noImagesInFolder:
+            "No image in this folder. Please select a valid project folder.",
 
         // Restore annotations modal
         restoreTitle: "Saved annotations found",
-        restoreFound: "This project has saved annotations. Do you want to restore them?",
+        restoreFound:
+            "This project has saved annotations. Do you want to restore them?",
         restoreYes: "Restore",
         restoreNo: "Ignore",
 
         // Save project
         saveProject: "Save project",
+        saveAnnotation: "Save annotation",
         saving: "Saving...",
 
         // Draft restore modal
         draftTitle: "Draft found",
-        draftFound: "Unsaved annotations were found. Do you want to restore them or discard them?",
+        draftFound:
+            "Unsaved annotations were found. Do you want to restore them or discard them?",
         draftContinue: "Restore",
         draftDiscard: "Discard",
 
@@ -221,8 +233,10 @@ const T = {
         // Zoom preference toggle
         zoomLocked: "Zoom locked",
         zoomReset: "Zoom reset",
-        zoomLockedTitle: "Zoom preserved when switching images (click to disable)",
-        zoomResetTitle: "Zoom reset when switching images (click to enable preservation)",
+        zoomLockedTitle:
+            "Zoom preserved when switching images (click to disable)",
+        zoomResetTitle:
+            "Zoom reset when switching images (click to enable preservation)",
     },
 } as const;
 
