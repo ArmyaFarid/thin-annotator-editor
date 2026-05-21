@@ -25,7 +25,7 @@ export default function useSaveAnnotation(): State {
     const [combination] = useFilterGamma();
 
     function generateActiveImageAnnotation() {
-        if (!imageSize) {
+        if (!imageSize || !activeImage) {
             return;
         }
 

@@ -48,7 +48,7 @@ export default function AnnotatorPage() {
     );
 
     const [showFinishModal, setShowFinishModal] = useState(false);
-    const [saveAnnotations, {savingProject}] = useSaveProject();
+    const [saveAnnotations, {saving: savingProject}] = useSaveProject();
 
     async function handleSaveAndLeave() {
         const ok = await saveAnnotations();
