@@ -9,23 +9,30 @@ type State = [
     status: {saving: boolean; error: string | null},
 ];
 
-export default function useSaveAnnotations(): State {
-    const {pairsCode = "", sampleId = ""} = useParams<{pairsCode: string; sampleId: string}>();
+export default function useSaveProject(): State {
+    const {pairsCode = "", sampleId = ""} = useParams<{
+        pairsCode: string;
+        sampleId: string;
+    }>();
     const masks = useAtomValue(masksAtom);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     async function save(): Promise<boolean> {
-        if (!pairsCode || !sampleId) return false;
+        if (!pairsCode || !sampleId) {
+            return false;
+        }
         setSaving(true);
         setError(null);
         try {
-            const res = await fetch(`${IMAGE_API_ENDPOINT}/api/annotations/save`, {
+            const res = await fetch(`${IMAGE_API_ENDPOINT}/api/project/save`, {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({pairsCode, sampleId, data: masks}),
             });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}`);
+            }
             return true;
         } catch (e) {
             setError(e instanceof Error ? e.message : "Erreur inconnue");

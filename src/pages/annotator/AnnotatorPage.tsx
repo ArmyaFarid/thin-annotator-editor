@@ -12,8 +12,8 @@ import {ZoomPreferenceToggle} from "@/common/components/zoom-preference/ZoomPref
 import {RestoreDraftBanner} from "@/common/components/restore-draft/RestoreDraftBanner.tsx";
 import {RestoreAnnotationsModal} from "@/common/components/restore-annotations/RestoreAnnotationsModal.tsx";
 import useAutosaveDraft from "@/app/useAutosaveDraft.ts";
-import useLoadAnnotations from "@/pages/annotator/useLoadAnnotations.ts";
-import useSaveAnnotations from "@/common/components/annotation-panel/useSaveAnnotations.ts";
+import useLoadProject from "@/pages/annotator/useLoadProject.ts";
+import useSaveProject from "@/common/components/annotation-panel/useSaveProject.ts";
 import {activePairAtom} from "@/app/atom.ts";
 import {t} from "@/i18n/index.ts";
 
@@ -39,11 +39,16 @@ export default function AnnotatorPage() {
     const sampleId = urlSampleId || activePair?.sampleId || "";
 
     // pick-folder already loaded annotations into the atom — skip both restores
-    const isPickFolder = (location.state as {source?: string} | null)?.source === "pick-folder";
-    const refetchAnnotations = useLoadAnnotations(pairsCode, sampleId, isPickFolder);
+    const isPickFolder =
+        (location.state as {source?: string} | null)?.source === "pick-folder";
+    const refetchAnnotations = useLoadProject(
+        pairsCode,
+        sampleId,
+        isPickFolder,
+    );
 
     const [showFinishModal, setShowFinishModal] = useState(false);
-    const [saveAnnotations, {saving}] = useSaveAnnotations();
+    const [saveAnnotations, {saving}] = useSaveProject();
 
     async function handleSaveAndLeave() {
         const ok = await saveAnnotations();
@@ -57,7 +62,11 @@ export default function AnnotatorPage() {
 
     return (
         <PageLayout>
-            <RestoreDraftBanner pairsCode={pairsCode} sampleId={sampleId} onDiscard={refetchAnnotations} />
+            <RestoreDraftBanner
+                pairsCode={pairsCode}
+                sampleId={sampleId}
+                onDiscard={refetchAnnotations}
+            />
             <RestoreAnnotationsModal />
             {showFinishModal ? (
                 <div
@@ -67,8 +76,12 @@ export default function AnnotatorPage() {
                         onClick={(e) => e.stopPropagation()}
                         className="bg-[#1C1C1C] border border-white/15 rounded-xl shadow-2xl p-7 w-full max-w-sm flex flex-col gap-4">
                         <div className="flex flex-col gap-1.5">
-                            <span className="text-sm font-semibold text-white">{t("finishTitle")}</span>
-                            <span className="text-xs text-white/55 leading-relaxed">{t("finishConfirm")}</span>
+                            <span className="text-sm font-semibold text-white">
+                                {t("finishTitle")}
+                            </span>
+                            <span className="text-xs text-white/55 leading-relaxed">
+                                {t("finishConfirm")}
+                            </span>
                         </div>
                         <div className="flex gap-2">
                             <button

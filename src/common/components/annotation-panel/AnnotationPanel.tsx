@@ -2,7 +2,7 @@ import React from "react";
 import {useAtom} from "jotai";
 import {toast} from "sonner";
 import useAnnotationOptions from "@/common/components/annotation-panel/useAnnotationOptions.ts";
-import useSaveAnnotations from "@/common/components/annotation-panel/useSaveAnnotations.ts";
+import useSaveProject from "@/common/components/annotation-panel/useSaveProject.ts";
 import {t, LANG} from "@/i18n/index.ts";
 import {
     activeImageSizeAtom,
@@ -31,7 +31,7 @@ export const AnnotationPanel: React.FC = () => {
     const activeMask =
         currentMask !== 0 ? masks.find((m) => m.id === currentMask) : null;
     const options = useAnnotationOptions();
-    const [saveAnnotations, {saving}] = useSaveAnnotations();
+    const [saveAnnotations, {saving}] = useSaveProject();
 
     async function handleSaveProject() {
         const ok = await saveAnnotations();
