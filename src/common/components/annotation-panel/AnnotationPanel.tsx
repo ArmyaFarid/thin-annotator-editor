@@ -15,31 +15,43 @@ import {
 import {mergeToCanvas, canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {MaskEditTools} from "@/common/components/annotation-panel/MaskEditTools.tsx";
 import {MineralAnnotationForm} from "@/common/components/annotation-panel/MineralAnnotationForm.tsx";
+import useFilterGamma from "@/common/components/filter-gamma-selector/useFilterGamma.ts";
+import useActiveImage from "@/common/components/image/editor/useActiveImage.ts";
 
 export const AnnotationPanel: React.FC = () => {
     const [masks, setMasks] = useAtom(masksAtom);
     const [prompts, setPrompts] = useAtom(promptsAtom);
     const [currentMask, setCurrentMask] = useAtom(currentMaskAtom);
+    const [combination, _] = useFilterGamma();
+    const [activeImage, setActiveImage] = useActiveImage();
     const [, setEditorOn] = useAtom(editorOnAtom);
     const [, setSubtractMode] = useAtom(subtractModeAtom);
     const [imageSize] = useAtom(activeImageSizeAtom);
 
-    const activeMask = currentMask !== 0 ? masks.find((m) => m.id === currentMask) : null;
+    const activeMask =
+        currentMask !== 0 ? masks.find((m) => m.id === currentMask) : null;
     const options = useAnnotationOptions();
     const [saveAnnotations, {saving}] = useSaveAnnotations();
 
     async function handleSaveProject() {
         const ok = await saveAnnotations();
-        if (ok) toast.success("Projet sauvegardé");
-        else toast.error("Échec de la sauvegarde");
+        if (ok) {
+            toast.success("Projet sauvegardé");
+        } else {
+            toast.error("Échec de la sauvegarde");
+        }
     }
     function mineralName(id: string | null) {
-        if (!id) return null;
+        if (!id) {
+            return null;
+        }
         return options.minerals.find((m) => m.value === id)?.label[LANG] ?? id;
     }
 
     function handleMaskClick(maskId: number) {
-        if (!masks.find((m) => m.id === maskId)) return;
+        if (!masks.find((m) => m.id === maskId)) {
+            return;
+        }
         setPrompts([]);
         setCurrentMask(maskId);
         setEditorOn(true);
@@ -53,7 +65,16 @@ export const AnnotationPanel: React.FC = () => {
             setMasks((prev) =>
                 prev.map((m) =>
                     m.id === activeMask.id
-                        ? {...m, layers: [{id: layerId, rleMask: rle, source: "manual" as const}]}
+                        ? {
+                              ...m,
+                              layers: [
+                                  {
+                                      id: layerId,
+                                      rleMask: rle,
+                                      source: "manual" as const,
+                                  },
+                              ],
+                          }
                         : m,
                 ),
             );
@@ -65,19 +86,104 @@ export const AnnotationPanel: React.FC = () => {
     }
 
     function handleExport() {
-        if (!imageSize) return;
+        if (!imageSize) {
+            return;
+        }
         const exported = masks.map((m) => {
             const canvas = mergeToCanvas(m, imageSize.w, imageSize.h);
             const rle = canvasToRLE(canvas);
-            return {id: m.id, label: m.label, color: m.color, annotation: m.annotation, rle};
+            return {
+                id: m.id,
+                label: m.label,
+                color: m.color,
+                annotation: m.annotation,
+                rle,
+            };
         });
-        const blob = new Blob([JSON.stringify(exported, null, 2)], {type: "application/json"});
+        const blob = new Blob([JSON.stringify(exported, null, 2)], {
+            type: "application/json",
+        });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
         a.download = "annotations.json";
         a.click();
         URL.revokeObjectURL(url);
+    }
+
+    function downloadJson(data: unknown, filename = "annotations.json") {
+        const blob = new Blob([JSON.stringify(data, null, 2)], {
+            type: "application/json",
+        });
+
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        a.click();
+
+        URL.revokeObjectURL(url);
+    }
+
+    function saveCurrentImageAnnotation() {
+        if (!imageSize) {
+            return;
+        }
+
+        const filename = activeImage.path.split(/[\\/]/).pop();
+        const image = {
+            id: 1,
+            file_name: filename,
+            width: imageSize.w,
+            height: imageSize.h,
+        };
+
+        const metadata = {
+            lightning_modality: combination.filter,
+            gamma:
+                combination.filter === 1
+                    ? "add"
+                    : combination.filter === -1
+                      ? "sous"
+                      : "na",
+            rotation: 45,
+        };
+
+        const license = {
+            name: "Attribution-NonCommercial",
+            url: "http://creativecommons.org/licenses/by-nc/2.0/",
+        };
+
+        const annotations = masks.map((m) => {
+            const canvas = mergeToCanvas(m, imageSize.w, imageSize.h);
+            const rle = canvasToRLE(canvas);
+            const {mineralIds, ...annotationWithoutMineralIds} =
+                m.annotation ?? {};
+            return {
+                id: m.id,
+                // annotation: m.annotation,
+                segmentation: rle,
+                mineralIds,
+                ...annotationWithoutMineralIds,
+            };
+        });
+
+        const all = {
+            metadata,
+            license,
+            image,
+            annotations,
+        };
+
+        console.log(all);
+        console.log(activeImage);
+        // return;
+
+        downloadJson(
+            all,
+            filename.replace(/\.[^/.]+$/, "") + "-annotation.json",
+        );
     }
 
     return (
@@ -98,7 +204,9 @@ export const AnnotationPanel: React.FC = () => {
                         <div className="flex items-center gap-2">
                             <div
                                 className="w-4 h-4 rounded shrink-0"
-                                style={{backgroundColor: `rgba(${activeMask.color.r},${activeMask.color.g},${activeMask.color.b},${activeMask.color.a})`}}
+                                style={{
+                                    backgroundColor: `rgba(${activeMask.color.r},${activeMask.color.g},${activeMask.color.b},${activeMask.color.a})`,
+                                }}
                             />
                             <input
                                 className="flex-1 bg-transparent border border-white/20 rounded px-2 py-1 text-sm focus:outline-none focus:border-white/40"
@@ -106,14 +214,22 @@ export const AnnotationPanel: React.FC = () => {
                                 value={activeMask.label}
                                 onChange={(e) =>
                                     setMasks((prev) =>
-                                        prev.map((m) => m.id === activeMask.id ? {...m, label: e.target.value} : m),
+                                        prev.map((m) =>
+                                            m.id === activeMask.id
+                                                ? {...m, label: e.target.value}
+                                                : m,
+                                        ),
                                     )
                                 }
                             />
                             <button
                                 title="Supprimer"
                                 onClick={() => {
-                                    setMasks(prev => prev.filter(m => m.id !== activeMask.id));
+                                    setMasks((prev) =>
+                                        prev.filter(
+                                            (m) => m.id !== activeMask.id,
+                                        ),
+                                    );
                                     setCurrentMask(0);
                                     setPrompts([]);
                                 }}
@@ -128,18 +244,33 @@ export const AnnotationPanel: React.FC = () => {
                         {/* SAM prompt list */}
                         {prompts.length > 0 ? (
                             <div className="border border-white/10 rounded p-1.5 flex flex-col gap-0.5">
-                                <span className="text-[10px] text-white/40 uppercase tracking-wide px-0.5 mb-0.5">{t("samPoints")}</span>
+                                <span className="text-[10px] text-white/40 uppercase tracking-wide px-0.5 mb-0.5">
+                                    {t("samPoints")}
+                                </span>
                                 {prompts.map((p) => (
-                                    <div key={p.id} className="flex items-center justify-between gap-1 text-xs">
+                                    <div
+                                        key={p.id}
+                                        className="flex items-center justify-between gap-1 text-xs">
                                         <span className="text-white/50 shrink-0 w-5 text-center">
-                                            {p.bbox ? "□" : p.point_labels === 1 ? "+" : "−"}
+                                            {p.bbox
+                                                ? "□"
+                                                : p.point_labels === 1
+                                                  ? "+"
+                                                  : "−"}
                                         </span>
                                         <span className="flex-1 text-white/40 tabular-nums">
-                                            {Math.round(p.point_coords[0])}, {Math.round(p.point_coords[1])}
+                                            {Math.round(p.point_coords[0])},{" "}
+                                            {Math.round(p.point_coords[1])}
                                         </span>
                                         <button
                                             className="text-white/30 hover:text-red-400 leading-none px-1"
-                                            onClick={() => setPrompts((prev) => prev.filter((x) => x.id !== p.id))}>
+                                            onClick={() =>
+                                                setPrompts((prev) =>
+                                                    prev.filter(
+                                                        (x) => x.id !== p.id,
+                                                    ),
+                                                )
+                                            }>
                                             ×
                                         </button>
                                     </div>
@@ -153,7 +284,8 @@ export const AnnotationPanel: React.FC = () => {
                         {/* Save */}
                         {(() => {
                             const ids = activeMask.annotation?.mineralIds;
-                            const ready = ids?.every((id) => id !== null) ?? false;
+                            const ready =
+                                ids?.every((id) => id !== null) ?? false;
                             return (
                                 <button
                                     disabled={!ready}
@@ -170,24 +302,36 @@ export const AnnotationPanel: React.FC = () => {
                 {currentMask === 0 ? (
                     <>
                         {masks.length === 0 ? (
-                            <p className="text-xs text-white/30 text-center py-4">{t("noAnnotation")}</p>
+                            <p className="text-xs text-white/30 text-center py-4">
+                                {t("noAnnotation")}
+                            </p>
                         ) : (
                             <div className="flex flex-col gap-0.5">
                                 {masks.map((mask) => (
                                     <button
                                         key={mask.id}
                                         className="w-full flex items-center gap-2 px-2 py-2 rounded hover:bg-[#2F2F2F] text-left transition-colors"
-                                        onClick={() => handleMaskClick(mask.id)}>
+                                        onClick={() =>
+                                            handleMaskClick(mask.id)
+                                        }>
                                         <div
                                             className="w-3 h-3 rounded shrink-0"
-                                            style={{backgroundColor: `rgba(${mask.color.r},${mask.color.g},${mask.color.b},${mask.color.a})`}}
+                                            style={{
+                                                backgroundColor: `rgba(${mask.color.r},${mask.color.g},${mask.color.b},${mask.color.a})`,
+                                            }}
                                         />
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-sm truncate">{mask.label || t("unnamed")}</p>
-                                            {mask.annotation?.mineralIds.some((id) => id) ? (
+                                            <p className="text-sm truncate">
+                                                {mask.label || t("unnamed")}
+                                            </p>
+                                            {mask.annotation?.mineralIds.some(
+                                                (id) => id,
+                                            ) ? (
                                                 <p className="text-[10px] text-white/40 truncate">
                                                     {mask.annotation.mineralIds
-                                                        .map((id) => mineralName(id))
+                                                        .map((id) =>
+                                                            mineralName(id),
+                                                        )
                                                         .filter(Boolean)
                                                         .join(" › ")}
                                                 </p>
@@ -216,6 +360,11 @@ export const AnnotationPanel: React.FC = () => {
                                     className="flex-1 border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 transition-colors"
                                     onClick={handleExport}>
                                     {t("exportJson")}
+                                </button>
+                                <button
+                                    className="flex-1 border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 transition-colors"
+                                    onClick={saveCurrentImageAnnotation}>
+                                    Save Annotation
                                 </button>
                             </div>
                         ) : null}

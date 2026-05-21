@@ -14,24 +14,18 @@ import {
     activeImageSizeAtom,
     slicOverlayAtom,
     type SlicSuperpixel,
+    ActiveImage,
 } from "@/app/atom.ts";
 import {RefineOverlay} from "@/common/components/image/editor/refine/RefineOverlay.tsx";
 import {SlicOverlay} from "@/common/components/image/editor/slic/SlicOverlay.tsx";
 import type {ImageEditorGetPairsQuery} from "@/common/components/image/editor/__generated__/ImageEditorGetPairsQuery.graphql.ts";
 import useSlicPrompts from "@/common/components/image/editor/useSlicPrompts.ts";
+import useActiveImage from "@/common/components/image/editor/useActiveImage.ts";
 
 interface RLEMask {
     counts: string;
     size: [number, number];
 }
-
-type ActiveImage = {
-    id: string;
-    path: string;
-    url: string;
-    width: number;
-    height: number;
-};
 
 interface ImageEditorProps {
     pairsCode: string;
@@ -42,7 +36,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
     pairsCode,
     sampleId,
 }) => {
-    const [activeImage, setActiveImage] = useState<ActiveImage | null>(null);
+    const [activeImage, setActiveImage] = useActiveImage();
     const [activeFilterGammaCombination] = useFilterGamma();
     const [, setConfig] = useFilterGammaConfig();
     const [prompts] = usePrompts();
