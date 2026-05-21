@@ -72,10 +72,6 @@ export default function useSaveAnnotation(): State {
             annotations,
         };
 
-        console.log(imageAnnotationJson);
-        console.log(activeImage);
-        // return;
-
         return imageAnnotationJson;
     }
 
