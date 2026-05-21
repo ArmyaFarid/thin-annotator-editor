@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef} from "react";
 import {graphql, useLazyLoadQuery, useMutation} from "react-relay";
 import {useAtom, useAtomValue, useSetAtom} from "jotai";
 import {CanvasStack} from "@/canvas/CanvasStack.tsx";
