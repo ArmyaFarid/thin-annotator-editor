@@ -4,7 +4,7 @@ import {IMAGE_API_ENDPOINT} from "@/app/AppConfig.tsx";
 import {masksAtom, pendingAnnotationsAtom, type Mask} from "@/app/atom.ts";
 import {loadDraft} from "@/app/persistence.ts";
 
-export default function useLoadAnnotations(
+export default function useLoadProject(
     pairsCode: string,
     sampleId: string,
     skip: boolean,

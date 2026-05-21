@@ -9,7 +9,7 @@ type State = [
     status: {saving: boolean; error: string | null},
 ];
 
-export default function useSaveAnnotations(): State {
+export default function useSaveProject(): State {
     const {pairsCode = "", sampleId = ""} = useParams<{
         pairsCode: string;
         sampleId: string;
