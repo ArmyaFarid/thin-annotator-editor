@@ -18,7 +18,7 @@ export default function useLoadAnnotations(
         }
         try {
             const res = await fetch(
-                `${IMAGE_API_ENDPOINT}/api/project-annotations/load?pairsCode=${encodeURIComponent(pairsCode)}&sampleId=${encodeURIComponent(sampleId)}`,
+                `${IMAGE_API_ENDPOINT}/api/project/load?pairsCode=${encodeURIComponent(pairsCode)}&sampleId=${encodeURIComponent(sampleId)}`,
             );
             if (!res.ok) {
                 return;
