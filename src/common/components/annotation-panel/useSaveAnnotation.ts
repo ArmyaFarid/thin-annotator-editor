@@ -31,7 +31,6 @@ export default function useSaveAnnotation(): State {
 
         const filename = activeImage.path.split(/[\\/]/).pop();
         const image = {
-            id: 1,
             file_name: filename,
             width: imageSize.w,
             height: imageSize.h,
@@ -91,6 +90,7 @@ export default function useSaveAnnotation(): State {
                     body: JSON.stringify({
                         pairsCode,
                         sampleId,
+                        imageId: activeImage?.id,
                         data: activeImagaAnnotationJson,
                     }),
                 },
