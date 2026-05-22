@@ -36,7 +36,7 @@ export default function useSaveAnnotation(): State {
             height: imageSize.h,
         };
 
-        const filterValue = Number(combination.filter);
+        const filterValue = Number(combination.gamma);
 
         const metadata = {
             lightning_modality: combination.filter,
