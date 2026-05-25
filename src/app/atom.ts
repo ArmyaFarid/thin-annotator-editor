@@ -101,8 +101,17 @@ export interface SlicPrompt {
     bbox: Box;
 }
 
+export type ActiveImage = {
+    id: string;
+    path: string;
+    url: string;
+    width: number;
+    height: number;
+};
+
 export const activeToolAtom = atom<Tool>("select-add");
 export const promptsAtom = atom<Prompt[]>([]);
+export const activeImage = atom<ActiveImage | null>(null);
 export const slicPromptsAtom = atom<SlicPrompt | undefined>(undefined);
 export const masksAtom = atom<Mask[]>([]);
 export const currentMaskAtom = atom<number>(0);
@@ -170,4 +179,3 @@ export interface ActivePair {
 export const activePairAtom = atom<ActivePair | null>(null);
 
 export const pendingAnnotationsAtom = atom<Mask[] | null>(null);
-

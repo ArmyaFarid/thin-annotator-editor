@@ -1,0 +1,73 @@
+{
+  "info": {
+    "version": "1.0",
+    "description": "-",
+    "date_created": "2024/01/01"
+  },
+
+  "licenses":{
+      "name": "Attribution-NonCommercial",
+      "url": "http://creativecommons.org/licenses/by-nc/2.0/"
+    },
+
+  "meta-data": {
+    "lightning-modality" : "xpl",
+    "gamma" : "sous",
+    "rotation": 45
+  },
+
+  "image": {
+      "id": 1,
+      "file_name": "GDX-22-PI_mod-PPL_comp-na_rot-45.bmp",
+      "width": 640,
+      "height": 480
+    },
+  "annotations": [
+    {
+      "id": 1,
+      "iscrowd": 0,
+      "bbox": [50, 30, 200, 180],
+      "area": 28500,
+      "segmentation": {
+        "counts": "Pb[d0Y2Z2X3W4V5U5V4W3X2Y2Z2",
+        "size": [480, 640]
+      },
+      "mineralIds": [
+        "qtz",
+        "kfs",
+        "plag"
+      ],
+      "observedColor": "",
+      "relief": null,
+      "birefringence": null,
+      "cleavage": null,
+      "crystalSystem": null,
+      "pleochroism": null,
+      "extinctionAngle": "",
+      "notes": ""
+    },
+    {
+      "id": 2,
+      "iscrowd": 0,
+      "bbox": [350, 100, 150, 130],
+      "area": 14200,
+      "segmentation": {
+        "counts": "jc`21W2Y2X3V4U5T6U5V4W3X2Y2",
+        "size": [480, 640]
+      },
+      "mineralIds": [
+        "qtz",
+        "kfs",
+        "plag"
+      ],
+      "observedColor": "",
+      "relief": null,
+      "birefringence": null,
+      "cleavage": null,
+      "crystalSystem": null,
+      "pleochroism": null,
+      "extinctionAngle": "",
+      "notes": ""
+    }
+  ]
+}

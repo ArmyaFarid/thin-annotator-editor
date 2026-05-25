@@ -1,0 +1,59 @@
+{
+  "info": {
+    "year": 2024,
+    "version": "1.0",
+    "description": "Sample COCO Dataset",
+    "date_created": "2024/01/01"
+  },
+
+  "licenses": [
+    {
+      "id": 1,
+      "name": "Attribution-NonCommercial",
+      "url": "http://creativecommons.org/licenses/by-nc/2.0/"
+    }
+  ],
+
+  "images": [
+    {
+      "id": 1,
+      "file_name": "dog_and_cat.jpg",
+      "width": 640,
+      "height": 480,
+      "license": 1,
+      "date_captured": "2024-01-01"
+    }
+  ],
+
+  "categories": [
+    { "id": 1, "name": "dog", "supercategory": "animal" },
+    { "id": 2, "name": "cat", "supercategory": "animal" }
+  ],
+
+  "annotations": [
+    {
+      "id": 1,
+      "image_id": 1,
+      "category_id": 1,
+      "iscrowd": 0,
+      "bbox": [50, 30, 200, 180],
+      "area": 28500,
+      "segmentation": {
+        "counts": "Pb[d0Y2Z2X3W4V5U5V4W3X2Y2Z2",
+        "size": [480, 640]
+      }
+    },
+    {
+      "id": 2,
+      "image_id": 1,
+      "category_id": 2,
+      "iscrowd": 0,
+      "bbox": [350, 100, 150, 130],
+      "area": 14200,
+      "segmentation": {
+        "counts": "jc`21W2Y2X3V4U5T6U5V4W3X2Y2",
+        "size": [480, 640]
+      }
+    }
+  ]
+}
