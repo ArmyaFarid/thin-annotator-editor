@@ -39,41 +39,81 @@ export class ToolManager {
     }
 
     onMouseDown(p: ImageSpacePoint): void {
-        if (this.activeTool === "bounding-box") this.bbox.onMouseDown(p);
-        if (this.activeTool === "slic-bbox") this.slicBbox.onMouseDown(p);
-        if (this.activeTool === "freeform-draw") this.freeform.onMouseDown(p);
+        if (this.activeTool === "bounding-box") {
+            this.bbox.onMouseDown(p);
+        }
+        if (this.activeTool === "slic-bbox") {
+            this.slicBbox.onMouseDown(p);
+        }
+        if (this.activeTool === "freeform-draw") {
+            this.freeform.onMouseDown(p);
+        }
     }
 
     onMouseMove(p: ImageSpacePoint): void {
-        if (this.activeTool === "bounding-box") this.bbox.onMouseMove(p);
-        if (this.activeTool === "slic-bbox") this.slicBbox.onMouseMove(p);
-        if (this.activeTool === "freeform-draw") this.freeform.onMouseMove(p);
-        if (this.activeTool === "polygon-lasso") this.polygon.onMouseMove(p);
+        if (this.activeTool === "bounding-box") {
+            this.bbox.onMouseMove(p);
+        }
+        if (this.activeTool === "slic-bbox") {
+            this.slicBbox.onMouseMove(p);
+        }
+        if (this.activeTool === "freeform-draw") {
+            this.freeform.onMouseMove(p);
+        }
+        if (this.activeTool === "polygon-lasso") {
+            this.polygon.onMouseMove(p);
+        }
     }
 
     onMouseUp(p: ImageSpacePoint, scale: {x: number; y: number}): void {
-        if (this.activeTool === "bounding-box") this.bbox.onMouseUp(p, scale);
-        if (this.activeTool === "slic-bbox") this.slicBbox.onMouseUp(p, scale);
-        if (this.activeTool === "freeform-draw") this.freeform.onMouseUp();
+        if (this.activeTool === "bounding-box") {
+            this.bbox.onMouseUp(p, scale);
+        }
+        if (this.activeTool === "slic-bbox") {
+            this.slicBbox.onMouseUp(p, scale);
+        }
+        if (this.activeTool === "freeform-draw") {
+            this.freeform.onMouseUp();
+        }
     }
 
-    onClick(p: ImageSpacePoint, scale: {x: number; y: number}): void {
-        if (this.activeTool === "select-add") this.selectAdd.onClick(p);
-        if (this.activeTool === "select-remove") this.selectRemove.onClick(p);
-        if (this.activeTool === "polygon-lasso") this.polygon.onClick(p, scale);
+    onClick(
+        p: ImageSpacePoint,
+        scale: {x: number; y: number},
+        zoom?: number,
+    ): void {
+        if (this.activeTool === "select-add") {
+            this.selectAdd.onClick(p);
+        }
+        if (this.activeTool === "select-remove") {
+            this.selectRemove.onClick(p);
+        }
+        if (this.activeTool === "polygon-lasso") {
+            if (zoom) {
+                this.polygon.onClick(p, scale, zoom);
+            } else {
+                this.polygon.onClick(p, scale, 1);
+            }
+        }
     }
 
     onDblClick(): void {
-        if (this.activeTool === "polygon-lasso") this.polygon.onDblClick();
+        if (this.activeTool === "polygon-lasso") {
+            this.polygon.onDblClick();
+        }
     }
 
     onContextMenu(): void {
-        if (this.activeTool === "polygon-lasso") this.polygon.onContextMenu();
+        if (this.activeTool === "polygon-lasso") {
+            this.polygon.onContextMenu();
+        }
     }
 
     // Undo the last polygon vertex. Returns true if consumed.
     undoVertex(): boolean {
-        if (this.activeTool === "polygon-lasso") return this.polygon.undoVertex();
+        if (this.activeTool === "polygon-lasso") {
+            return this.polygon.undoVertex();
+        }
         return false;
     }
 

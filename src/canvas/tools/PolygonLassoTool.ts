@@ -24,17 +24,25 @@ export class PolygonLassoTool {
         }
     }
 
-    onClick(p: ImageSpacePoint, scale: {x: number; y: number}): void {
+    onClick(
+        p: ImageSpacePoint,
+        scale: {x: number; y: number},
+        zoom: number,
+    ): void {
         if (this.vertices.length === 0) {
+            console.log("000000");
             this.vertices = [p];
             this.sync(p);
             return;
         }
 
         const first = this.vertices[0];
-        const distPx = Math.hypot((p.x - first.x) * scale.x, (p.y - first.y) * scale.y);
+        const distPx = Math.hypot(
+            (p.x - first.x) * scale.x,
+            (p.y - first.y) * scale.y,
+        );
 
-        if (this.vertices.length >= 3 && distPx < CLOSE_THRESHOLD_PX) {
+        if (this.vertices.length >= 3 && distPx < CLOSE_THRESHOLD_PX / zoom) {
             this.close();
             return;
         }
@@ -54,7 +62,9 @@ export class PolygonLassoTool {
     }
 
     onMouseMove(p: ImageSpacePoint): void {
-        if (this.vertices.length === 0) return;
+        if (this.vertices.length === 0) {
+            return;
+        }
         this.dynLayer.setInteractionState({
             type: "polygon-drawing",
             vertices: this.vertices,
@@ -65,7 +75,9 @@ export class PolygonLassoTool {
 
     // Remove the last placed vertex. Returns true if a vertex was removed.
     undoVertex(): boolean {
-        if (this.vertices.length === 0) return false;
+        if (this.vertices.length === 0) {
+            return false;
+        }
         this.vertices = this.vertices.slice(0, -1);
         if (this.vertices.length === 0) {
             this.dynLayer.setInteractionState({type: "idle"});

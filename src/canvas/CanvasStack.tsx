@@ -225,7 +225,8 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
 
                 if (w * h > MAX_SLIC_BBOX_AREA) {
                     toast.error("Zone SLIC trop grande", {
-                        description: "Réduisez la sélection (max 100 superpixels).",
+                        description:
+                            "Réduisez la sélection (max 100 superpixels).",
                     });
                     return;
                 }
@@ -503,7 +504,11 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
         if (!preserveZoomRef.current || isFirst) {
             const cw = container?.clientWidth ?? img.naturalWidth;
             const ch = container?.clientHeight ?? img.naturalHeight;
-            const fitZoom = Math.min(cw / img.naturalWidth, ch / img.naturalHeight, 1);
+            const fitZoom = Math.min(
+                cw / img.naturalWidth,
+                ch / img.naturalHeight,
+                1,
+            );
             const panX = (cw - img.naturalWidth * fitZoom) / 2;
             const panY = (ch - img.naturalHeight * fitZoom) / 2;
             setView({zoom: fitZoom, panX, panY});
