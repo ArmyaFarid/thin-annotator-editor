@@ -5,6 +5,7 @@ import {decode} from "@/jscocotools/mask.ts";
 import {canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
 import {MASK_FILL_ALPHA} from "@/canvas/canvas-theme.ts";
+import {commitHistoryAtom} from "@/app/history.ts";
 
 interface SlicOverlayProps {
     imageUrl: string;
@@ -29,6 +30,7 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     const [masks, setMasks] = useAtom(masksAtom);
     const setCurrentMask = useSetAtom(currentMaskAtom);
     const imageSize = useAtomValue(activeImageSizeAtom);
+    const commitHistory = useSetAtom(commitHistoryAtom);
 
     const [deleted, setDeleted] = useState<Set<number>>(new Set());
     const [tilesReady, setTilesReady] = useState(false);
@@ -277,6 +279,11 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
 
         const newRle = canvasToRLE(mergeCanvas);
         const layerId = Date.now();
+
+        commitHistory({
+            action: "slic.result",
+            payload: {regions: superpixels.length},
+        });
 
         if (targetMaskId !== 0) {
             setMasks(prev =>

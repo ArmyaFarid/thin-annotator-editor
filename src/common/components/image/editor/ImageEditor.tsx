@@ -9,6 +9,7 @@ import useFilterGamma from "@/common/components/filter-gamma-selector/useFilterG
 import useFilterGammaConfig from "@/common/components/image/editor/useFilterGammaConfig.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
 import {MASK_FILL_ALPHA} from "@/canvas/canvas-theme.ts";
+import {commitHistoryAtom} from "@/app/history.ts";
 import {
     refineModeAtom,
     activeImageSizeAtom,
@@ -47,6 +48,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
     const refineMode = useAtomValue(refineModeAtom);
     const setImageSize = useSetAtom(activeImageSizeAtom);
     const [slicOverlay, setSlicOverlay] = useAtom(slicOverlayAtom);
+    const commitHistory = useSetAtom(commitHistoryAtom);
 
     const pairsData = useLazyLoadQuery<ImageEditorGetPairsQuery>(
         graphql`
@@ -166,6 +168,11 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
                 const coords = pointPrompts.map((p) => p.point_coords);
                 const labels = pointPrompts.map((p) => p.point_labels);
                 const layerId = Date.now() + 1;
+
+                commitHistory({
+                    action: "sam.result",
+                    payload: {prompts: pointPrompts.length},
+                });
 
                 if (currentMask === 0) {
                     const id = Date.now();

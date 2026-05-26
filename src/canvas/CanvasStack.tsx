@@ -4,6 +4,7 @@ import {toast} from "sonner";
 import {
     activeToolAtom,
     activeImageSizeAtom,
+    activePairAtom,
     borderOnlyAtom,
     currentMaskAtom,
     cursorHudVisibleAtom,
@@ -17,6 +18,12 @@ import {
     type PolygonAnnotation,
     slicPromptsAtom,
 } from "@/app/atom.ts";
+import {
+    commitHistoryAtom,
+    undoAtom,
+    redoAtom,
+    clearHistoryAtom,
+} from "@/app/history.ts";
 import {CanvasEngine} from "@/canvas/CanvasEngine.ts";
 import type {EngineCallbacks, ImageSpacePoint} from "@/canvas/types.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
@@ -101,6 +108,24 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
         engineRef.current?.setHudVisible(cursorHudVisible);
     }, [cursorHudVisible]);
 
+    // Undo/redo wiring. Snapshot is captured BEFORE each mutation via
+    // commitHistory(...) at every callback site below.
+    const commitHistory = useSetAtom(commitHistoryAtom);
+    const undo = useSetAtom(undoAtom);
+    const redo = useSetAtom(redoAtom);
+    const clearHistory = useSetAtom(clearHistoryAtom);
+
+    // Clear history when the user switches to a different sample (different
+    // rock / thin section). PPL ↔ XPL image swaps on the SAME sample do NOT
+    // reset — annotations persist across lighting views.
+    const activePair = useAtomValue(activePairAtom);
+    const sampleKey = activePair
+        ? `${activePair.pairsCode}/${activePair.sampleId}`
+        : null;
+    useEffect(() => {
+        clearHistory();
+    }, [sampleKey, clearHistory]);
+
     const [view, setView] = useState<View>({zoom: 1, panX: 0, panY: 0});
     const viewRef = useRef(view);
     useEffect(() => {
@@ -140,6 +165,22 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 return;
             }
 
+            // Undo / redo: Cmd-Z / Ctrl-Z; Cmd-Shift-Z / Ctrl-Shift-Z; Ctrl-Y.
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
+                e.preventDefault();
+                if (e.shiftKey) {
+                    redo();
+                } else {
+                    undo();
+                }
+                return;
+            }
+            if (e.ctrlKey && e.key.toLowerCase() === "y") {
+                e.preventDefault();
+                redo();
+                return;
+            }
+
             if (e.key === "Escape") {
                 engineRef.current?.cancelTool();
                 return;
@@ -151,6 +192,10 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                     return;
                 }
                 if (currentMaskRef.current !== 0) {
+                    commitHistory({
+                        action: "mask.delete",
+                        payload: {maskId: currentMaskRef.current},
+                    });
                     setMasks((prev) =>
                         prev.filter((m) => m.id !== currentMaskRef.current),
                     );
@@ -161,6 +206,10 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
             }
 
             if (e.key === "Delete" && currentMaskRef.current !== 0) {
+                commitHistory({
+                    action: "mask.delete",
+                    payload: {maskId: currentMaskRef.current},
+                });
                 setMasks((prev) =>
                     prev.filter((m) => m.id !== currentMaskRef.current),
                 );
@@ -198,12 +247,15 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
         setMasks,
         setCurrentMask,
         setPrompts,
+        undo,
+        redo,
+        commitHistory,
     ]);
 
     const callbacks = useCallback(
         (): EngineCallbacks => ({
             onKeypointAdded(x: number, y: number, label: 0 | 1) {
-                console.log("onKeypointAdded", x, y, label);
+                commitHistory({action: "keypoint.add", payload: {x, y, label}});
                 const type = label === 1 ? "select-add" : "select-remove";
                 setPrompts((prev: Prompt[]) => [
                     ...prev,
@@ -216,6 +268,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 ]);
             },
             onBboxAdded(x: number, y: number, w: number, h: number) {
+                commitHistory({action: "bbox.add", payload: {x, y, w, h}});
                 setPrompts((prev: Prompt[]) => [
                     ...prev,
                     {
@@ -244,6 +297,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                     return;
                 }
 
+                commitHistory({action: "slic-bbox.set", payload: {x, y, w, h}});
                 setSlicPrompts({
                     type: "slic-bounding-box",
                     bbox: {left: x, top: y, width: w, height: h},
@@ -260,6 +314,13 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 const layerKind = subtractModeRef.current
                     ? ("hole" as const)
                     : ("fill" as const);
+                commitHistory({
+                    action: "freeform.add",
+                    payload: {
+                        maskId: activeMaskId !== 0 ? activeMaskId : undefined,
+                        pointCount: vertices.length,
+                    },
+                });
 
                 if (activeMaskId !== 0) {
                     setMasks((prev: Mask[]) => {
@@ -336,6 +397,13 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 const layerKind = subtractModeRef.current
                     ? ("hole" as const)
                     : ("fill" as const);
+                commitHistory({
+                    action: "polygon.add",
+                    payload: {
+                        maskId: activeMaskId !== 0 ? activeMaskId : undefined,
+                        vertexCount: vertices.length,
+                    },
+                });
 
                 if (activeMaskId !== 0) {
                     setMasks((prev: Mask[]) => {
@@ -406,6 +474,10 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 }
             },
             onLayerDeleted(objectId: number, layerId: number) {
+                commitHistory({
+                    action: "layer.delete",
+                    payload: {maskId: objectId, layerId},
+                });
                 setMasks((prev: Mask[]) =>
                     prev.map((m) =>
                         m.id === objectId
@@ -424,6 +496,10 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 layerId: number,
                 vertices: ImageSpacePoint[],
             ) {
+                commitHistory({
+                    action: "vertex.move",
+                    payload: {maskId: objectId, layerId},
+                });
                 setMasks((prev: Mask[]) =>
                     prev.map((m) => {
                         if (m.id !== objectId) {
@@ -448,7 +524,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 );
             },
         }),
-        [setPrompts, setMasks, setCurrentMask],
+        [setPrompts, setMasks, setCurrentMask, setSlicPrompts, commitHistory],
     );
 
     // Mount engine once

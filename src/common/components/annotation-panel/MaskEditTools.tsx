@@ -1,5 +1,5 @@
 import React from "react";
-import {useAtom, useAtomValue} from "jotai";
+import {useAtom, useAtomValue, useSetAtom} from "jotai";
 import {
     activeToolAtom,
     activeImageSizeAtom,
@@ -9,6 +9,7 @@ import {
     subtractModeAtom,
     type MaskLayer,
 } from "@/app/atom.ts";
+import {commitHistoryAtom} from "@/app/history.ts";
 import {mergeToCanvas, canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {rleToEditableContours} from "@/canvas/utils/contourExtract.ts";
 import {MASK_FILL_ALPHA} from "@/canvas/canvas-theme.ts";
@@ -21,6 +22,7 @@ export const MaskEditTools: React.FC = () => {
     const [subtractMode, setSubtractMode] = useAtom(subtractModeAtom);
     const [activeTool, setActiveTool] = useAtom(activeToolAtom);
     const imageSize = useAtomValue(activeImageSizeAtom);
+    const commitHistory = useSetAtom(commitHistoryAtom);
 
     const activeMask = currentMask !== 0 ? masks.find((m) => m.id === currentMask) : null;
     const isAnchorMode = activeMask
@@ -46,6 +48,7 @@ export const MaskEditTools: React.FC = () => {
                 strokeColor: `rgb(${r},${g},${b})`,
             },
         }));
+        commitHistory({action: "mask.extract-contours", payload: {maskId: activeMask.id}});
         setMasks((prev) => prev.map((m) => m.id === activeMask.id ? {...m, layers: newLayers} : m));
         setActiveTool("polygon-lasso");
     }
@@ -60,6 +63,7 @@ export const MaskEditTools: React.FC = () => {
             layerKind: "fill" as const,
             rleMask: rle,
         };
+        commitHistory({action: "mask.merge", payload: {maskId: activeMask.id}});
         setMasks((prev) => prev.map((m) => m.id === activeMask.id ? {...m, layers: [newLayer]} : m));
         setActiveTool("select-add");
     }

@@ -1,4 +1,4 @@
-import {useAtom, useAtomValue} from "jotai";
+import {useAtom, useAtomValue, useSetAtom} from "jotai";
 import {
     activeToolAtom,
     currentMaskAtom,
@@ -10,6 +10,7 @@ import {
     subtractModeAtom,
     activeImageSizeAtom,
 } from "@/app/atom.ts";
+import {commitHistoryAtom} from "@/app/history.ts";
 import {mergeToCanvas, canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {rleToEditableContours} from "@/canvas/utils/contourExtract.ts";
 import {MASK_FILL_ALPHA} from "@/canvas/canvas-theme.ts";
@@ -23,6 +24,7 @@ export default function MaskList() {
     const [subtractMode, setSubtractMode] = useAtom(subtractModeAtom);
     const [activeTool, setActiveTool] = useAtom(activeToolAtom);
     const imageSize = useAtomValue(activeImageSizeAtom);
+    const commitHistory = useSetAtom(commitHistoryAtom);
 
     function handleMaskClick(maskId: number) {
         const mask = masks.find((m) => m.id === maskId);
@@ -55,6 +57,10 @@ export default function MaskList() {
                 strokeColor: `rgb(${r},${g},${b})`,
             },
         }));
+        commitHistory({
+            action: "mask.extract-contours",
+            payload: {maskId: activeMask.id},
+        });
         setMasks((prev) =>
             prev.map((m) =>
                 m.id === activeMask.id ? {...m, layers: newLayers} : m,
@@ -75,6 +81,10 @@ export default function MaskList() {
             layerKind: "fill" as const,
             rleMask: rle,
         };
+        commitHistory({
+            action: "mask.merge",
+            payload: {maskId: activeMask.id},
+        });
         setMasks((prev) =>
             prev.map((m) =>
                 m.id === activeMask.id ? {...m, layers: [newLayer]} : m,
@@ -218,11 +228,15 @@ export default function MaskList() {
                                 </span>
                                 <button
                                     className="shrink-0 text-white/40 hover:text-red-400 leading-none"
-                                    onClick={() =>
+                                    onClick={() => {
+                                        commitHistory({
+                                            action: "other",
+                                            payload: {note: "delete prompt"},
+                                        });
                                         setPrompts((prev) =>
                                             prev.filter((x) => x.id !== p.id),
-                                        )
-                                    }>
+                                        );
+                                    }}>
                                     ×
                                 </button>
                             </div>
@@ -241,6 +255,10 @@ export default function MaskList() {
                                 );
                                 const rle = canvasToRLE(merged);
                                 const layerId = Date.now();
+                                commitHistory({
+                                    action: "mask.merge",
+                                    payload: {maskId: activeMask.id},
+                                });
                                 setMasks((prev) =>
                                     prev.map((m) =>
                                         m.id === activeMask.id

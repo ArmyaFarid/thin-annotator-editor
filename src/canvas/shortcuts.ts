@@ -45,6 +45,8 @@ export interface UiShortcutDef {
 export const UI_SHORTCUT_DEFS: UiShortcutDef[] = [
     {key: "m",         label: "Minimap",  hint: "Afficher / masquer"},
     {key: "h",         label: "Position", hint: "Afficher / masquer le curseur en pixels"},
+    {key: "Ctrl+Z",    label: "Annuler",  hint: "Annuler la dernière action"},
+    {key: "Ctrl+⇧+Z",  label: "Rétablir", hint: "Rétablir l'action annulée"},
     {key: "?",         label: "Aide",     hint: "Raccourcis clavier"},
     {key: "Escape",    label: "Annuler",  hint: "Annuler le dessin en cours"},
     {key: "Backspace", label: "Défaire",  hint: "Dernier point (polygone) / supprimer"},
