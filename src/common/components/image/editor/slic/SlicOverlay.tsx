@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {useAtom, useAtomValue, useSetAtom} from "jotai";
+import {ArrowUturnLeftIcon, ArrowUturnRightIcon} from "@heroicons/react/24/outline";
 import {masksAtom, slicOverlayAtom, currentMaskAtom, activeImageSizeAtom} from "@/app/atom.ts";
 import {decode} from "@/jscocotools/mask.ts";
 import {canvasToRLE} from "@/canvas/utils/maskMerge.ts";
@@ -37,10 +38,8 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
 
     // Local SLIC undo stack — only active while this modal is open.
     // History entries are snapshots of `deleted` (small Set<number>).
-    // Past/future are only ever read from inside their setters via prev,
-    // so we discard the state value and keep only the setter.
-    const [, setLocalPast] = useState<Set<number>[]>([]);
-    const [, setLocalFuture] = useState<Set<number>[]>([]);
+    const [localPast, setLocalPast] = useState<Set<number>[]>([]);
+    const [localFuture, setLocalFuture] = useState<Set<number>[]>([]);
     // Ref for closure-safe reads from inside callbacks.
     const deletedRef = useRef<Set<number>>(new Set());
 
@@ -414,6 +413,21 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                     disabled={deleted.size === 0}
                     className="px-3 py-1 rounded text-sm text-white/60 hover:text-white transition-colors disabled:opacity-30">
                     Réinitialiser
+                </button>
+                <div className="w-px h-5 bg-white/20" />
+                <button
+                    onClick={localUndo}
+                    disabled={localPast.length === 0}
+                    title="Annuler la dernière action (Ctrl+Z)"
+                    className="p-1.5 rounded text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                    <ArrowUturnLeftIcon className="w-4 h-4" strokeWidth={2.5} />
+                </button>
+                <button
+                    onClick={localRedo}
+                    disabled={localFuture.length === 0}
+                    title="Rétablir (Ctrl+Shift+Z)"
+                    className="p-1.5 rounded text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                    <ArrowUturnRightIcon className="w-4 h-4" strokeWidth={2.5} />
                 </button>
                 <div className="w-px h-5 bg-white/20" />
                 <span className="text-xs text-white/50">Zoom:</span>

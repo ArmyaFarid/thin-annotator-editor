@@ -1,6 +1,16 @@
 import React from "react";
-import {useAtom} from "jotai";
+import {useAtom, useAtomValue, useSetAtom} from "jotai";
+import {ArrowUturnLeftIcon, ArrowUturnRightIcon} from "@heroicons/react/24/outline";
 import {borderOnlyAtom, showShortcutsAtom} from "@/app/atom.ts";
+import {
+    historyAtom,
+    canUndoAtom,
+    canRedoAtom,
+    undoAtom,
+    redoAtom,
+    historyScopeAtom,
+    labelToFrench,
+} from "@/app/history.ts";
 import SelectAddIcon from "@/assets/icons/select-add.svg?react";
 import SelectRemoveIcon from "@/assets/icons/select-remove.svg?react";
 import BoundingBoxIcon from "@/assets/icons/bounding-box.svg?react";
@@ -56,8 +66,55 @@ export const Toolbar: React.FC<ToolbarProps> = () => {
     const [showShortcuts, setShowShortcuts] = useAtom(showShortcutsAtom);
     const [borderOnly, setBorderOnly] = useAtom(borderOnlyAtom);
 
+    const history = useAtomValue(historyAtom);
+    const canUndo = useAtomValue(canUndoAtom);
+    const canRedo = useAtomValue(canRedoAtom);
+    const undo = useSetAtom(undoAtom);
+    const redo = useSetAtom(redoAtom);
+    const historyScope = useAtomValue(historyScopeAtom);
+    // When a modal owns the scope, the global undo/redo doesn't apply —
+    // the modal has its own buttons in its own toolbar.
+    const modalActive = historyScope !== "global";
+    const undoLabel = modalActive
+        ? "Annuler (géré par la fenêtre active)"
+        : canUndo
+        ? `Annuler : ${labelToFrench(history.past[history.past.length - 1].label)}`
+        : "Aucune action à annuler";
+    const redoLabel = modalActive
+        ? "Rétablir (géré par la fenêtre active)"
+        : canRedo
+        ? `Rétablir : ${labelToFrench(history.future[history.future.length - 1].label)}`
+        : "Aucune action à rétablir";
+    const undoDisabled = modalActive || !canUndo;
+    const redoDisabled = modalActive || !canRedo;
+
     return (
         <div className="flex flex-col items-center gap-0.5 p-1.5 rounded-xl bg-secondary w-12">
+            {/* Undo / redo — separated from the tool group below. */}
+            <button
+                title={undoLabel}
+                disabled={undoDisabled}
+                onClick={undo}
+                className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
+                    undoDisabled
+                        ? "text-[#5A5A5A] cursor-not-allowed"
+                        : "text-[#B8B8B8] hover:bg-[#2F2F2F]/60 hover:text-white"
+                }`}>
+                <ArrowUturnLeftIcon className="w-4 h-4" strokeWidth={2.5} />
+            </button>
+            <button
+                title={redoLabel}
+                disabled={redoDisabled}
+                onClick={redo}
+                className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${
+                    redoDisabled
+                        ? "text-[#5A5A5A] cursor-not-allowed"
+                        : "text-[#B8B8B8] hover:bg-[#2F2F2F]/60 hover:text-white"
+                }`}>
+                <ArrowUturnRightIcon className="w-4 h-4" strokeWidth={2.5} />
+            </button>
+            <div className="w-6 h-px bg-white/10 my-1" />
+
             {TOOLS.map(tool => {
                 const active = activeTool === tool;
                 const Icon = TOOL_ICONS[tool];

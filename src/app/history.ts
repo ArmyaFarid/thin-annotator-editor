@@ -152,3 +152,23 @@ export const clearHistoryAtom = atom(null, (_get, set) => {
 
 export const canUndoAtom = atom((get) => get(historyAtom).past.length > 0);
 export const canRedoAtom = atom((get) => get(historyAtom).future.length > 0);
+
+// ── French label for UI tooltips. ────────────────────────────────────────
+export function labelToFrench(label: HistoryLabel): string {
+    switch (label.action) {
+        case "keypoint.add":          return "Ajout de point";
+        case "bbox.add":              return "Ajout de boîte";
+        case "slic-bbox.set":         return "Définition zone SLIC";
+        case "polygon.add":           return "Ajout de polygone";
+        case "freeform.add":          return "Tracé libre";
+        case "layer.delete":          return "Suppression de calque";
+        case "vertex.move":           return "Déplacement de sommet";
+        case "mask.delete":           return "Suppression de masque";
+        case "mask.rename":           return "Renommage";
+        case "mask.merge":            return "Fusion de masque";
+        case "mask.extract-contours": return "Extraction de contours";
+        case "sam.result":            return "Résultat SAM";
+        case "slic.result":           return "Résultat SLIC";
+        case "other":                 return label.payload.note;
+    }
+}

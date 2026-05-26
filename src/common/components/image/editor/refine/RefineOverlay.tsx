@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {useAtom, useSetAtom} from "jotai";
+import {ArrowUturnLeftIcon, ArrowUturnRightIcon} from "@heroicons/react/24/outline";
 import {masksAtom, refineModeAtom} from "@/app/atom.ts";
 import {canvasToRLE, mergeToCanvas} from "@/canvas/utils/maskMerge.ts";
 import {decode} from "@/jscocotools/mask.ts";
@@ -143,10 +144,8 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
     }, [targetMask, imageW, imageH]);
 
     // ── Local refine undo: per-stroke RLE snapshots of `workingRef`. ──
-    // Past/future are only ever read from inside their setters via prev,
-    // so we discard the state value and keep only the setter.
-    const [, setLocalPast] = useState<RLE[]>([]);
-    const [, setLocalFuture] = useState<RLE[]>([]);
+    const [localPast, setLocalPast] = useState<RLE[]>([]);
+    const [localFuture, setLocalFuture] = useState<RLE[]>([]);
 
     // Snapshot the current working canvas BEFORE a stroke starts.
     const pushLocalHistory = useCallback(() => {
@@ -400,6 +399,21 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
                     onClick={() => setTool("add")}
                     className={`px-3 py-1 rounded text-sm transition-colors ${tool === "add" ? "bg-[#4FC3F7]/20 text-[#4FC3F7] ring-1 ring-[#4FC3F7]/40" : "text-white/60 hover:text-white"}`}>
                     Ajouter
+                </button>
+                <div className="w-px h-5 bg-white/20" />
+                <button
+                    onClick={localUndo}
+                    disabled={localPast.length === 0}
+                    title="Annuler le dernier trait (Ctrl+Z)"
+                    className="p-1.5 rounded text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                    <ArrowUturnLeftIcon className="w-4 h-4" strokeWidth={2.5} />
+                </button>
+                <button
+                    onClick={localRedo}
+                    disabled={localFuture.length === 0}
+                    title="Rétablir (Ctrl+Shift+Z)"
+                    className="p-1.5 rounded text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                    <ArrowUturnRightIcon className="w-4 h-4" strokeWidth={2.5} />
                 </button>
                 <div className="w-px h-5 bg-white/20" />
                 <span className="text-xs text-white/50">Pinceau:</span>
