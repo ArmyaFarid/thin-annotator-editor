@@ -1,5 +1,5 @@
 import type {AnnotationObject, ImageSpacePoint, Rect, RenderState} from "@/canvas/types.ts";
-import {MASK_STROKE_WIDTH} from "@/canvas/mask-style.ts";
+import {theme} from "@/canvas/canvas-theme.ts";
 
 function pointInPolygon(x: number, y: number, vertices: ImageSpacePoint[]): boolean {
     let inside = false;
@@ -35,7 +35,9 @@ export class Polygon implements AnnotationObject {
     render(ctx: CanvasRenderingContext2D, state: RenderState, zoom: number): void {
         if (this.vertices.length < 2) return;
 
-        const visualWidth = (MASK_STROKE_WIDTH + (state === "hovered" ? 1.5 : 0)) / zoom;
+        const baseWidth = theme.mask.strokeWidth;
+        const extra = state === "hovered" ? theme.polygon.hoverExtraWidth : 0;
+        const visualWidth = (baseWidth + extra) / zoom;
 
         ctx.save();
         ctx.beginPath();
@@ -48,12 +50,12 @@ export class Polygon implements AnnotationObject {
         ctx.fillStyle = this.fillColor;
         ctx.fill();
 
-        ctx.strokeStyle = state === "hovered" ? "#fff" : this.strokeColor;
+        ctx.strokeStyle = state === "hovered" ? theme.polygon.strokeHovered : this.strokeColor;
         ctx.lineWidth = visualWidth;
         ctx.stroke();
 
         if (state === "active" || state === "hovered") {
-            const dotRadius = visualWidth * 2;
+            const dotRadius = visualWidth * theme.polygon.dotRadiusFactor;
             for (const v of this.vertices) {
                 ctx.beginPath();
                 ctx.arc(v.x, v.y, dotRadius, 0, Math.PI * 2);

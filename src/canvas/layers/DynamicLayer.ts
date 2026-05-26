@@ -1,7 +1,6 @@
 import type {InteractionState, View} from "@/canvas/types.ts";
 import type {ObjectEditor} from "@/canvas/ObjectEditor.ts";
-
-const POLYGON_CLOSE_PX = 15;
+import {theme} from "@/canvas/canvas-theme.ts";
 
 export class DynamicLayer {
     private state: InteractionState = {type: "idle"};
@@ -108,18 +107,16 @@ export class DynamicLayer {
         const text = `${imgX.toFixed(0)} × ${imgY.toFixed(0)} px`;
 
         ctx.save();
-        ctx.font = "11px ui-monospace, monospace";
-        const padX = 7;
+        ctx.font = theme.cursorHud.font;
+        const padX = theme.cursorHud.padX;
         const w = ctx.measureText(text).width + padX * 2;
-        const h = 20;
-        const x = 8;
-        const y = 8;
+        const h = theme.cursorHud.height;
+        const x = theme.cursorHud.marginX;
+        const y = theme.cursorHud.marginY;
 
-        ctx.fillStyle = outside
-            ? "rgba(220, 38, 38, 0.88)"
-            : "rgba(0, 0, 0, 0.55)";
+        ctx.fillStyle = outside ? theme.cursorHud.bgOutside : theme.cursorHud.bg;
         ctx.fillRect(x, y, w, h);
-        ctx.fillStyle = "white";
+        ctx.fillStyle = theme.cursorHud.text;
         ctx.textBaseline = "middle";
         ctx.fillText(text, x + padX, y + h / 2 + 1);
         ctx.restore();
@@ -132,13 +129,14 @@ export class DynamicLayer {
             const y = Math.min(start.y, current.y);
             const w = Math.abs(current.x - start.x);
             const h = Math.abs(current.y - start.y);
+            const [dashA, dashB] = theme.bboxDrawing.dash;
 
             ctx.save();
-            ctx.fillStyle = "rgba(79,195,247,0.1)";
+            ctx.fillStyle = theme.bboxDrawing.fill;
             ctx.fillRect(x, y, w, h);
-            ctx.strokeStyle = "#4FC3F7";
-            ctx.lineWidth = 2 / zoom;
-            ctx.setLineDash([6 / zoom, 3 / zoom]);
+            ctx.strokeStyle = theme.bboxDrawing.stroke;
+            ctx.lineWidth = theme.bboxDrawing.lineWidth / zoom;
+            ctx.setLineDash([dashA / zoom, dashB / zoom]);
             ctx.strokeRect(x, y, w, h);
             ctx.restore();
         }
@@ -169,7 +167,8 @@ export class DynamicLayer {
                 ctx.lineCap = "round";
                 ctx.lineJoin = "round";
                 if (subtract) {
-                    ctx.setLineDash([8 / zoom, 5 / zoom]);
+                    const [dashA, dashB] = theme.freeformDrawing.subtractDash;
+                    ctx.setLineDash([dashA / zoom, dashB / zoom]);
                 }
                 ctx.stroke();
                 ctx.restore();
@@ -179,10 +178,12 @@ export class DynamicLayer {
         if (this.state.type === "polygon-drawing") {
             const {vertices, cursor, subtract} = this.state;
             if (vertices.length > 0 && cursor) {
-                const strokeColor = subtract ? "#EF4444" : "#F59E0B";
+                const strokeColor = subtract
+                    ? theme.polygonDrawing.strokeSubtract
+                    : theme.polygonDrawing.strokeAdd;
                 const fillColor = subtract
-                    ? "rgba(239,68,68,0.08)"
-                    : "rgba(245,158,11,0.08)";
+                    ? theme.polygonDrawing.fillSubtract
+                    : theme.polygonDrawing.fillAdd;
 
                 ctx.save();
 
@@ -204,9 +205,10 @@ export class DynamicLayer {
                 }
                 ctx.lineTo(cursor.x, cursor.y);
                 ctx.strokeStyle = strokeColor;
-                ctx.lineWidth = 2 / zoom;
+                ctx.lineWidth = theme.polygonDrawing.lineWidth / zoom;
                 if (subtract) {
-                    ctx.setLineDash([8 / zoom, 5 / zoom]);
+                    const [dashA, dashB] = theme.polygonDrawing.subtractDash;
+                    ctx.setLineDash([dashA / zoom, dashB / zoom]);
                 }
                 ctx.stroke();
                 ctx.setLineDash([]);
@@ -223,7 +225,9 @@ export class DynamicLayer {
                 return;
             }
 
-            const strokeColor = subtract ? "#EF4444" : "#F59E0B";
+            const strokeColor = subtract
+                ? theme.polygonDrawing.strokeSubtract
+                : theme.polygonDrawing.strokeAdd;
             const {zoom, panX, panY} = this.view;
 
             ctx.save();
@@ -231,7 +235,7 @@ export class DynamicLayer {
                 const sx = v.x * zoom + panX;
                 const sy = v.y * zoom + panY;
                 ctx.beginPath();
-                ctx.arc(sx, sy, 4, 0, Math.PI * 2);
+                ctx.arc(sx, sy, theme.polygonDrawing.vertexDotRadius, 0, Math.PI * 2);
                 ctx.fillStyle = strokeColor;
                 ctx.fill();
             }
@@ -242,11 +246,20 @@ export class DynamicLayer {
             const csx = cursor.x * zoom + panX;
             const csy = cursor.y * zoom + panY;
             const distPx = Math.hypot(csx - fsx, csy - fsy);
-            if (vertices.length >= 3 && distPx < POLYGON_CLOSE_PX) {
+            if (
+                vertices.length >= 3 &&
+                distPx < theme.polygonDrawing.closeThresholdPx
+            ) {
                 ctx.beginPath();
-                ctx.arc(fsx, fsy, 9, 0, Math.PI * 2);
+                ctx.arc(
+                    fsx,
+                    fsy,
+                    theme.polygonDrawing.closeIndicatorRadius,
+                    0,
+                    Math.PI * 2,
+                );
                 ctx.strokeStyle = strokeColor;
-                ctx.lineWidth = 3;
+                ctx.lineWidth = theme.polygonDrawing.closeIndicatorLineWidth;
                 ctx.stroke();
             }
             ctx.restore();

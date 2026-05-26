@@ -20,7 +20,7 @@ import {
 import {CanvasEngine} from "@/canvas/CanvasEngine.ts";
 import type {EngineCallbacks, ImageSpacePoint} from "@/canvas/types.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
-import {MASK_FILL_ALPHA} from "@/canvas/mask-style.ts";
+import {MASK_FILL_ALPHA} from "@/canvas/canvas-theme.ts";
 import {douglasPeucker} from "@/canvas/utils/polygonUtils.ts";
 import usePreserveZoom from "@/canvas/usePreserveZoom.ts";
 import {Minimap} from "@/canvas/Minimap.tsx";

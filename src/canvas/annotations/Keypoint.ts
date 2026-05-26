@@ -1,4 +1,5 @@
 import type {AnnotationObject, Rect, RenderState} from "@/canvas/types.ts";
+import {theme} from "@/canvas/canvas-theme.ts";
 
 export class Keypoint implements AnnotationObject {
     readonly kind = "keypoint";
@@ -11,16 +12,23 @@ export class Keypoint implements AnnotationObject {
     ) {}
 
     render(ctx: CanvasRenderingContext2D, state: RenderState, zoom: number): void {
-        const color = this.label === 1 ? "#22c55e" : "#ef4444";
-        const radius = (state === "hovered" || state === "active" ? 5 : 4) / zoom;
-        const lineW = 1.5 / zoom;
-        const arm = 3 / zoom;
+        const isPositive = this.label === 1;
+        const color = isPositive ? theme.keypoint.positive : theme.keypoint.negative;
+        const fill = isPositive
+            ? theme.keypoint.positiveFill
+            : theme.keypoint.negativeFill;
+        const isHighlighted = state === "hovered" || state === "active";
+        const radius =
+            (isHighlighted ? theme.keypoint.radiusActive : theme.keypoint.radius) /
+            zoom;
+        const lineW = theme.keypoint.lineWidth / zoom;
+        const arm = theme.keypoint.arm / zoom;
 
         ctx.save();
 
         ctx.beginPath();
         ctx.arc(this.x, this.y, radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.label === 1 ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)";
+        ctx.fillStyle = fill;
         ctx.fill();
 
         ctx.strokeStyle = color;
@@ -33,7 +41,7 @@ export class Keypoint implements AnnotationObject {
         ctx.beginPath();
         ctx.moveTo(this.x - arm, this.y);
         ctx.lineTo(this.x + arm, this.y);
-        if (this.label === 1) {
+        if (isPositive) {
             ctx.moveTo(this.x, this.y - arm);
             ctx.lineTo(this.x, this.y + arm);
         }
@@ -49,6 +57,11 @@ export class Keypoint implements AnnotationObject {
     }
 
     getBounds(): Rect {
-        return {x: this.x - 4, y: this.y - 4, w: 8, h: 8};
+        return {
+            x: this.x - theme.keypoint.radius,
+            y: this.y - theme.keypoint.radius,
+            w: theme.keypoint.radius * 2,
+            h: theme.keypoint.radius * 2,
+        };
     }
 }

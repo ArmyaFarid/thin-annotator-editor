@@ -1,6 +1,6 @@
 import {decode} from "@/jscocotools/mask.ts";
 import type {AnnotationObject, Rect, RenderState} from "@/canvas/types.ts";
-import {MASK_BORDER_DARKEN, MASK_BORDER_THICKNESS} from "@/canvas/mask-style.ts";
+import {theme} from "@/canvas/canvas-theme.ts";
 import type {MaskLayer} from "@/app/atom.ts";
 import {Polygon} from "@/canvas/annotations/Polygon.ts";
 
@@ -50,7 +50,7 @@ export class Mask implements AnnotationObject {
         if (!hasHole) {
             ctx.save();
             if (state === "active") {
-                ctx.filter = "drop-shadow(0 0 4px rgba(255,255,255,0.85))";
+                ctx.filter = theme.mask.activeShadow;
             }
             const prevSmoothing = ctx.imageSmoothingEnabled;
             ctx.imageSmoothingEnabled = false;
@@ -126,7 +126,7 @@ export class Mask implements AnnotationObject {
 
         ctx.save();
         if (state === "active") {
-            ctx.filter = "drop-shadow(0 0 4px rgba(255,255,255,0.85))";
+            ctx.filter = theme.mask.activeShadow;
         }
         const prevSmoothing = ctx.imageSmoothingEnabled;
         ctx.imageSmoothingEnabled = false;
@@ -137,8 +137,10 @@ export class Mask implements AnnotationObject {
 
     private renderSkeleton(ctx: CanvasRenderingContext2D, zoom: number): void {
         const {r, g, b} = this.color;
+        const stroke = theme.mask.skeletonStrokeWidth / zoom;
+        const [dashA, dashB] = theme.mask.skeletonHoleDash;
         ctx.save();
-        ctx.filter = "drop-shadow(0 0 4px rgba(255,255,255,0.7))";
+        ctx.filter = theme.mask.activeShadow;
 
         for (const layer of this.layers) {
             if (!layer.canvasShape || layer.canvasShape.kind !== "polygon") continue;
@@ -158,12 +160,12 @@ export class Mask implements AnnotationObject {
                 ctx.fillStyle = `rgba(${r},${g},${b},0.15)`;
                 ctx.fill();
                 ctx.strokeStyle = `rgba(${r},${g},${b},1)`;
-                ctx.lineWidth = 1.5 / zoom;
+                ctx.lineWidth = stroke;
                 ctx.stroke();
             } else {
-                ctx.strokeStyle = "rgba(255,140,50,0.9)";
-                ctx.lineWidth = 1.5 / zoom;
-                ctx.setLineDash([5 / zoom, 3 / zoom]);
+                ctx.strokeStyle = theme.mask.skeletonHoleStroke;
+                ctx.lineWidth = stroke;
+                ctx.setLineDash([dashA / zoom, dashB / zoom]);
                 ctx.stroke();
                 ctx.setLineDash([]);
             }
@@ -235,8 +237,8 @@ export class Mask implements AnnotationObject {
         const [maskH, maskW] = layer.rleMask.size;
         const {r, g, b, a} = this.color;
         const rgbaData = new Uint8ClampedArray(maskH * maskW * 4);
-        const borderThickness = MASK_BORDER_THICKNESS;
-        const darkenFactor = MASK_BORDER_DARKEN;
+        const borderThickness = theme.mask.borderThickness;
+        const darkenFactor = theme.mask.borderDarken;
 
         for (let x = 0; x < maskW; x++) {
             for (let y = 0; y < maskH; y++) {

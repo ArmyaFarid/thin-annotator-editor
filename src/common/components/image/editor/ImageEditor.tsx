@@ -8,7 +8,7 @@ import useCurrentMask from "@/common/components/image/editor/useCurrentMask.ts";
 import useFilterGamma from "@/common/components/filter-gamma-selector/useFilterGamma.ts";
 import useFilterGammaConfig from "@/common/components/image/editor/useFilterGammaConfig.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
-import {MASK_FILL_ALPHA} from "@/canvas/mask-style.ts";
+import {MASK_FILL_ALPHA} from "@/canvas/canvas-theme.ts";
 import {
     refineModeAtom,
     activeImageSizeAtom,

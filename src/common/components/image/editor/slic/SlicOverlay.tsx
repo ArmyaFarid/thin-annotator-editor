@@ -4,7 +4,7 @@ import {masksAtom, slicOverlayAtom, currentMaskAtom, activeImageSizeAtom} from "
 import {decode} from "@/jscocotools/mask.ts";
 import {canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
-import {MASK_FILL_ALPHA} from "@/canvas/mask-style.ts";
+import {MASK_FILL_ALPHA} from "@/canvas/canvas-theme.ts";
 
 interface SlicOverlayProps {
     imageUrl: string;

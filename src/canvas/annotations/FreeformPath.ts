@@ -1,5 +1,5 @@
 import type {AnnotationObject, ImageSpacePoint, Rect, RenderState} from "@/canvas/types.ts";
-import {MASK_STROKE_WIDTH} from "@/canvas/mask-style.ts";
+import {theme} from "@/canvas/canvas-theme.ts";
 
 function distToSegment(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
     const dx = bx - ax;
@@ -23,7 +23,9 @@ export class FreeformPath implements AnnotationObject {
     render(ctx: CanvasRenderingContext2D, state: RenderState, zoom: number): void {
         if (this.points.length < 2) return;
 
-        const visualWidth = (MASK_STROKE_WIDTH + (state === "hovered" ? 1.5 : 0)) / zoom;
+        const baseWidth = theme.mask.strokeWidth;
+        const extra = state === "hovered" ? theme.freeform.hoverExtraWidth : 0;
+        const visualWidth = (baseWidth + extra) / zoom;
 
         ctx.save();
         ctx.beginPath();
@@ -42,7 +44,7 @@ export class FreeformPath implements AnnotationObject {
         const last = this.points[this.points.length - 1];
         ctx.lineTo(last.x, last.y);
 
-        ctx.strokeStyle = state === "hovered" ? "#fff" : this.color;
+        ctx.strokeStyle = state === "hovered" ? theme.polygon.strokeHovered : this.color;
         ctx.lineWidth = visualWidth;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";

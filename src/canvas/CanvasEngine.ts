@@ -15,6 +15,7 @@ export class CanvasEngine {
     private view: View = {zoom: 1, panX: 0, panY: 0};
     private dpr: number =
         typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+    private naturalSize: {w: number; h: number} | null = null;
 
     private editorConsumed = false;
 
@@ -33,6 +34,7 @@ export class CanvasEngine {
 
     setImage(img: HTMLImageElement): void {
         const size = {w: img.naturalWidth, h: img.naturalHeight};
+        this.naturalSize = size;
         this.dataLayer.setNaturalSize(size);
         this.dynLayer.setNaturalSize(size);
     }
@@ -95,30 +97,34 @@ export class CanvasEngine {
 
     onMouseDown(e: MouseEvent): void {
         const p = this.toImageSpace(e);
+        // First chance: editor (vertex drag, delete button) anywhere on the canvas.
         this.editorConsumed = this.editor.tryMouseDown(p);
-        if (!this.editorConsumed) {
-            this.toolManager.onMouseDown(p);
-        }
+        if (this.editorConsumed) return;
+        // Tool starts (bbox/freeform/slic): only if click started inside image.
+        if (!this.isInsideImage(p)) return;
+        this.toolManager.onMouseDown(p);
     }
 
     onMouseMove(e: MouseEvent): void {
         const p = this.toImageSpace(e);
+        // Editor hover/drag uses raw coord (handles can be near image edge).
         this.editor.tryMouseMove(p);
-        if (!this.editor.isDragging()) {
-            this.toolManager.onMouseMove(p);
-        }
+        if (this.editor.isDragging()) return;
+        // Drawing previews follow the cursor but never leave the image.
+        this.toolManager.onMouseMove(this.clampToImage(p));
     }
 
     onMouseUp(e: MouseEvent): void {
         const p = this.toImageSpace(e);
         this.editor.tryMouseUp(p);
-        this.toolManager.onMouseUp(p, this.view.zoom);
+        // Finalize draw — clamp so the committed shape lives in image bounds.
+        this.toolManager.onMouseUp(this.clampToImage(p), this.view.zoom);
     }
 
     onMouseLeave(e: MouseEvent): void {
         const p = this.toImageSpace(e);
         this.editor.tryMouseUp(p);
-        this.toolManager.onMouseUp(p, this.view.zoom);
+        this.toolManager.onMouseUp(this.clampToImage(p), this.view.zoom);
     }
 
     onClick(e: MouseEvent): void {
@@ -126,7 +132,10 @@ export class CanvasEngine {
             this.editorConsumed = false;
             return;
         }
-        this.toolManager.onClick(this.toImageSpace(e), this.view.zoom);
+        const p = this.toImageSpace(e);
+        // Keypoint / polygon-vertex placement: drop clicks outside the image.
+        if (!this.isInsideImage(p)) return;
+        this.toolManager.onClick(p, this.view.zoom);
     }
 
     onDblClick(): void {
@@ -139,6 +148,28 @@ export class CanvasEngine {
 
     destroy(): void {
         this.dynLayer.stopLoop();
+    }
+
+    // True if the image-space point is within the natural image bounds.
+    // Returns true when natural size is unknown (image not loaded yet) so
+    // events aren't silently swallowed before setImage runs.
+    private isInsideImage(p: ImageSpacePoint): boolean {
+        if (!this.naturalSize) return true;
+        return (
+            p.x >= 0 &&
+            p.y >= 0 &&
+            p.x <= this.naturalSize.w &&
+            p.y <= this.naturalSize.h
+        );
+    }
+
+    // Clamp an image-space point to the natural image bounds.
+    private clampToImage(p: ImageSpacePoint): ImageSpacePoint {
+        if (!this.naturalSize) return p;
+        return {
+            x: Math.max(0, Math.min(this.naturalSize.w, p.x)),
+            y: Math.max(0, Math.min(this.naturalSize.h, p.y)),
+        };
     }
 
     // Mouse client coords → image space, using the current view.

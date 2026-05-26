@@ -12,7 +12,7 @@ import {
 } from "@/app/atom.ts";
 import {mergeToCanvas, canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {rleToEditableContours} from "@/canvas/utils/contourExtract.ts";
-import {MASK_FILL_ALPHA} from "@/canvas/mask-style.ts";
+import {MASK_FILL_ALPHA} from "@/canvas/canvas-theme.ts";
 
 export default function MaskList() {
     const [masks, setMasks] = useAtom(masksAtom);

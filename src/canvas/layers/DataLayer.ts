@@ -3,6 +3,7 @@ import type {Prompt, Mask as MaskData} from "@/app/atom.ts";
 import {Keypoint} from "@/canvas/annotations/Keypoint.ts";
 import {BoundingBox} from "@/canvas/annotations/BoundingBox.ts";
 import {Mask} from "@/canvas/annotations/Mask.ts";
+import {theme} from "@/canvas/canvas-theme.ts";
 
 function maskSig(m: MaskData): string {
     return m.layers.map(l => {
@@ -101,7 +102,7 @@ export class DataLayer {
             const isActive = m.id === this.currentMaskId;
             const state = isActive ? "active" : "idle";
             ctx.save();
-            if (hasActive && !isActive) ctx.globalAlpha = 0.3;
+            if (hasActive && !isActive) ctx.globalAlpha = theme.dimming.inactiveAlpha;
             entry.obj.renderWithNatural(ctx, state, zoom, this.naturalSize);
             ctx.restore();
         }

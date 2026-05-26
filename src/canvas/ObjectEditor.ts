@@ -1,12 +1,11 @@
 import type {EngineCallbacks, ImageSpacePoint, View} from "@/canvas/types.ts";
 import type {MaskLayer} from "@/app/atom.ts";
+import {theme} from "@/canvas/canvas-theme.ts";
 
-interface VertexRef { layerId: number; idx: number }
-
-// Screen-pixel constants. Hit tests divide by zoom to convert to image space.
-const HIT_PX = 12;
-const VERTEX_R = 5;
-const DEL_R = 9;
+interface VertexRef {
+    layerId: number;
+    idx: number;
+}
 
 export class ObjectEditor {
     private objectId = 0;
@@ -41,13 +40,16 @@ export class ObjectEditor {
         this.tempVertices.clear();
     }
 
-    isActive(): boolean { return this.objectId !== 0; }
-    isDragging(): boolean { return this.dragVertex !== null; }
+    isActive(): boolean {
+        return this.objectId !== 0;
+    }
+    isDragging(): boolean {
+        return this.dragVertex !== null;
+    }
 
-    // Image-space hit test. Returns true if the editor consumed the event.
     tryMouseDown(p: ImageSpacePoint): boolean {
         if (!this.objectId) return false;
-        const hitR = HIT_PX / this.zoom;
+        const hitR = theme.editor.hitPx / this.zoom;
 
         for (const layer of this.layers) {
             const d = this.delPos(layer);
@@ -74,11 +76,11 @@ export class ObjectEditor {
 
     tryMouseMove(p: ImageSpacePoint): void {
         if (!this.objectId) return;
-        const hitR = HIT_PX / this.zoom;
+        const hitR = theme.editor.hitPx / this.zoom;
 
         if (this.dragVertex) {
             const {layerId, idx} = this.dragVertex;
-            const layer = this.layers.find(l => l.id === layerId);
+            const layer = this.layers.find((l) => l.id === layerId);
             if (layer) {
                 const base = this.getVertices(layer)!;
                 const updated = [...base];
@@ -118,7 +120,7 @@ export class ObjectEditor {
         const updated = this.tempVertices.get(layerId);
         if (updated) {
             this.callbacks.onPolygonVertexMoved(this.objectId, layerId, updated);
-            this.layers = this.layers.map(l => {
+            this.layers = this.layers.map((l) => {
                 if (l.id !== layerId || !l.canvasShape) return l;
                 return {...l, canvasShape: {...l.canvasShape, vertices: updated}};
             });
@@ -128,8 +130,6 @@ export class ObjectEditor {
         return true;
     }
 
-    // Document-space pass: drag outline only.
-    // Caller must have ctx.setTransform applied for image-space drawing.
     renderDoc(ctx: CanvasRenderingContext2D): void {
         if (!this.objectId) return;
         const z = this.zoom;
@@ -143,15 +143,13 @@ export class ObjectEditor {
                 ctx.lineTo(verts[i].x, verts[i].y);
             }
             ctx.closePath();
-            ctx.strokeStyle = "rgba(255,255,255,0.8)";
-            ctx.lineWidth = 2 / z;
+            ctx.strokeStyle = theme.editor.dragOutlineColor;
+            ctx.lineWidth = theme.editor.dragOutlineWidth / z;
             ctx.stroke();
             ctx.restore();
         }
     }
 
-    // Overlay pass: vertex handles + delete buttons in CSS-pixel sizes.
-    // Caller must have ctx.setTransform(dpr, 0, 0, dpr, 0, 0).
     renderOverlay(ctx: CanvasRenderingContext2D, view: View): void {
         if (!this.objectId) return;
         for (const layer of this.layers) {
@@ -159,23 +157,39 @@ export class ObjectEditor {
         }
     }
 
-    private renderLayerOverlay(ctx: CanvasRenderingContext2D, layer: MaskLayer, view: View): void {
+    private renderLayerOverlay(
+        ctx: CanvasRenderingContext2D,
+        layer: MaskLayer,
+        view: View,
+    ): void {
         const verts = this.getVertices(layer);
 
         if (verts) {
             for (let i = 0; i < verts.length; i++) {
                 const sx = verts[i].x * view.zoom + view.panX;
                 const sy = verts[i].y * view.zoom + view.panY;
-                const hovered = this.hoverVertex?.layerId === layer.id && this.hoverVertex.idx === i;
-                const dragged = this.dragVertex?.layerId === layer.id && this.dragVertex.idx === i;
+                const hovered =
+                    this.hoverVertex?.layerId === layer.id &&
+                    this.hoverVertex.idx === i;
+                const dragged =
+                    this.dragVertex?.layerId === layer.id &&
+                    this.dragVertex.idx === i;
+                const radius =
+                    dragged || hovered
+                        ? theme.editor.vertexRadius + 2
+                        : theme.editor.vertexRadius;
 
                 ctx.save();
                 ctx.beginPath();
-                ctx.arc(sx, sy, dragged || hovered ? VERTEX_R + 2 : VERTEX_R, 0, Math.PI * 2);
-                ctx.fillStyle = dragged ? "#f97316" : hovered ? "#fff" : "rgba(255,255,255,0.75)";
+                ctx.arc(sx, sy, radius, 0, Math.PI * 2);
+                ctx.fillStyle = dragged
+                    ? theme.editor.vertexFillDrag
+                    : hovered
+                      ? theme.editor.vertexFillHover
+                      : theme.editor.vertexFill;
                 ctx.fill();
-                ctx.strokeStyle = "#F59E0B";
-                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = theme.editor.vertexStroke;
+                ctx.lineWidth = theme.editor.vertexStrokeWidth;
                 ctx.stroke();
                 ctx.restore();
             }
@@ -186,17 +200,19 @@ export class ObjectEditor {
             const sx = d.x * view.zoom + view.panX;
             const sy = d.y * view.zoom + view.panY;
             const hovered = this.hoverDelete === layer.id;
-            const cross = 3.5;
+            const cross = theme.editor.deleteCrossArm;
             ctx.save();
             ctx.beginPath();
-            ctx.arc(sx, sy, DEL_R, 0, Math.PI * 2);
-            ctx.fillStyle = hovered ? "#ef4444" : "rgba(239,68,68,0.8)";
+            ctx.arc(sx, sy, theme.editor.deleteRadius, 0, Math.PI * 2);
+            ctx.fillStyle = hovered
+                ? theme.editor.deleteFillHover
+                : theme.editor.deleteFill;
             ctx.fill();
-            ctx.strokeStyle = "rgba(255,255,255,0.5)";
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = theme.editor.deleteStroke;
+            ctx.lineWidth = theme.editor.deleteStrokeWidth;
             ctx.stroke();
-            ctx.strokeStyle = "#fff";
-            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = theme.editor.deleteCrossStroke;
+            ctx.lineWidth = theme.editor.deleteCrossStrokeWidth;
             ctx.lineCap = "round";
             ctx.beginPath();
             ctx.moveTo(sx - cross, sy - cross);
@@ -215,20 +231,20 @@ export class ObjectEditor {
         return null;
     }
 
-    // Delete button position in IMAGE SPACE. Offsets are screen pixels
-    // divided by zoom so the button stays a constant on-screen distance
-    // from its anchor.
     private delPos(layer: MaskLayer): {x: number; y: number} | null {
         const z = this.zoom;
         if (layer.canvasShape?.kind === "polygon") {
             const verts = this.getVertices(layer) ?? layer.canvasShape.vertices;
-            const maxX = Math.max(...verts.map(v => v.x));
-            const minY = Math.min(...verts.map(v => v.y));
-            return {x: maxX + (DEL_R + 4) / z, y: minY};
+            const maxX = Math.max(...verts.map((v) => v.x));
+            const minY = Math.min(...verts.map((v) => v.y));
+            const offset =
+                (theme.editor.deleteRadius + theme.editor.deleteOffsetFromMaxX) / z;
+            return {x: maxX + offset, y: minY};
         }
         if (layer.rleMask) {
             const maskW = layer.rleMask.size[1];
-            return {x: maskW - 20 / z, y: 20 / z};
+            const inset = theme.editor.rleDeleteInset / z;
+            return {x: maskW - inset, y: inset};
         }
         return null;
     }
