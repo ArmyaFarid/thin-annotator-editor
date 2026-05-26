@@ -1,7 +1,40 @@
 import React, {useCallback, useEffect, useRef, useState} from "react";
-import {useAtom} from "jotai";
+import {useAtom, useSetAtom} from "jotai";
 import {masksAtom, refineModeAtom} from "@/app/atom.ts";
 import {canvasToRLE, mergeToCanvas} from "@/canvas/utils/maskMerge.ts";
+import {decode} from "@/jscocotools/mask.ts";
+import {commitHistoryAtom, historyScopeAtom} from "@/app/history.ts";
+
+interface RLE {
+    counts: string;
+    size: [number, number];
+}
+
+const MAX_REFINE_LOCAL_HISTORY = 20;
+
+// Paint an RLE-encoded mask onto a working canvas as white pixels with
+// alpha 255 where set, transparent elsewhere. Matches the format the brush
+// strokes accumulate in workingRef so undo/redo restores byte-for-byte.
+function applyRleToCanvas(rle: RLE, target: HTMLCanvasElement): void {
+    const decoded = decode([rle]);
+    const data = decoded.data as Uint8Array;
+    const [maskH, maskW] = rle.size;
+    const rgba = new Uint8ClampedArray(maskW * maskH * 4);
+    for (let x = 0; x < maskW; x++) {
+        for (let y = 0; y < maskH; y++) {
+            if (data[x * maskH + y] === 1) {
+                const i = (y * maskW + x) * 4;
+                rgba[i] = 255;
+                rgba[i + 1] = 255;
+                rgba[i + 2] = 255;
+                rgba[i + 3] = 255;
+            }
+        }
+    }
+    const ctx = target.getContext("2d")!;
+    ctx.clearRect(0, 0, target.width, target.height);
+    ctx.putImageData(new ImageData(rgba, maskW, maskH), 0, 0);
+}
 
 interface RefineOverlayProps {
     imageUrl: string;
@@ -55,6 +88,9 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
 
     useEffect(() => { viewRef.current = {zoom, panX, panY}; }, [zoom, panX, panY]);
 
+    const setHistoryScope = useSetAtom(historyScopeAtom);
+    const commitHistory = useSetAtom(commitHistoryAtom);
+
     const redrawDisplay = useCallback(() => {
         const display = displayCanvasRef.current;
         const working = workingRef.current;
@@ -105,6 +141,71 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
             ctx.drawImage(colorBuf, 0, 0);
         }
     }, [targetMask, imageW, imageH]);
+
+    // ── Local refine undo: per-stroke RLE snapshots of `workingRef`. ──
+    // Past/future are only ever read from inside their setters via prev,
+    // so we discard the state value and keep only the setter.
+    const [, setLocalPast] = useState<RLE[]>([]);
+    const [, setLocalFuture] = useState<RLE[]>([]);
+
+    // Snapshot the current working canvas BEFORE a stroke starts.
+    const pushLocalHistory = useCallback(() => {
+        if (!workingRef.current) return;
+        const snapshot = canvasToRLE(workingRef.current);
+        setLocalPast(past => {
+            const next = [...past, snapshot];
+            return next.length > MAX_REFINE_LOCAL_HISTORY
+                ? next.slice(-MAX_REFINE_LOCAL_HISTORY)
+                : next;
+        });
+        setLocalFuture([]);
+    }, []);
+
+    const localUndo = useCallback(() => {
+        setLocalPast(past => {
+            if (past.length === 0 || !workingRef.current) return past;
+            const previous = past[past.length - 1];
+            const current = canvasToRLE(workingRef.current);
+            setLocalFuture(f => [...f, current]);
+            applyRleToCanvas(previous, workingRef.current);
+            redrawDisplay();
+            return past.slice(0, -1);
+        });
+    }, [redrawDisplay]);
+
+    const localRedo = useCallback(() => {
+        setLocalFuture(future => {
+            if (future.length === 0 || !workingRef.current) return future;
+            const next = future[future.length - 1];
+            const current = canvasToRLE(workingRef.current);
+            setLocalPast(p => [...p, current]);
+            applyRleToCanvas(next, workingRef.current);
+            redrawDisplay();
+            return future.slice(0, -1);
+        });
+    }, [redrawDisplay]);
+
+    // Claim refine scope on mount, release on unmount.
+    useEffect(() => {
+        setHistoryScope("refine");
+        return () => setHistoryScope("global");
+    }, [setHistoryScope]);
+
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            const tag = (e.target as HTMLElement).tagName;
+            if (tag === "INPUT" || tag === "TEXTAREA") return;
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
+                e.preventDefault();
+                if (e.shiftKey) localRedo(); else localUndo();
+            } else if (e.ctrlKey && e.key.toLowerCase() === "y") {
+                e.preventDefault();
+                localRedo();
+            }
+        };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, [localUndo, localRedo]);
 
     // Init working canvas + auto-zoom when entering refine mode
     useEffect(() => {
@@ -237,6 +338,7 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
             return;
         }
         if (e.button !== 0) return;
+        pushLocalHistory();   // snapshot pre-stroke state for local undo
         isDrawing.current = true;
         drawBrush(e);
     }
@@ -265,6 +367,8 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
         if (!workingRef.current) return;
         const newRle = canvasToRLE(workingRef.current);
         const layerId = Date.now();
+        // Whole refine session becomes a single GLOBAL undo step.
+        commitHistory({action: "other", payload: {note: "refine apply"}});
         setMasks(prev =>
             prev.map(m => {
                 if (m.id !== refineMode) return m;

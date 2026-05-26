@@ -23,6 +23,7 @@ import {
     undoAtom,
     redoAtom,
     clearHistoryAtom,
+    historyScopeAtom,
 } from "@/app/history.ts";
 import {CanvasEngine} from "@/canvas/CanvasEngine.ts";
 import type {EngineCallbacks, ImageSpacePoint} from "@/canvas/types.ts";
@@ -114,6 +115,11 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     const undo = useSetAtom(undoAtom);
     const redo = useSetAtom(redoAtom);
     const clearHistory = useSetAtom(clearHistoryAtom);
+    const historyScope = useAtomValue(historyScopeAtom);
+    const historyScopeRef = useRef(historyScope);
+    useEffect(() => {
+        historyScopeRef.current = historyScope;
+    }, [historyScope]);
 
     // Clear history when the user switches to a different sample (different
     // rock / thin section). PPL ↔ XPL image swaps on the SAME sample do NOT
@@ -166,7 +172,10 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
             }
 
             // Undo / redo: Cmd-Z / Ctrl-Z; Cmd-Shift-Z / Ctrl-Shift-Z; Ctrl-Y.
+            // Skip when a modal owns the scope — that modal handles its own
+            // local undo via its own keydown listener.
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
+                if (historyScopeRef.current !== "global") return;
                 e.preventDefault();
                 if (e.shiftKey) {
                     redo();
@@ -176,6 +185,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 return;
             }
             if (e.ctrlKey && e.key.toLowerCase() === "y") {
+                if (historyScopeRef.current !== "global") return;
                 e.preventDefault();
                 redo();
                 return;

@@ -65,6 +65,17 @@ interface HistoryState {
 
 export const historyAtom = atom<HistoryState>({past: [], future: []});
 
+/**
+ * Which UI surface currently owns the Ctrl-Z behaviour.
+ * "global" → main editor; undo/redo applies to the global history.
+ * "slic" / "refine" → an editing modal owns Ctrl-Z; the global handler
+ *   short-circuits, the modal manages its own per-stroke history.
+ *
+ * Modals must set the scope on mount and reset to "global" on unmount.
+ */
+export type HistoryScope = "global" | "slic" | "refine";
+export const historyScopeAtom = atom<HistoryScope>("global");
+
 // ── Write-only action atoms ──────────────────────────────────────────────
 
 /**

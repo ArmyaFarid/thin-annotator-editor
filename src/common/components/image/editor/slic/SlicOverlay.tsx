@@ -5,7 +5,9 @@ import {decode} from "@/jscocotools/mask.ts";
 import {canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
 import {MASK_FILL_ALPHA} from "@/canvas/canvas-theme.ts";
-import {commitHistoryAtom} from "@/app/history.ts";
+import {commitHistoryAtom, historyScopeAtom} from "@/app/history.ts";
+
+const MAX_SLIC_LOCAL_HISTORY = 50;
 
 interface SlicOverlayProps {
     imageUrl: string;
@@ -31,8 +33,77 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     const setCurrentMask = useSetAtom(currentMaskAtom);
     const imageSize = useAtomValue(activeImageSizeAtom);
     const commitHistory = useSetAtom(commitHistoryAtom);
+    const setHistoryScope = useSetAtom(historyScopeAtom);
+
+    // Local SLIC undo stack — only active while this modal is open.
+    // History entries are snapshots of `deleted` (small Set<number>).
+    // Past/future are only ever read from inside their setters via prev,
+    // so we discard the state value and keep only the setter.
+    const [, setLocalPast] = useState<Set<number>[]>([]);
+    const [, setLocalFuture] = useState<Set<number>[]>([]);
+    // Ref for closure-safe reads from inside callbacks.
+    const deletedRef = useRef<Set<number>>(new Set());
 
     const [deleted, setDeleted] = useState<Set<number>>(new Set());
+    useEffect(() => {
+        deletedRef.current = deleted;
+    }, [deleted]);
+
+    // Snapshot the CURRENT `deleted` set onto the local undo stack and
+    // clear the redo branch. Call before any mutation to `deleted`.
+    const pushLocalHistory = useCallback(() => {
+        setLocalPast((past) => {
+            const next = [...past, new Set(deletedRef.current)];
+            return next.length > MAX_SLIC_LOCAL_HISTORY
+                ? next.slice(-MAX_SLIC_LOCAL_HISTORY)
+                : next;
+        });
+        setLocalFuture([]);
+    }, []);
+
+    const localUndo = useCallback(() => {
+        setLocalPast((past) => {
+            if (past.length === 0) return past;
+            const previous = past[past.length - 1];
+            setLocalFuture((f) => [...f, new Set(deletedRef.current)]);
+            setDeleted(previous);
+            return past.slice(0, -1);
+        });
+    }, []);
+
+    const localRedo = useCallback(() => {
+        setLocalFuture((future) => {
+            if (future.length === 0) return future;
+            const next = future[future.length - 1];
+            setLocalPast((p) => [...p, new Set(deletedRef.current)]);
+            setDeleted(next);
+            return future.slice(0, -1);
+        });
+    }, []);
+
+    // Claim scope on mount, release on unmount.
+    useEffect(() => {
+        setHistoryScope("slic");
+        return () => setHistoryScope("global");
+    }, [setHistoryScope]);
+
+    // Modal-local Ctrl-Z / Ctrl-Shift-Z / Ctrl-Y handler.
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            const tag = (e.target as HTMLElement).tagName;
+            if (tag === "INPUT" || tag === "TEXTAREA") return;
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
+                e.preventDefault();
+                if (e.shiftKey) localRedo();
+                else localUndo();
+            } else if (e.ctrlKey && e.key.toLowerCase() === "y") {
+                e.preventDefault();
+                localRedo();
+            }
+        };
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, [localUndo, localRedo]);
     const [tilesReady, setTilesReady] = useState(false);
     const [zoom, setZoom] = useState(1);
     const [panX, setPanX] = useState(0);
@@ -215,8 +286,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         if (e.button !== 0) return;
         const id = getSuperpixelAt(e);
         if (id === null) return;
+        if (deletedRef.current.has(id)) return;   // no-op click, no history entry
+        pushLocalHistory();
         setDeleted(prev => {
-            if (prev.has(id)) return prev;
             const next = new Set(prev);
             next.add(id);
             return next;
@@ -334,7 +406,11 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                 </span>
                 <div className="w-px h-5 bg-white/20" />
                 <button
-                    onClick={() => setDeleted(new Set())}
+                    onClick={() => {
+                        if (deleted.size === 0) return;
+                        pushLocalHistory();
+                        setDeleted(new Set());
+                    }}
                     disabled={deleted.size === 0}
                     className="px-3 py-1 rounded text-sm text-white/60 hover:text-white transition-colors disabled:opacity-30">
                     Réinitialiser
