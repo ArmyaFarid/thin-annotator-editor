@@ -46,7 +46,9 @@ export class DynamicLayer {
 
     private render(): void {
         const ctx = this.canvas.getContext("2d");
-        if (!ctx) return;
+        if (!ctx) {
+            return;
+        }
 
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -61,6 +63,9 @@ export class DynamicLayer {
 
         // ============ Overlay pass ============
         ctx.setTransform(d, 0, 0, d, 0, 0);
+
+        this.drawPixelGrid(ctx);
+
         this.renderOverlay(ctx);
         this.editor?.renderOverlay(ctx, this.view);
     }
@@ -93,7 +98,12 @@ export class DynamicLayer {
                 for (let i = 1; i < points.length - 1; i++) {
                     const curr = points[i];
                     const next = points[i + 1];
-                    ctx.quadraticCurveTo(curr.x, curr.y, (curr.x + next.x) / 2, (curr.y + next.y) / 2);
+                    ctx.quadraticCurveTo(
+                        curr.x,
+                        curr.y,
+                        (curr.x + next.x) / 2,
+                        (curr.y + next.y) / 2,
+                    );
                 }
 
                 const last = points[points.length - 1];
@@ -103,7 +113,9 @@ export class DynamicLayer {
                 ctx.lineWidth = width / zoom;
                 ctx.lineCap = "round";
                 ctx.lineJoin = "round";
-                if (subtract) ctx.setLineDash([8 / zoom, 5 / zoom]);
+                if (subtract) {
+                    ctx.setLineDash([8 / zoom, 5 / zoom]);
+                }
                 ctx.stroke();
                 ctx.restore();
             }
@@ -113,7 +125,9 @@ export class DynamicLayer {
             const {vertices, cursor, subtract} = this.state;
             if (vertices.length > 0 && cursor) {
                 const strokeColor = subtract ? "#EF4444" : "#F59E0B";
-                const fillColor = subtract ? "rgba(239,68,68,0.08)" : "rgba(245,158,11,0.08)";
+                const fillColor = subtract
+                    ? "rgba(239,68,68,0.08)"
+                    : "rgba(245,158,11,0.08)";
 
                 ctx.save();
 
@@ -136,7 +150,9 @@ export class DynamicLayer {
                 ctx.lineTo(cursor.x, cursor.y);
                 ctx.strokeStyle = strokeColor;
                 ctx.lineWidth = 2 / zoom;
-                if (subtract) ctx.setLineDash([8 / zoom, 5 / zoom]);
+                if (subtract) {
+                    ctx.setLineDash([8 / zoom, 5 / zoom]);
+                }
                 ctx.stroke();
                 ctx.setLineDash([]);
 
@@ -148,7 +164,9 @@ export class DynamicLayer {
     private renderOverlay(ctx: CanvasRenderingContext2D): void {
         if (this.state.type === "polygon-drawing") {
             const {vertices, cursor, subtract} = this.state;
-            if (vertices.length === 0 || !cursor) return;
+            if (vertices.length === 0 || !cursor) {
+                return;
+            }
 
             const strokeColor = subtract ? "#EF4444" : "#F59E0B";
             const {zoom, panX, panY} = this.view;
@@ -178,5 +196,45 @@ export class DynamicLayer {
             }
             ctx.restore();
         }
+    }
+
+    // Dans DynamicLayer.ts
+
+    private drawPixelGrid(ctx: CanvasRenderingContext2D): void {
+        // 1. Le seuil : On n'affiche la grille que si le zoom est suffisamment grand (ex: > 15x)
+        if (this.view.zoom < 12) {
+            return;
+        }
+
+        ctx.save();
+
+        // Une couleur très subtile pour la grille
+        ctx.strokeStyle = "rgba(0, 0, 0, 0.1)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+
+        // 2. Décalage de départ (modulo)
+        // On multiplie par DPR si ton canvas est géré en pixels physiques
+        const z = this.view.zoom * this.dpr;
+        const startX = (this.view.panX * this.dpr) % z;
+        const startY = (this.view.panY * this.dpr) % z;
+
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        // 3. Lignes verticales
+        for (let x = startX; x < w; x += z) {
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, h);
+        }
+
+        // 4. Lignes horizontales
+        for (let y = startY; y < h; y += z) {
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+        }
+
+        ctx.stroke();
+        ctx.restore();
     }
 }
