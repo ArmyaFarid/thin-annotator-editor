@@ -32,10 +32,9 @@ export class CanvasEngine {
     }
 
     setImage(img: HTMLImageElement): void {
-        this.dataLayer.setNaturalSize({
-            w: img.naturalWidth,
-            h: img.naturalHeight,
-        });
+        const size = {w: img.naturalWidth, h: img.naturalHeight};
+        this.dataLayer.setNaturalSize(size);
+        this.dynLayer.setNaturalSize(size);
     }
 
     onResize(cssW: number, cssH: number): void {
