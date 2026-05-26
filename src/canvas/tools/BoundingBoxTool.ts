@@ -23,7 +23,7 @@ export class BoundingBoxTool {
         this.dynLayer.setInteractionState({type: "bbox-drawing", start: this.start, current: p});
     }
 
-    onMouseUp(p: ImageSpacePoint, scale: {x: number; y: number}): void {
+    onMouseUp(p: ImageSpacePoint, zoom: number): void {
         if (!this.drawing) return;
         this.drawing = false;
         this.dynLayer.setInteractionState({type: "idle"});
@@ -33,7 +33,7 @@ export class BoundingBoxTool {
         const w = Math.abs(p.x - this.start.x);
         const h = Math.abs(p.y - this.start.y);
 
-        if (w * scale.x < MIN_SIZE_PX || h * scale.y < MIN_SIZE_PX) return;
+        if (w * zoom < MIN_SIZE_PX || h * zoom < MIN_SIZE_PX) return;
 
         this.callbacks.onBboxAdded(x, y, w, h);
     }

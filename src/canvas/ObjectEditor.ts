@@ -1,13 +1,12 @@
-import type {EngineCallbacks, ImageSpacePoint, Scale} from "@/canvas/types.ts";
+import type {EngineCallbacks, ImageSpacePoint, View} from "@/canvas/types.ts";
 import type {MaskLayer} from "@/app/atom.ts";
 
 interface VertexRef { layerId: number; idx: number }
 
-// All hit-testing and rendering is done in CANVAS PIXEL space to avoid
-// scale-dependent threshold math and to keep the delete button visually consistent.
-const HIT_PX = 12;   // canvas-pixel hit radius for vertices and delete buttons
-const VERTEX_R = 5;  // canvas-pixel vertex handle radius
-const DEL_R = 9;     // canvas-pixel delete button radius
+// Screen-pixel constants. Hit tests divide by zoom to convert to image space.
+const HIT_PX = 12;
+const VERTEX_R = 5;
+const DEL_R = 9;
 
 export class ObjectEditor {
     private objectId = 0;
@@ -16,8 +15,6 @@ export class ObjectEditor {
     private hoverDelete: number | null = null;
     private dragVertex: VertexRef | null = null;
     private tempVertices = new Map<number, ImageSpacePoint[]>();
-    // View zoom — handle sizes and hit radii are divided by it so they
-    // stay constant on screen (the canvas stack is CSS-scaled by zoom).
     private zoom = 1;
 
     constructor(private readonly callbacks: EngineCallbacks) {}
@@ -47,29 +44,25 @@ export class ObjectEditor {
     isActive(): boolean { return this.objectId !== 0; }
     isDragging(): boolean { return this.dragVertex !== null; }
 
-    // Returns true if consumed — caller must not pass event to drawing tools.
-    tryMouseDown(p: ImageSpacePoint, scale: Scale): boolean {
+    // Image-space hit test. Returns true if the editor consumed the event.
+    tryMouseDown(p: ImageSpacePoint): boolean {
         if (!this.objectId) return false;
-        const px = p.x * scale.x;
-        const py = p.y * scale.y;
+        const hitR = HIT_PX / this.zoom;
 
-        // Delete buttons checked first
         for (const layer of this.layers) {
-            const d = this.delPos(layer, scale);
-            if (d && Math.hypot(px - d.x, py - d.y) < HIT_PX / this.zoom) {
+            const d = this.delPos(layer);
+            if (d && Math.hypot(p.x - d.x, p.y - d.y) < hitR) {
                 this.callbacks.onLayerDeleted(this.objectId, layer.id);
                 return true;
             }
         }
 
-        // Polygon vertex drag (only for polygon layers)
         for (const layer of this.layers) {
             const verts = this.getVertices(layer);
             if (!verts) continue;
             for (let i = 0; i < verts.length; i++) {
-                const vx = verts[i].x * scale.x;
-                const vy = verts[i].y * scale.y;
-                if (Math.hypot(px - vx, py - vy) < HIT_PX / this.zoom) {
+                const v = verts[i];
+                if (Math.hypot(p.x - v.x, p.y - v.y) < hitR) {
                     this.dragVertex = {layerId: layer.id, idx: i};
                     return true;
                 }
@@ -79,10 +72,9 @@ export class ObjectEditor {
         return false;
     }
 
-    tryMouseMove(p: ImageSpacePoint, scale: Scale): void {
+    tryMouseMove(p: ImageSpacePoint): void {
         if (!this.objectId) return;
-        const px = p.x * scale.x;
-        const py = p.y * scale.y;
+        const hitR = HIT_PX / this.zoom;
 
         if (this.dragVertex) {
             const {layerId, idx} = this.dragVertex;
@@ -100,8 +92,8 @@ export class ObjectEditor {
         this.hoverDelete = null;
 
         for (const layer of this.layers) {
-            const d = this.delPos(layer, scale);
-            if (d && Math.hypot(px - d.x, py - d.y) < HIT_PX / this.zoom) {
+            const d = this.delPos(layer);
+            if (d && Math.hypot(p.x - d.x, p.y - d.y) < hitR) {
                 this.hoverDelete = layer.id;
                 return;
             }
@@ -111,9 +103,8 @@ export class ObjectEditor {
             const verts = this.getVertices(layer);
             if (!verts) continue;
             for (let i = 0; i < verts.length; i++) {
-                const vx = verts[i].x * scale.x;
-                const vy = verts[i].y * scale.y;
-                if (Math.hypot(px - vx, py - vy) < HIT_PX / this.zoom) {
+                const v = verts[i];
+                if (Math.hypot(p.x - v.x, p.y - v.y) < hitR) {
                     this.hoverVertex = {layerId: layer.id, idx: i};
                     return;
                 }
@@ -137,24 +128,19 @@ export class ObjectEditor {
         return true;
     }
 
-    render(ctx: CanvasRenderingContext2D, scale: Scale): void {
+    // Document-space pass: drag outline only.
+    // Caller must have ctx.setTransform applied for image-space drawing.
+    renderDoc(ctx: CanvasRenderingContext2D): void {
         if (!this.objectId) return;
-        for (const layer of this.layers) {
-            this.renderLayer(ctx, layer, scale);
-        }
-    }
-
-    private renderLayer(ctx: CanvasRenderingContext2D, layer: MaskLayer, scale: Scale): void {
-        const verts = this.getVertices(layer);
         const z = this.zoom;
-
-        // Live outline while dragging a vertex
-        if (verts && this.dragVertex?.layerId === layer.id) {
+        for (const layer of this.layers) {
+            const verts = this.getVertices(layer);
+            if (!verts || this.dragVertex?.layerId !== layer.id) continue;
             ctx.save();
             ctx.beginPath();
-            ctx.moveTo(verts[0].x * scale.x, verts[0].y * scale.y);
+            ctx.moveTo(verts[0].x, verts[0].y);
             for (let i = 1; i < verts.length; i++) {
-                ctx.lineTo(verts[i].x * scale.x, verts[i].y * scale.y);
+                ctx.lineTo(verts[i].x, verts[i].y);
             }
             ctx.closePath();
             ctx.strokeStyle = "rgba(255,255,255,0.8)";
@@ -162,55 +148,66 @@ export class ObjectEditor {
             ctx.stroke();
             ctx.restore();
         }
+    }
 
-        // Vertex handles (polygon layers only)
+    // Overlay pass: vertex handles + delete buttons in CSS-pixel sizes.
+    // Caller must have ctx.setTransform(dpr, 0, 0, dpr, 0, 0).
+    renderOverlay(ctx: CanvasRenderingContext2D, view: View): void {
+        if (!this.objectId) return;
+        for (const layer of this.layers) {
+            this.renderLayerOverlay(ctx, layer, view);
+        }
+    }
+
+    private renderLayerOverlay(ctx: CanvasRenderingContext2D, layer: MaskLayer, view: View): void {
+        const verts = this.getVertices(layer);
+
         if (verts) {
             for (let i = 0; i < verts.length; i++) {
-                const vx = verts[i].x * scale.x;
-                const vy = verts[i].y * scale.y;
+                const sx = verts[i].x * view.zoom + view.panX;
+                const sy = verts[i].y * view.zoom + view.panY;
                 const hovered = this.hoverVertex?.layerId === layer.id && this.hoverVertex.idx === i;
                 const dragged = this.dragVertex?.layerId === layer.id && this.dragVertex.idx === i;
 
                 ctx.save();
                 ctx.beginPath();
-                ctx.arc(vx, vy, (dragged || hovered ? VERTEX_R + 2 : VERTEX_R) / z, 0, Math.PI * 2);
+                ctx.arc(sx, sy, dragged || hovered ? VERTEX_R + 2 : VERTEX_R, 0, Math.PI * 2);
                 ctx.fillStyle = dragged ? "#f97316" : hovered ? "#fff" : "rgba(255,255,255,0.75)";
                 ctx.fill();
                 ctx.strokeStyle = "#F59E0B";
-                ctx.lineWidth = 1.5 / z;
+                ctx.lineWidth = 1.5;
                 ctx.stroke();
                 ctx.restore();
             }
         }
 
-        // Delete × button (all layer types)
-        const d = this.delPos(layer, scale);
+        const d = this.delPos(layer);
         if (d) {
+            const sx = d.x * view.zoom + view.panX;
+            const sy = d.y * view.zoom + view.panY;
             const hovered = this.hoverDelete === layer.id;
-            const delR = DEL_R / z;
-            const cross = 3.5 / z;
+            const cross = 3.5;
             ctx.save();
             ctx.beginPath();
-            ctx.arc(d.x, d.y, delR, 0, Math.PI * 2);
+            ctx.arc(sx, sy, DEL_R, 0, Math.PI * 2);
             ctx.fillStyle = hovered ? "#ef4444" : "rgba(239,68,68,0.8)";
             ctx.fill();
             ctx.strokeStyle = "rgba(255,255,255,0.5)";
-            ctx.lineWidth = 1 / z;
+            ctx.lineWidth = 1;
             ctx.stroke();
             ctx.strokeStyle = "#fff";
-            ctx.lineWidth = 1.5 / z;
+            ctx.lineWidth = 1.5;
             ctx.lineCap = "round";
             ctx.beginPath();
-            ctx.moveTo(d.x - cross, d.y - cross);
-            ctx.lineTo(d.x + cross, d.y + cross);
-            ctx.moveTo(d.x + cross, d.y - cross);
-            ctx.lineTo(d.x - cross, d.y + cross);
+            ctx.moveTo(sx - cross, sy - cross);
+            ctx.lineTo(sx + cross, sy + cross);
+            ctx.moveTo(sx + cross, sy - cross);
+            ctx.lineTo(sx - cross, sy + cross);
             ctx.stroke();
             ctx.restore();
         }
     }
 
-    // Returns polygon vertices (with live-drag override), or null for RLE layers.
     private getVertices(layer: MaskLayer): ImageSpacePoint[] | null {
         const temp = this.tempVertices.get(layer.id);
         if (temp) return temp;
@@ -218,19 +215,20 @@ export class ObjectEditor {
         return null;
     }
 
-    // Returns delete button position in CANVAS PIXELS, or null if no position can be determined.
-    private delPos(layer: MaskLayer, scale: Scale): {x: number; y: number} | null {
+    // Delete button position in IMAGE SPACE. Offsets are screen pixels
+    // divided by zoom so the button stays a constant on-screen distance
+    // from its anchor.
+    private delPos(layer: MaskLayer): {x: number; y: number} | null {
         const z = this.zoom;
         if (layer.canvasShape?.kind === "polygon") {
             const verts = this.getVertices(layer) ?? layer.canvasShape.vertices;
-            const maxX = Math.max(...verts.map(v => v.x)) * scale.x;
-            const minY = Math.min(...verts.map(v => v.y)) * scale.y;
+            const maxX = Math.max(...verts.map(v => v.x));
+            const minY = Math.min(...verts.map(v => v.y));
             return {x: maxX + (DEL_R + 4) / z, y: minY};
         }
         if (layer.rleMask) {
-            // Fixed position: 20px inset from the top-right corner of the canvas
-            const canvasW = layer.rleMask.size[1] * scale.x;
-            return {x: canvasW - 20 / z, y: 20 / z};
+            const maskW = layer.rleMask.size[1];
+            return {x: maskW - 20 / z, y: 20 / z};
         }
         return null;
     }

@@ -1,13 +1,12 @@
-import type {InteractionState, Scale} from "@/canvas/types.ts";
+import type {InteractionState, View} from "@/canvas/types.ts";
 import type {ObjectEditor} from "@/canvas/ObjectEditor.ts";
 
 const POLYGON_CLOSE_PX = 15;
 
 export class DynamicLayer {
     private state: InteractionState = {type: "idle"};
-    private scale: Scale = {x: 1, y: 1};
-    private pxRatio: {x: number; y: number} = {x: 1, y: 1};
-    private zoom = 1;
+    private view: View = {zoom: 1, panX: 0, panY: 0};
+    private dpr = 1;
     private rafId = 0;
     private editor: ObjectEditor | null = null;
 
@@ -17,22 +16,16 @@ export class DynamicLayer {
         this.editor = editor;
     }
 
-    resize(w: number, h: number, pxRatio?: {x: number; y: number}): void {
-        this.canvas.width = w;
-        this.canvas.height = h;
-        if (pxRatio) this.pxRatio = pxRatio;
+    resize(cssW: number, cssH: number, dpr: number): void {
+        this.dpr = dpr;
+        this.canvas.width = Math.max(1, Math.round(cssW * dpr));
+        this.canvas.height = Math.max(1, Math.round(cssH * dpr));
+        this.canvas.style.width = `${cssW}px`;
+        this.canvas.style.height = `${cssH}px`;
     }
 
-    setScale(scale: Scale): void {
-        this.scale = scale;
-    }
-
-    setPxRatio(pxRatio: {x: number; y: number}): void {
-        this.pxRatio = pxRatio;
-    }
-
-    setZoom(zoom: number): void {
-        this.zoom = zoom;
+    setView(view: View): void {
+        this.view = view;
     }
 
     setInteractionState(state: InteractionState): void {
@@ -55,26 +48,37 @@ export class DynamicLayer {
         const ctx = this.canvas.getContext("2d");
         if (!ctx) return;
 
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        ctx.save();
-        ctx.scale(this.pxRatio.x, this.pxRatio.y);
-        const s = this.scale;
-        // Widget sizes are divided by zoom so they stay constant on screen.
-        const z = this.zoom;
 
+        const {zoom, panX, panY} = this.view;
+        const d = this.dpr;
+
+        // ============ Document pass ============
+        ctx.setTransform(zoom * d, 0, 0, zoom * d, panX * d, panY * d);
+        this.renderDoc(ctx, zoom);
+        this.editor?.renderDoc(ctx);
+
+        // ============ Overlay pass ============
+        ctx.setTransform(d, 0, 0, d, 0, 0);
+        this.renderOverlay(ctx);
+        this.editor?.renderOverlay(ctx, this.view);
+    }
+
+    private renderDoc(ctx: CanvasRenderingContext2D, zoom: number): void {
         if (this.state.type === "bbox-drawing") {
             const {start, current} = this.state;
-            const x = Math.min(start.x, current.x) * s.x;
-            const y = Math.min(start.y, current.y) * s.y;
-            const w = Math.abs(current.x - start.x) * s.x;
-            const h = Math.abs(current.y - start.y) * s.y;
+            const x = Math.min(start.x, current.x);
+            const y = Math.min(start.y, current.y);
+            const w = Math.abs(current.x - start.x);
+            const h = Math.abs(current.y - start.y);
 
             ctx.save();
             ctx.fillStyle = "rgba(79,195,247,0.1)";
             ctx.fillRect(x, y, w, h);
             ctx.strokeStyle = "#4FC3F7";
-            ctx.lineWidth = 2 / z;
-            ctx.setLineDash([6 / z, 3 / z]);
+            ctx.lineWidth = 2 / zoom;
+            ctx.setLineDash([6 / zoom, 3 / zoom]);
             ctx.strokeRect(x, y, w, h);
             ctx.restore();
         }
@@ -84,27 +88,22 @@ export class DynamicLayer {
             if (points.length >= 2) {
                 ctx.save();
                 ctx.beginPath();
-                ctx.moveTo(points[0].x * s.x, points[0].y * s.y);
+                ctx.moveTo(points[0].x, points[0].y);
 
                 for (let i = 1; i < points.length - 1; i++) {
                     const curr = points[i];
                     const next = points[i + 1];
-                    ctx.quadraticCurveTo(
-                        curr.x * s.x,
-                        curr.y * s.y,
-                        ((curr.x + next.x) / 2) * s.x,
-                        ((curr.y + next.y) / 2) * s.y,
-                    );
+                    ctx.quadraticCurveTo(curr.x, curr.y, (curr.x + next.x) / 2, (curr.y + next.y) / 2);
                 }
 
                 const last = points[points.length - 1];
-                ctx.lineTo(last.x * s.x, last.y * s.y);
+                ctx.lineTo(last.x, last.y);
 
                 ctx.strokeStyle = color;
-                ctx.lineWidth = width;
+                ctx.lineWidth = width / zoom;
                 ctx.lineCap = "round";
                 ctx.lineJoin = "round";
-                if (subtract) ctx.setLineDash([8, 5]);
+                if (subtract) ctx.setLineDash([8 / zoom, 5 / zoom]);
                 ctx.stroke();
                 ctx.restore();
             }
@@ -120,9 +119,9 @@ export class DynamicLayer {
 
                 if (vertices.length >= 2) {
                     ctx.beginPath();
-                    ctx.moveTo(vertices[0].x * s.x, vertices[0].y * s.y);
+                    ctx.moveTo(vertices[0].x, vertices[0].y);
                     for (let i = 1; i < vertices.length; i++) {
-                        ctx.lineTo(vertices[i].x * s.x, vertices[i].y * s.y);
+                        ctx.lineTo(vertices[i].x, vertices[i].y);
                     }
                     ctx.closePath();
                     ctx.fillStyle = fillColor;
@@ -130,45 +129,54 @@ export class DynamicLayer {
                 }
 
                 ctx.beginPath();
-                ctx.moveTo(vertices[0].x * s.x, vertices[0].y * s.y);
+                ctx.moveTo(vertices[0].x, vertices[0].y);
                 for (let i = 1; i < vertices.length; i++) {
-                    ctx.lineTo(vertices[i].x * s.x, vertices[i].y * s.y);
+                    ctx.lineTo(vertices[i].x, vertices[i].y);
                 }
-                ctx.lineTo(cursor.x * s.x, cursor.y * s.y);
+                ctx.lineTo(cursor.x, cursor.y);
                 ctx.strokeStyle = strokeColor;
-                ctx.lineWidth = 2 / z;
-                if (subtract) ctx.setLineDash([8 / z, 5 / z]);
+                ctx.lineWidth = 2 / zoom;
+                if (subtract) ctx.setLineDash([8 / zoom, 5 / zoom]);
                 ctx.stroke();
                 ctx.setLineDash([]);
-
-                for (const v of vertices) {
-                    ctx.beginPath();
-                    ctx.arc(v.x * s.x, v.y * s.y, 4 / z, 0, Math.PI * 2);
-                    ctx.fillStyle = strokeColor;
-                    ctx.fill();
-                }
-
-                const first = vertices[0];
-                const distPx = Math.hypot(
-                    (cursor.x - first.x) * s.x,
-                    (cursor.y - first.y) * s.y,
-                );
-                if (vertices.length >= 3 && distPx < POLYGON_CLOSE_PX / z) {
-                    ctx.beginPath();
-                    ctx.arc(first.x * s.x, first.y * s.y, 9 / z, 0, Math.PI * 2);
-                    ctx.strokeStyle = strokeColor;
-                    ctx.lineWidth = 3 / z;
-                    ctx.setLineDash([]);
-                    ctx.stroke();
-                }
 
                 ctx.restore();
             }
         }
+    }
 
-        // Editing overlay always renders on top of drawing previews
-        this.editor?.render(ctx, this.scale);
+    private renderOverlay(ctx: CanvasRenderingContext2D): void {
+        if (this.state.type === "polygon-drawing") {
+            const {vertices, cursor, subtract} = this.state;
+            if (vertices.length === 0 || !cursor) return;
 
-        ctx.restore();
+            const strokeColor = subtract ? "#EF4444" : "#F59E0B";
+            const {zoom, panX, panY} = this.view;
+
+            ctx.save();
+            for (const v of vertices) {
+                const sx = v.x * zoom + panX;
+                const sy = v.y * zoom + panY;
+                ctx.beginPath();
+                ctx.arc(sx, sy, 4, 0, Math.PI * 2);
+                ctx.fillStyle = strokeColor;
+                ctx.fill();
+            }
+
+            const first = vertices[0];
+            const fsx = first.x * zoom + panX;
+            const fsy = first.y * zoom + panY;
+            const csx = cursor.x * zoom + panX;
+            const csy = cursor.y * zoom + panY;
+            const distPx = Math.hypot(csx - fsx, csy - fsy);
+            if (vertices.length >= 3 && distPx < POLYGON_CLOSE_PX) {
+                ctx.beginPath();
+                ctx.arc(fsx, fsy, 9, 0, Math.PI * 2);
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
     }
 }

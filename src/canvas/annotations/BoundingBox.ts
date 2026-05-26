@@ -1,4 +1,4 @@
-import type {AnnotationObject, Rect, RenderState, Scale} from "@/canvas/types.ts";
+import type {AnnotationObject, Rect, RenderState} from "@/canvas/types.ts";
 
 export class BoundingBox implements AnnotationObject {
     readonly kind = "bbox";
@@ -11,21 +11,17 @@ export class BoundingBox implements AnnotationObject {
         public readonly h: number,
     ) {}
 
-    render(ctx: CanvasRenderingContext2D, state: RenderState, scale: Scale, zoom: number): void {
-        const dispX = this.x * scale.x;
-        const dispY = this.y * scale.y;
-        const dispW = this.w * scale.x;
-        const dispH = this.h * scale.y;
-        const lineW = 1 / Math.min(scale.x, scale.y) / zoom;
+    render(ctx: CanvasRenderingContext2D, state: RenderState, zoom: number): void {
+        const lineW = (state === "hovered" ? 3 : 2) / zoom;
 
         ctx.save();
 
         ctx.fillStyle = "rgba(79,195,247,0.15)";
-        ctx.fillRect(dispX, dispY, dispW, dispH);
+        ctx.fillRect(this.x, this.y, this.w, this.h);
 
         ctx.strokeStyle = state === "hovered" ? "#81d4fa" : "#4FC3F7";
-        ctx.lineWidth = lineW * (state === "hovered" ? 3 : 2);
-        ctx.strokeRect(dispX, dispY, dispW, dispH);
+        ctx.lineWidth = lineW;
+        ctx.strokeRect(this.x, this.y, this.w, this.h);
 
         ctx.restore();
     }

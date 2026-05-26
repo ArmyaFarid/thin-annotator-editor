@@ -1,5 +1,5 @@
 import {decode} from "@/jscocotools/mask.ts";
-import type {AnnotationObject, Rect, RenderState, Scale} from "@/canvas/types.ts";
+import type {AnnotationObject, Rect, RenderState} from "@/canvas/types.ts";
 import {MASK_BORDER_DARKEN, MASK_BORDER_THICKNESS} from "@/canvas/mask-style.ts";
 import type {MaskLayer} from "@/app/atom.ts";
 import {Polygon} from "@/canvas/annotations/Polygon.ts";
@@ -12,7 +12,6 @@ export class Mask implements AnnotationObject {
     private readonly rleCanvasCache = new Map<number, HTMLCanvasElement>();
     private readonly rleBorderOnlyCache = new Map<number, HTMLCanvasElement>();
     private readonly rleDataCache = new Map<number, Uint8Array>();
-    // Separate cache for alpha-only shape canvases used by hole compositing
     private readonly rleAlphaCache = new Map<number, HTMLCanvasElement>();
     private borderOnly = false;
 
@@ -26,58 +25,73 @@ export class Mask implements AnnotationObject {
         public readonly color: Color,
     ) {}
 
-    render(ctx: CanvasRenderingContext2D, state: RenderState, scale: Scale, zoom: number): void {
-        // Skeleton mode: active mask whose layers are all polygons (post-contour-extraction)
+    // Standard AnnotationObject.render delegates to renderWithNatural with no
+    // natural size — only the no-hole fast path is used. Use renderWithNatural
+    // directly from DataLayer when natural image size is known.
+    render(ctx: CanvasRenderingContext2D, state: RenderState, zoom: number): void {
+        this.renderWithNatural(ctx, state, zoom, null);
+    }
+
+    renderWithNatural(
+        ctx: CanvasRenderingContext2D,
+        state: RenderState,
+        zoom: number,
+        naturalSize: {w: number; h: number} | null,
+    ): void {
         const isSkeletonMode = state === "active" && this.layers.length > 0
             && this.layers.every(l => l.canvasShape && !l.rleMask);
         if (isSkeletonMode) {
-            this.renderSkeleton(ctx, scale, zoom);
+            this.renderSkeleton(ctx, zoom);
             return;
         }
 
         const hasHole = this.layers.some(l => l.layerKind === "hole");
 
         if (!hasHole) {
-            // Fast path: no holes, draw layers directly as before
             ctx.save();
             if (state === "active") {
                 ctx.filter = "drop-shadow(0 0 4px rgba(255,255,255,0.85))";
             }
+            const prevSmoothing = ctx.imageSmoothingEnabled;
+            ctx.imageSmoothingEnabled = false;
             for (const layer of this.layers) {
                 if (layer.rleMask) {
                     const src = this.getLayerCanvas(layer);
                     if (!src) continue;
                     const [h, w] = layer.rleMask.size;
-                    ctx.drawImage(src, 0, 0, w, h, 0, 0, w * scale.x, h * scale.y);
+                    ctx.drawImage(src, 0, 0, w, h, 0, 0, w, h);
                 } else if (layer.canvasShape) {
                     const s = layer.canvasShape;
-                    new Polygon(s.id, s.vertices, s.fillColor, s.strokeColor).render(ctx, state, scale, zoom);
+                    new Polygon(s.id, s.vertices, s.fillColor, s.strokeColor).render(ctx, state, zoom);
                 }
             }
+            ctx.imageSmoothingEnabled = prevSmoothing;
             ctx.restore();
             return;
         }
 
-        // Hole path: composite layers onto an offscreen canvas to handle destination-out correctly
-        const offW = ctx.canvas.width;
-        const offH = ctx.canvas.height;
+        // Hole compositing: render layers onto an image-natural-size offscreen
+        // so destination-out works at the data's resolution, then drawImage it
+        // back at image-space coords (the main ctx has the view transform).
+        const natW = naturalSize?.w ?? 1;
+        const natH = naturalSize?.h ?? 1;
         const off = document.createElement("canvas");
-        off.width = offW;
-        off.height = offH;
+        off.width = natW;
+        off.height = natH;
         const offCtx = off.getContext("2d")!;
+        offCtx.imageSmoothingEnabled = false;
 
         for (const layer of this.layers) {
             const isHole = layer.layerKind === "hole";
 
             if (isHole) {
-                // For holes we need an alpha-only shape to use destination-out
                 if (layer.rleMask) {
                     const alphaCanvas = this.getLayerAlphaCanvas(layer);
                     if (alphaCanvas) {
                         const [h, w] = layer.rleMask.size;
                         offCtx.save();
                         offCtx.globalCompositeOperation = "destination-out";
-                        offCtx.drawImage(alphaCanvas, 0, 0, w, h, 0, 0, w * scale.x, h * scale.y);
+                        offCtx.drawImage(alphaCanvas, 0, 0, w, h, 0, 0, w, h);
                         offCtx.restore();
                     }
                 } else if (layer.canvasShape) {
@@ -87,9 +101,9 @@ export class Mask implements AnnotationObject {
                         offCtx.globalCompositeOperation = "destination-out";
                         offCtx.fillStyle = "rgba(255,255,255,1)";
                         offCtx.beginPath();
-                        offCtx.moveTo(s.vertices[0].x * scale.x, s.vertices[0].y * scale.y);
+                        offCtx.moveTo(s.vertices[0].x, s.vertices[0].y);
                         for (let i = 1; i < s.vertices.length; i++) {
-                            offCtx.lineTo(s.vertices[i].x * scale.x, s.vertices[i].y * scale.y);
+                            offCtx.lineTo(s.vertices[i].x, s.vertices[i].y);
                         }
                         offCtx.closePath();
                         offCtx.fill();
@@ -97,16 +111,15 @@ export class Mask implements AnnotationObject {
                     }
                 }
             } else {
-                // Normal fill layer
                 if (layer.rleMask) {
                     const src = this.getLayerCanvas(layer);
                     if (src) {
                         const [h, w] = layer.rleMask.size;
-                        offCtx.drawImage(src, 0, 0, w, h, 0, 0, w * scale.x, h * scale.y);
+                        offCtx.drawImage(src, 0, 0, w, h, 0, 0, w, h);
                     }
                 } else if (layer.canvasShape) {
                     const s = layer.canvasShape;
-                    new Polygon(s.id, s.vertices, s.fillColor, s.strokeColor).render(offCtx, state, scale, zoom);
+                    new Polygon(s.id, s.vertices, s.fillColor, s.strokeColor).render(offCtx, state, zoom);
                 }
             }
         }
@@ -115,11 +128,14 @@ export class Mask implements AnnotationObject {
         if (state === "active") {
             ctx.filter = "drop-shadow(0 0 4px rgba(255,255,255,0.85))";
         }
-        ctx.drawImage(off, 0, 0);
+        const prevSmoothing = ctx.imageSmoothingEnabled;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(off, 0, 0, natW, natH, 0, 0, natW, natH);
+        ctx.imageSmoothingEnabled = prevSmoothing;
         ctx.restore();
     }
 
-    private renderSkeleton(ctx: CanvasRenderingContext2D, scale: Scale, zoom: number): void {
+    private renderSkeleton(ctx: CanvasRenderingContext2D, zoom: number): void {
         const {r, g, b} = this.color;
         ctx.save();
         ctx.filter = "drop-shadow(0 0 4px rgba(255,255,255,0.7))";
@@ -132,9 +148,9 @@ export class Mask implements AnnotationObject {
 
             ctx.save();
             ctx.beginPath();
-            ctx.moveTo(s.vertices[0].x * scale.x, s.vertices[0].y * scale.y);
+            ctx.moveTo(s.vertices[0].x, s.vertices[0].y);
             for (let i = 1; i < s.vertices.length; i++) {
-                ctx.lineTo(s.vertices[i].x * scale.x, s.vertices[i].y * scale.y);
+                ctx.lineTo(s.vertices[i].x, s.vertices[i].y);
             }
             ctx.closePath();
 
@@ -259,10 +275,6 @@ export class Mask implements AnnotationObject {
         return canvas;
     }
 
-    /**
-     * Returns a white-on-transparent canvas for use with destination-out compositing.
-     * Only needed for hole layers.
-     */
     private getLayerAlphaCanvas(layer: MaskLayer): HTMLCanvasElement | null {
         if (this.rleAlphaCache.has(layer.id)) return this.rleAlphaCache.get(layer.id)!;
         if (!layer.rleMask) return null;

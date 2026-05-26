@@ -1,78 +1,55 @@
-import {StaticLayer} from "@/canvas/layers/StaticLayer.ts";
 import {DataLayer} from "@/canvas/layers/DataLayer.ts";
 import {DynamicLayer} from "@/canvas/layers/DynamicLayer.ts";
 import {ToolManager} from "@/canvas/ToolManager.ts";
 import {ObjectEditor} from "@/canvas/ObjectEditor.ts";
-import type {EngineCallbacks, ImageSpacePoint, Scale} from "@/canvas/types.ts";
+import type {EngineCallbacks, ImageSpacePoint, View} from "@/canvas/types.ts";
 import type {Prompt, Mask, MaskLayer} from "@/app/atom.ts";
 import type {Tool} from "@/app/types.ts";
 
 export class CanvasEngine {
-    private readonly staticLayer: StaticLayer;
     private readonly dataLayer: DataLayer;
     private readonly dynLayer: DynamicLayer;
     private readonly toolManager: ToolManager;
     private readonly editor: ObjectEditor;
 
-    private naturalSize: {w: number; h: number} = {w: 1, h: 1};
-    private displaySize: {w: number; h: number} = {w: 0, h: 0};
+    private view: View = {zoom: 1, panX: 0, panY: 0};
+    private dpr: number =
+        typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
 
-    // Set to true when editor consumes a mouseDown so the resulting click is suppressed.
     private editorConsumed = false;
 
-    public zoom: number;
-
     constructor(
-        staticCanvas: HTMLCanvasElement,
         dataCanvas: HTMLCanvasElement,
         private readonly dynCanvas: HTMLCanvasElement,
         callbacks: EngineCallbacks,
     ) {
-        this.staticLayer = new StaticLayer(staticCanvas);
         this.dataLayer = new DataLayer(dataCanvas);
         this.dynLayer = new DynamicLayer(dynCanvas);
         this.editor = new ObjectEditor(callbacks);
         this.dynLayer.setEditor(this.editor);
         this.toolManager = new ToolManager(this.dynLayer, callbacks);
         this.dynLayer.startLoop();
-        this.zoom = 1;
     }
 
     setImage(img: HTMLImageElement): void {
-        this.naturalSize = {w: img.naturalWidth, h: img.naturalHeight};
-        // Use container size from onResize if available, else fall back to natural size
-        const dispW =
-            this.displaySize.w > 0 ? this.displaySize.w : img.naturalWidth;
-        const dispH =
-            this.displaySize.h > 0 ? this.displaySize.h : img.naturalHeight;
-        this.displaySize = {w: dispW, h: dispH};
-        this.resizeAll(dispW, dispH);
-        this.staticLayer.setImage(img);
+        this.dataLayer.setNaturalSize({
+            w: img.naturalWidth,
+            h: img.naturalHeight,
+        });
     }
 
-    onResize(dispW: number, dispH: number): void {
-        this.displaySize = {w: dispW, h: dispH};
-        if (this.naturalSize.w <= 1) {
-            return;
-        } // image not loaded yet
-        // Canvases stay at natural resolution — only update scale/pxRatio for rendering
-        const scale = this.getScale();
-        const pxRatio = {
-            x: this.naturalSize.w / dispW,
-            y: this.naturalSize.h / dispH,
-        };
-        this.dataLayer.setScale(scale);
-        this.dataLayer.setPxRatio(pxRatio);
-        this.dynLayer.setScale(scale);
-        this.dynLayer.setPxRatio(pxRatio);
-        this.dataLayer.render();
+    onResize(cssW: number, cssH: number): void {
+        this.dpr =
+            typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+        this.dataLayer.resize(cssW, cssH, this.dpr);
+        this.dynLayer.resize(cssW, cssH, this.dpr);
     }
 
-    setZoom(zoom: number): void {
-        this.dataLayer.setZoom(zoom);
-        this.dynLayer.setZoom(zoom);
-        this.editor.setZoom(zoom);
-        this.zoom = zoom;
+    setView(view: View): void {
+        this.view = view;
+        this.dataLayer.setView(view);
+        this.dynLayer.setView(view);
+        this.editor.setZoom(view.zoom);
     }
 
     setActiveTool(tool: Tool): void {
@@ -83,7 +60,6 @@ export class CanvasEngine {
         this.toolManager.cancel();
     }
 
-    // Undo last polygon vertex. Returns true if a vertex was removed.
     undoVertex(): boolean {
         return this.toolManager.undoVertex();
     }
@@ -116,8 +92,7 @@ export class CanvasEngine {
 
     onMouseDown(e: MouseEvent): void {
         const p = this.toImageSpace(e);
-        const scale = this.getScale();
-        this.editorConsumed = this.editor.tryMouseDown(p, scale);
+        this.editorConsumed = this.editor.tryMouseDown(p);
         if (!this.editorConsumed) {
             this.toolManager.onMouseDown(p);
         }
@@ -125,8 +100,7 @@ export class CanvasEngine {
 
     onMouseMove(e: MouseEvent): void {
         const p = this.toImageSpace(e);
-        const scale = this.getScale();
-        this.editor.tryMouseMove(p, scale);
+        this.editor.tryMouseMove(p);
         if (!this.editor.isDragging()) {
             this.toolManager.onMouseMove(p);
         }
@@ -134,30 +108,22 @@ export class CanvasEngine {
 
     onMouseUp(e: MouseEvent): void {
         const p = this.toImageSpace(e);
-        const scale = this.getScale();
         this.editor.tryMouseUp(p);
-        this.toolManager.onMouseUp(p, scale);
+        this.toolManager.onMouseUp(p, this.view.zoom);
     }
 
-    // Flush any in-progress draw (freeform/bbox) when cursor leaves the canvas.
     onMouseLeave(e: MouseEvent): void {
         const p = this.toImageSpace(e);
-        const scale = this.getScale();
         this.editor.tryMouseUp(p);
-        this.toolManager.onMouseUp(p, scale);
+        this.toolManager.onMouseUp(p, this.view.zoom);
     }
 
     onClick(e: MouseEvent): void {
-        // Suppress click when editor consumed the preceding mouseDown (vertex drag or delete).
         if (this.editorConsumed) {
             this.editorConsumed = false;
             return;
         }
-        this.toolManager.onClick(
-            this.toImageSpace(e),
-            this.getScale(),
-            this.getZoom(),
-        );
+        this.toolManager.onClick(this.toImageSpace(e), this.view.zoom);
     }
 
     onDblClick(): void {
@@ -172,39 +138,27 @@ export class CanvasEngine {
         this.dynLayer.stopLoop();
     }
 
-    private resizeAll(dispW: number, dispH: number): void {
-        const scale = this.getScale();
-        const pxRatio = {
-            x: this.naturalSize.w / dispW,
-            y: this.naturalSize.h / dispH,
-        };
-        // Canvas physical dimensions = natural image resolution for sharp rendering at any zoom
-        this.staticLayer.resize(this.naturalSize.w, this.naturalSize.h);
-        this.dataLayer.resize(this.naturalSize.w, this.naturalSize.h, pxRatio);
-        this.dataLayer.setScale(scale);
-        this.dynLayer.resize(this.naturalSize.w, this.naturalSize.h, pxRatio);
-        this.dynLayer.setScale(scale);
-    }
-
-    private getScale(): Scale {
-        return {
-            x: this.displaySize.w / this.naturalSize.w,
-            y: this.displaySize.h / this.naturalSize.h,
-        };
-    }
-
-    private getZoom(): number {
-        return this.zoom;
-    }
-
+    // Mouse client coords → image space, using the current view.
+    // The canvas is now sized to the container (not the image) and is no
+    // longer inside the CSS transform, so rect.{width,height} reflect the
+    // container in CSS pixels.
     private toImageSpace(e: MouseEvent): ImageSpacePoint {
-        // getBoundingClientRect already includes the CSS zoom transform, so rect.width
-        // = canvas_css_width × viewZoom. Dividing by rect.width * (1/naturalW) converts
-        // any screen position to image space without needing to know viewZoom explicitly.
         const rect = this.dynCanvas.getBoundingClientRect();
-        return {
-            x: ((e.clientX - rect.left) * this.naturalSize.w) / rect.width,
-            y: ((e.clientY - rect.top) * this.naturalSize.h) / rect.height,
+        const sx = e.clientX - rect.left;
+        const sy = e.clientY - rect.top;
+        const img = {
+            x: (sx - this.view.panX) / this.view.zoom,
+            y: (sy - this.view.panY) / this.view.zoom,
         };
+        // TEMP DEBUG — remove after diagnosing coord issue
+        // eslint-disable-next-line no-console
+        // console.log("[click→image]", {
+        //     client: {x: e.clientX, y: e.clientY},
+        //     rect: {left: rect.left.toFixed(1), top: rect.top.toFixed(1), w: rect.width.toFixed(1), h: rect.height.toFixed(1)},
+        //     sx: sx.toFixed(1), sy: sy.toFixed(1),
+        //     view: this.view,
+        //     img: {x: img.x.toFixed(1), y: img.y.toFixed(1)},
+        // });
+        return img;
     }
 }

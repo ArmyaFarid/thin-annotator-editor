@@ -133,6 +133,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
         useMutation(ComputeSlicMutation);
 
     function sendPrompt() {
+        console.log(prompts);
         const bboxes: [number, number, number, number][] = prompts
             .filter((p) => p.bbox != null)
             .map((p) => {
@@ -141,6 +142,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
             });
 
         const pointPrompts = prompts.filter((p) => !p.bbox);
+
+        console.log(pointPrompts);
 
         commitPoints({
             variables: {

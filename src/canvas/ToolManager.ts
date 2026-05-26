@@ -65,23 +65,19 @@ export class ToolManager {
         }
     }
 
-    onMouseUp(p: ImageSpacePoint, scale: {x: number; y: number}): void {
+    onMouseUp(p: ImageSpacePoint, zoom: number): void {
         if (this.activeTool === "bounding-box") {
-            this.bbox.onMouseUp(p, scale);
+            this.bbox.onMouseUp(p, zoom);
         }
         if (this.activeTool === "slic-bbox") {
-            this.slicBbox.onMouseUp(p, scale);
+            this.slicBbox.onMouseUp(p, zoom);
         }
         if (this.activeTool === "freeform-draw") {
             this.freeform.onMouseUp();
         }
     }
 
-    onClick(
-        p: ImageSpacePoint,
-        scale: {x: number; y: number},
-        zoom?: number,
-    ): void {
+    onClick(p: ImageSpacePoint, zoom: number): void {
         if (this.activeTool === "select-add") {
             this.selectAdd.onClick(p);
         }
@@ -89,11 +85,7 @@ export class ToolManager {
             this.selectRemove.onClick(p);
         }
         if (this.activeTool === "polygon-lasso") {
-            if (zoom) {
-                this.polygon.onClick(p, scale, zoom);
-            } else {
-                this.polygon.onClick(p, scale, 1);
-            }
+            this.polygon.onClick(p, zoom);
         }
     }
 
@@ -109,7 +101,6 @@ export class ToolManager {
         }
     }
 
-    // Undo the last polygon vertex. Returns true if consumed.
     undoVertex(): boolean {
         if (this.activeTool === "polygon-lasso") {
             return this.polygon.undoVertex();

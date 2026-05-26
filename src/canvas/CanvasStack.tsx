@@ -52,7 +52,6 @@ let nextId = Date.now();
 const genId = () => nextId++;
 
 export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
-    const staticRef = useRef<HTMLCanvasElement>(null);
     const dataRef = useRef<HTMLCanvasElement>(null);
     const dynRef = useRef<HTMLCanvasElement>(null);
     const imgRef = useRef<HTMLImageElement>(null);
@@ -191,6 +190,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     const callbacks = useCallback(
         (): EngineCallbacks => ({
             onKeypointAdded(x: number, y: number, label: 0 | 1) {
+                console.log("onKeypointAdded", x, y, label);
                 const type = label === 1 ? "select-add" : "select-remove";
                 setPrompts((prev: Prompt[]) => [
                     ...prev,
@@ -440,11 +440,10 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
 
     // Mount engine once
     useEffect(() => {
-        if (!staticRef.current || !dataRef.current || !dynRef.current) {
+        if (!dataRef.current || !dynRef.current) {
             return;
         }
         const engine = new CanvasEngine(
-            staticRef.current,
             dataRef.current,
             dynRef.current,
             callbacks(),
@@ -468,10 +467,11 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
         engineRef.current?.setMasks(masks);
     }, [masks]);
 
-    // Sync zoom → layers (keeps tool widgets a constant on-screen size)
+    // Sync view (zoom + pan) → engine. The annotation canvases live outside
+    // the CSS-transformed inner div and apply the view via ctx.setTransform.
     useEffect(() => {
-        engineRef.current?.setZoom(view.zoom);
-    }, [view.zoom]);
+        engineRef.current?.setView(view);
+    }, [view]);
 
     // Sync active object → editor + DataLayer dimming
     useEffect(() => {
@@ -663,6 +663,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                     lineHeight: 0,
                     transform,
                     transformOrigin: "0 0",
+                    pointerEvents: "none",
                 }}>
                 <img
                     ref={imgRef}
@@ -672,37 +673,29 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                     style={{display: "block", userSelect: "none"}}
                     alt=""
                 />
-                <canvas
-                    ref={staticRef}
-                    style={{
-                        position: "absolute",
-                        inset: 0,
-                        pointerEvents: "none",
-                    }}
-                />
-                <canvas
-                    ref={dataRef}
-                    style={{
-                        position: "absolute",
-                        inset: 0,
-                        pointerEvents: "none",
-                    }}
-                />
-                <canvas
-                    ref={dynRef}
-                    style={{position: "absolute", inset: 0, cursor}}
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseLeave}
-                    onClick={handleClick}
-                    onDoubleClick={() => engineRef.current?.onDblClick()}
-                    onContextMenu={(e) => {
-                        e.preventDefault();
-                        engineRef.current?.onContextMenu();
-                    }}
-                />
             </div>
+            <canvas
+                ref={dataRef}
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    pointerEvents: "none",
+                }}
+            />
+            <canvas
+                ref={dynRef}
+                style={{position: "absolute", inset: 0, cursor}}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseLeave}
+                onClick={handleClick}
+                onDoubleClick={() => engineRef.current?.onDblClick()}
+                onContextMenu={(e) => {
+                    e.preventDefault();
+                    engineRef.current?.onContextMenu();
+                }}
+            />
             <Minimap
                 imageUrl={imageUrl}
                 view={view}

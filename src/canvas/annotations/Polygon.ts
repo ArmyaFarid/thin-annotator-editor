@@ -1,4 +1,4 @@
-import type {AnnotationObject, ImageSpacePoint, Rect, RenderState, Scale} from "@/canvas/types.ts";
+import type {AnnotationObject, ImageSpacePoint, Rect, RenderState} from "@/canvas/types.ts";
 import {MASK_STROKE_WIDTH} from "@/canvas/mask-style.ts";
 
 function pointInPolygon(x: number, y: number, vertices: ImageSpacePoint[]): boolean {
@@ -32,16 +32,16 @@ export class Polygon implements AnnotationObject {
         public readonly strokeColor: string,
     ) {}
 
-    render(ctx: CanvasRenderingContext2D, state: RenderState, scale: Scale, zoom: number): void {
+    render(ctx: CanvasRenderingContext2D, state: RenderState, zoom: number): void {
         if (this.vertices.length < 2) return;
 
         const visualWidth = (MASK_STROKE_WIDTH + (state === "hovered" ? 1.5 : 0)) / zoom;
 
         ctx.save();
         ctx.beginPath();
-        ctx.moveTo(this.vertices[0].x * scale.x, this.vertices[0].y * scale.y);
+        ctx.moveTo(this.vertices[0].x, this.vertices[0].y);
         for (let i = 1; i < this.vertices.length; i++) {
-            ctx.lineTo(this.vertices[i].x * scale.x, this.vertices[i].y * scale.y);
+            ctx.lineTo(this.vertices[i].x, this.vertices[i].y);
         }
         ctx.closePath();
 
@@ -56,7 +56,7 @@ export class Polygon implements AnnotationObject {
             const dotRadius = visualWidth * 2;
             for (const v of this.vertices) {
                 ctx.beginPath();
-                ctx.arc(v.x * scale.x, v.y * scale.y, dotRadius, 0, Math.PI * 2);
+                ctx.arc(v.x, v.y, dotRadius, 0, Math.PI * 2);
                 ctx.fillStyle = this.strokeColor;
                 ctx.fill();
             }

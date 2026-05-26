@@ -1,4 +1,4 @@
-import type {AnnotationObject, ImageSpacePoint, Rect, RenderState, Scale} from "@/canvas/types.ts";
+import type {AnnotationObject, ImageSpacePoint, Rect, RenderState} from "@/canvas/types.ts";
 import {MASK_STROKE_WIDTH} from "@/canvas/mask-style.ts";
 
 function distToSegment(px: number, py: number, ax: number, ay: number, bx: number, by: number): number {
@@ -20,28 +20,27 @@ export class FreeformPath implements AnnotationObject {
         public readonly strokeWidth: number,
     ) {}
 
-    render(ctx: CanvasRenderingContext2D, state: RenderState, _scale: Scale, zoom: number): void {
+    render(ctx: CanvasRenderingContext2D, state: RenderState, zoom: number): void {
         if (this.points.length < 2) return;
 
-        const scale = _scale;
         const visualWidth = (MASK_STROKE_WIDTH + (state === "hovered" ? 1.5 : 0)) / zoom;
 
         ctx.save();
         ctx.beginPath();
 
         const first = this.points[0];
-        ctx.moveTo(first.x * scale.x, first.y * scale.y);
+        ctx.moveTo(first.x, first.y);
 
         for (let i = 1; i < this.points.length - 1; i++) {
             const curr = this.points[i];
             const next = this.points[i + 1];
-            const cpX = ((curr.x + next.x) / 2) * scale.x;
-            const cpY = ((curr.y + next.y) / 2) * scale.y;
-            ctx.quadraticCurveTo(curr.x * scale.x, curr.y * scale.y, cpX, cpY);
+            const cpX = (curr.x + next.x) / 2;
+            const cpY = (curr.y + next.y) / 2;
+            ctx.quadraticCurveTo(curr.x, curr.y, cpX, cpY);
         }
 
         const last = this.points[this.points.length - 1];
-        ctx.lineTo(last.x * scale.x, last.y * scale.y);
+        ctx.lineTo(last.x, last.y);
 
         ctx.strokeStyle = state === "hovered" ? "#fff" : this.color;
         ctx.lineWidth = visualWidth;

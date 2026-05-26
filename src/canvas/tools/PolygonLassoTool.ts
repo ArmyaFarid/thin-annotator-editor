@@ -24,25 +24,19 @@ export class PolygonLassoTool {
         }
     }
 
-    onClick(
-        p: ImageSpacePoint,
-        scale: {x: number; y: number},
-        zoom: number,
-    ): void {
+    onClick(p: ImageSpacePoint, zoom: number): void {
         if (this.vertices.length === 0) {
-            console.log("000000");
             this.vertices = [p];
             this.sync(p);
             return;
         }
 
         const first = this.vertices[0];
-        const distPx = Math.hypot(
-            (p.x - first.x) * scale.x,
-            (p.y - first.y) * scale.y,
-        );
+        const dxPx = (p.x - first.x) * zoom;
+        const dyPx = (p.y - first.y) * zoom;
+        const distPx = Math.hypot(dxPx, dyPx);
 
-        if (this.vertices.length >= 3 && distPx < CLOSE_THRESHOLD_PX / zoom) {
+        if (this.vertices.length >= 3 && distPx < CLOSE_THRESHOLD_PX) {
             this.close();
             return;
         }
@@ -73,7 +67,6 @@ export class PolygonLassoTool {
         });
     }
 
-    // Remove the last placed vertex. Returns true if a vertex was removed.
     undoVertex(): boolean {
         if (this.vertices.length === 0) {
             return false;

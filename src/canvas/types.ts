@@ -12,17 +12,19 @@ export interface Rect {
     h: number;
 }
 
-export interface Scale {
-    x: number;
-    y: number;
+export interface View {
+    zoom: number;
+    panX: number;
+    panY: number;
 }
 
 export interface AnnotationObject {
     readonly id: number;
     readonly kind: string;
-    // zoom = current view zoom; widget sizes are divided by it to stay
-    // constant on screen (the canvas stack is CSS-scaled by zoom).
-    render(ctx: CanvasRenderingContext2D, state: RenderState, scale: Scale, zoom: number): void;
+    // Annotations are drawn in image space; the canvas context has the view
+    // transform applied. `zoom` is passed so stroke widths and screen-pixel
+    // dots can be expressed as `pixels / zoom` in image units.
+    render(ctx: CanvasRenderingContext2D, state: RenderState, zoom: number): void;
     hitTest(x: number, y: number): boolean;
     getBounds(): Rect;
 }
