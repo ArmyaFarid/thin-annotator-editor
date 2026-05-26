@@ -170,6 +170,7 @@ export const preserveZoomAtom = atom<boolean>(
 export const showShortcutsAtom = atom<boolean>(false);
 export const minimapVisibleAtom = atom<boolean>(true);
 export const borderOnlyAtom = atom<boolean>(false);
+export const cursorHudVisibleAtom = atom<boolean>(true);
 
 export interface ActivePair {
     pairsCode: string;

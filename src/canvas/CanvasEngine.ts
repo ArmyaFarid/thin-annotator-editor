@@ -71,6 +71,10 @@ export class CanvasEngine {
         this.dataLayer.setBorderOnly(b);
     }
 
+    setHudVisible(visible: boolean): void {
+        this.dynLayer.setHudVisible(visible);
+    }
+
     setPrompts(prompts: Prompt[]): void {
         this.dataLayer.setPrompts(prompts);
     }

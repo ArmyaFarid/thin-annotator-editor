@@ -6,6 +6,7 @@ import {
     activeImageSizeAtom,
     borderOnlyAtom,
     currentMaskAtom,
+    cursorHudVisibleAtom,
     masksAtom,
     promptsAtom,
     subtractModeAtom,
@@ -93,6 +94,13 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
         engineRef.current?.setBorderOnly(borderOnly);
     }, [borderOnly]);
 
+    const [cursorHudVisible, setCursorHudVisible] = useAtom(
+        cursorHudVisibleAtom,
+    );
+    useEffect(() => {
+        engineRef.current?.setHudVisible(cursorHudVisible);
+    }, [cursorHudVisible]);
+
     const [view, setView] = useState<View>({zoom: 1, panX: 0, panY: 0});
     const viewRef = useRef(view);
     useEffect(() => {
@@ -169,6 +177,10 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 setMinimapVisible((v) => !v);
                 return;
             }
+            if (e.key === "h" || e.key === "H") {
+                setCursorHudVisible((v) => !v);
+                return;
+            }
             const tool =
                 SHORTCUT_MAP.get(e.key.toLowerCase()) ??
                 SHORTCUT_MAP.get(e.key);
@@ -182,6 +194,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
         setActiveTool,
         setMinimapVisible,
         setShowShortcuts,
+        setCursorHudVisible,
         setMasks,
         setCurrentMask,
         setPrompts,

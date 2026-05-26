@@ -11,6 +11,7 @@ export class DynamicLayer {
     private editor: ObjectEditor | null = null;
     private naturalSize: {w: number; h: number} | null = null;
     private cursor: {x: number; y: number} | null = null;
+    private hudVisible = true;
 
     constructor(private readonly canvas: HTMLCanvasElement) {
         this.canvas.addEventListener("mousemove", (e) => {
@@ -28,6 +29,10 @@ export class DynamicLayer {
 
     setNaturalSize(size: {w: number; h: number}): void {
         this.naturalSize = size;
+    }
+
+    setHudVisible(visible: boolean): void {
+        this.hudVisible = visible;
     }
 
     resize(cssW: number, cssH: number, dpr: number): void {
@@ -85,10 +90,10 @@ export class DynamicLayer {
         this.drawCursorHud(ctx);
     }
 
-    // Small HUD at the top-left showing the cursor's position on the image.
-    // Red when the cursor is outside the image bounds.
+    // Discrete HUD at the top-left showing the cursor's image-pixel position.
+    // Red background when the cursor is outside the image bounds.
     private drawCursorHud(ctx: CanvasRenderingContext2D): void {
-        if (!this.cursor || !this.naturalSize) {
+        if (!this.hudVisible || !this.cursor || !this.naturalSize) {
             return;
         }
         const {zoom, panX, panY} = this.view;
@@ -100,40 +105,23 @@ export class DynamicLayer {
             imgX > this.naturalSize.w ||
             imgY > this.naturalSize.h;
 
-        let lines: string[];
-        if (outside) {
-            lines = ["Hors de l'image"];
-        } else {
-            const pctX = (imgX / this.naturalSize.w) * 100;
-            const pctY = (imgY / this.naturalSize.h) * 100;
-            lines = [
-                `Position : ${imgX.toFixed(0)} × ${imgY.toFixed(0)} px`,
-                `${pctX.toFixed(0)} % depuis la gauche  ·  ${pctY.toFixed(0)} % depuis le haut`,
-            ];
-        }
+        const text = `${imgX.toFixed(0)} × ${imgY.toFixed(0)} px`;
 
         ctx.save();
-        ctx.font = "12px ui-monospace, monospace";
-        const padX = 10;
-        const padY = 7;
-        const lineH = 16;
-        const maxTextW = Math.max(
-            ...lines.map((line) => ctx.measureText(line).width),
-        );
-        const w = maxTextW + padX * 2;
-        const h = lineH * lines.length + padY * 2;
+        ctx.font = "11px ui-monospace, monospace";
+        const padX = 7;
+        const w = ctx.measureText(text).width + padX * 2;
+        const h = 20;
         const x = 8;
         const y = 8;
 
         ctx.fillStyle = outside
-            ? "rgba(220, 38, 38, 0.92)"
-            : "rgba(0, 0, 0, 0.78)";
+            ? "rgba(220, 38, 38, 0.88)"
+            : "rgba(0, 0, 0, 0.55)";
         ctx.fillRect(x, y, w, h);
         ctx.fillStyle = "white";
-        ctx.textBaseline = "top";
-        for (let i = 0; i < lines.length; i++) {
-            ctx.fillText(lines[i], x + padX, y + padY + i * lineH);
-        }
+        ctx.textBaseline = "middle";
+        ctx.fillText(text, x + padX, y + h / 2 + 1);
         ctx.restore();
     }
 
