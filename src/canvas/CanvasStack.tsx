@@ -670,7 +670,13 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                     src={imageUrl}
                     onLoad={handleImageLoad}
                     draggable={false}
-                    style={{display: "block", userSelect: "none"}}
+                    style={{
+                        display: "block",
+                        userSelect: "none",
+                        maxWidth: "none",
+                        width: imageSizeRef.current?.w, // ou la largeur native de l'image
+                        height: imageSizeRef.current?.h, // ou la hauteur native de l'image
+                    }}
                     alt=""
                 />
             </div>
