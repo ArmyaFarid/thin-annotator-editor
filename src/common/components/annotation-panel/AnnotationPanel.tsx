@@ -34,18 +34,18 @@ export const AnnotationPanel: React.FC = () => {
     async function handleSaveProject() {
         const ok = await saveProject();
         if (ok) {
-            toast.success("Projet sauvegardé");
+            toast.success(t("saveProjectSuccess"));
         } else {
-            toast.error("Échec de la sauvegarde");
+            toast.error(t("saveProjectError"));
         }
     }
 
     async function handleSaveAnnotation() {
         const ok = await saveAnnotation();
         if (ok) {
-            toast.success("Projet sauvegardé");
+            toast.success(t("exportAnnotationSuccess"));
         } else {
-            toast.error("Échec de la sauvegarde");
+            toast.error(t("exportAnnotationError"));
         }
     }
 
@@ -299,9 +299,7 @@ export const AnnotationPanel: React.FC = () => {
                         disabled={isSavingAnnotation}
                         className="border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                         onClick={handleSaveAnnotation}>
-                        {isSavingAnnotation
-                            ? t("saving")
-                            : t("saveAnnotation")}
+                        {isSavingAnnotation ? t("saving") : t("saveAnnotation")}
                     </button>
                 </div>
             ) : null}

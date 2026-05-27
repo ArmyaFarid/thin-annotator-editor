@@ -127,7 +127,7 @@ export default function AnnotatorPage() {
                     <ZoomPreferenceToggle />
                 </div>
 
-                <div className="w-72">
+                <div className="w-72 h-full min-h-0">
                     <AnnotationPanel />
                 </div>
             </div>

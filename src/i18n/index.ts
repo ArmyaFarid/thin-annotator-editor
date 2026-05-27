@@ -44,6 +44,10 @@ const T = {
         saveProject: "Enregistrer le brouillon",
         saveAnnotation: "Exporter l'annotation (image actuelle)",
         saving: "Sauvegarde...",
+        saveProjectSuccess: "Brouillon enregistré",
+        saveProjectError: "Échec de l'enregistrement du brouillon",
+        exportAnnotationSuccess: "Annotation exportée",
+        exportAnnotationError: "Échec de l'export de l'annotation",
 
         // Draft restore modal
         draftTitle: "Brouillon détecté",
@@ -183,6 +187,10 @@ const T = {
         saveProject: "Save draft",
         saveAnnotation: "Export annotation (current image)",
         saving: "Saving...",
+        saveProjectSuccess: "Draft saved",
+        saveProjectError: "Failed to save draft",
+        exportAnnotationSuccess: "Annotation exported",
+        exportAnnotationError: "Failed to export annotation",
 
         // Draft restore modal
         draftTitle: "Draft found",
