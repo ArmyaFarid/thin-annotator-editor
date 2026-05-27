@@ -41,8 +41,8 @@ const T = {
         restoreNo: "Ignorer",
 
         // Save project
-        saveProject: "Sauvegarder",
-        saveAnnotation: "Enregistrer l'annotation",
+        saveProject: "Enregistrer le brouillon",
+        saveAnnotation: "Exporter l'annotation (image actuelle)",
         saving: "Sauvegarde...",
 
         // Draft restore modal
@@ -180,8 +180,8 @@ const T = {
         restoreNo: "Ignore",
 
         // Save project
-        saveProject: "Save project",
-        saveAnnotation: "Save annotation",
+        saveProject: "Save draft",
+        saveAnnotation: "Export annotation (current image)",
         saving: "Saving...",
 
         // Draft restore modal
