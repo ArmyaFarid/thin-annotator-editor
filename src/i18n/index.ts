@@ -4,13 +4,34 @@ export const LANG: "fr" | "en" = "fr";
 const T = {
     fr: {
         // Home page
-        appTitle: "Outil d'annotation",
+        appTitle: "ThinAnnotator",
         appSubtitle: "Sélectionnez un dossier de lame mince pour commencer",
         openFolder: "Ouvrir un dossier",
         picking: "Chargement...",
         importFailed: "Échec de l'import du projet",
         noImagesInFolder:
             "Aucune image dans ce dossier. Sélectionnez un dossier de projet valide.",
+
+        // Import instructions (shown on the home page above the picker button)
+        importInstructionsTitle: "Préparer le dossier de projet",
+        importStructureHeading: "Structure du dossier",
+        importStructureBody:
+            "Sélectionnez le dossier FOV (champ de vision). Son dossier parent doit être nommé d'après la lame mince.",
+        importStructureExample: "<lame-mince> / <FOV> / images",
+        importFormatsHeading: "Formats acceptés",
+        importFormatsBody: ".jpg, .jpeg, .png, .tif, .tiff, .bmp",
+        importNamingHeading: "Nom des fichiers",
+        importNamingPattern: "<préfixe>_mod-<MOD>_comp-<COMP>_rot-<deg>.<ext>",
+        importNamingExampleLabel: "Exemple :",
+        importNamingExample: "echantillon01_mod-XPL_comp-add_rot-45.png",
+        importNamingMod: "mod : XPL ou PPL",
+        importNamingComp:
+            "comp : add (+λ), sous (−λ) ou na (sans compensateur)",
+        importNamingRot: "rot : angle de rotation en degrés (entier)",
+        importNamingPrefix: "préfixe : texte libre (non utilisé par l'import)",
+        importTipHeading: "Conseil",
+        importTipBody:
+            "Conservez la même valeur de rotation pour toutes les images d'un même dossier FOV.",
 
         // Restore annotations modal
         restoreTitle: "Annotations sauvegardées trouvées",
@@ -123,13 +144,33 @@ const T = {
     },
     en: {
         // Home page
-        appTitle: "Annotation Tool",
+        appTitle: "ThinAnnotator",
         appSubtitle: "Select a thin section folder to begin",
         openFolder: "Open folder",
         picking: "Loading...",
         importFailed: "Failed to import project",
         noImagesInFolder:
             "No image in this folder. Please select a valid project folder.",
+
+        // Import instructions (shown on the home page above the picker button)
+        importInstructionsTitle: "Prepare your project folder",
+        importStructureHeading: "Folder structure",
+        importStructureBody:
+            "Select the FOV (field of view) folder. Its parent folder must be named after the thin section.",
+        importStructureExample: "<thin-section> / <FOV> / images",
+        importFormatsHeading: "Accepted formats",
+        importFormatsBody: ".jpg, .jpeg, .png, .tif, .tiff, .bmp",
+        importNamingHeading: "File naming",
+        importNamingPattern: "<prefix>_mod-<MOD>_comp-<COMP>_rot-<deg>.<ext>",
+        importNamingExampleLabel: "Example:",
+        importNamingExample: "sample01_mod-XPL_comp-add_rot-45.png",
+        importNamingMod: "mod: XPL or PPL",
+        importNamingComp: "comp: add (+λ), sous (−λ) or na (no compensator)",
+        importNamingRot: "rot: rotation angle in degrees (integer)",
+        importNamingPrefix: "prefix: free text (not used by the import)",
+        importTipHeading: "Tip",
+        importTipBody:
+            "Keep the same rotation value across all images of a single FOV folder.",
 
         // Restore annotations modal
         restoreTitle: "Saved annotations found",
