@@ -9,7 +9,9 @@
       "Bash(yarn tsc *)",
       "Bash(echo \"EXIT: $?\")",
       "Bash(echo \"EXIT=$?\")",
-      "Bash(npx eslint *)"
+      "Bash(npx eslint *)",
+      "Bash(yarn add *)",
+      "Bash(echo \"exit=$?\")"
     ]
   }
 }

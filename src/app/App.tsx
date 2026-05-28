@@ -19,45 +19,53 @@
  * - Add image segmentation only page
  */
 
-import '@/assets/scss/App.scss';
-import ErrorReport from '@/common/error/ErrorReport';
-import AppErrorFallback from '@/app/AppErrorFallback';
-import AppSuspenseFallback from '@/app/AppSuspenseFallback';
-import RelayEnvironmentProvider from '@/graphql/RelayEnvironmentProvider';
-import RootLayout from '@/layouts/RootLayout';
-import AnnotatorPage from '@/pages/annotator/AnnotatorPageWrapper.tsx';
-import HomePage from '@/pages/home/home-page.tsx';
-import PageNotFoundPage from '@/routes/PageNotFoundPage';
-import useSettingsContext from '@/settings/useSettingsContext';
-import useLoadAnnotationOptions from '@/app/useLoadAnnotationOptions.ts';
-import {Route, Routes} from 'react-router-dom';
-import {Toaster} from 'sonner';
+import "@/assets/scss/App.scss";
+import ErrorReport from "@/common/error/ErrorReport";
+import AppErrorFallback from "@/app/AppErrorFallback";
+import AppSuspenseFallback from "@/app/AppSuspenseFallback";
+import RelayEnvironmentProvider from "@/graphql/RelayEnvironmentProvider";
+import RootLayout from "@/layouts/RootLayout";
+import AnnotatorPage from "@/pages/annotator/AnnotatorPageWrapper.tsx";
+import HomePage from "@/pages/home/home-page.tsx";
+import PageNotFoundPage from "@/routes/PageNotFoundPage";
+import useSettingsContext from "@/settings/useSettingsContext";
+import useLoadAnnotationOptions from "@/app/useLoadAnnotationOptions.ts";
+import {Route, Routes} from "react-router-dom";
+import {Toaster} from "sonner";
+import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
 export default function AppWrapper() {
-  const {settings} = useSettingsContext();
-  useLoadAnnotationOptions();
-  return (
-    <RelayEnvironmentProvider
-      endpoint={settings.videoAPIEndpoint}
-      suspenseFallback={<AppSuspenseFallback />}
-      errorFallback={AppErrorFallback}>
-      <Toaster richColors position="top-right" />
-      <AppRoutes />
-    </RelayEnvironmentProvider>
-  );
+    const {settings} = useSettingsContext();
+    useLoadAnnotationOptions();
+    return (
+        <RelayEnvironmentProvider
+            endpoint={settings.videoAPIEndpoint}
+            suspenseFallback={<AppSuspenseFallback />}
+            errorFallback={AppErrorFallback}>
+            <TooltipPrimitive.Provider
+                delayDuration={800}
+                skipDelayDuration={600}>
+                <Toaster richColors position="top-right" />
+                <AppRoutes />
+            </TooltipPrimitive.Provider>
+        </RelayEnvironmentProvider>
+    );
 }
 
 function AppRoutes() {
-  return (
-    <>
-      <Routes>
-        <Route element={<RootLayout />}>
-          <Route index={true} element={<HomePage />} />
-          <Route path="annotate/:pairsCode/:sampleId" element={<AnnotatorPage />} />
-          <Route path="*" element={<PageNotFoundPage />} />
-        </Route>
-      </Routes>
-      <ErrorReport />
-    </>
-  );
+    return (
+        <>
+            <Routes>
+                <Route element={<RootLayout />}>
+                    <Route index={true} element={<HomePage />} />
+                    <Route
+                        path="annotate/:pairsCode/:sampleId"
+                        element={<AnnotatorPage />}
+                    />
+                    <Route path="*" element={<PageNotFoundPage />} />
+                </Route>
+            </Routes>
+            <ErrorReport />
+        </>
+    );
 }

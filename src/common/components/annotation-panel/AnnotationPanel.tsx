@@ -16,6 +16,7 @@ import {mergeToCanvas, canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {MaskEditTools} from "@/common/components/annotation-panel/MaskEditTools.tsx";
 import {MineralAnnotationForm} from "@/common/components/annotation-panel/MineralAnnotationForm.tsx";
 import useSaveAnnotation from "@/common/components/annotation-panel/useSaveAnnotation.ts";
+import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
 
 export const AnnotationPanel: React.FC = () => {
     const [masks, setMasks] = useAtom(masksAtom);
@@ -155,20 +156,22 @@ export const AnnotationPanel: React.FC = () => {
                                     )
                                 }
                             />
-                            <button
-                                title="Supprimer"
-                                onClick={() => {
-                                    setMasks((prev) =>
-                                        prev.filter(
-                                            (m) => m.id !== activeMask.id,
-                                        ),
-                                    );
-                                    setCurrentMask(0);
-                                    setPrompts([]);
-                                }}
-                                className="shrink-0 w-7 h-7 flex items-center justify-center rounded border border-red-500/30 text-red-400 hover:bg-red-500/15 transition-colors text-base leading-none">
-                                ×
-                            </button>
+                            <Tooltip content="Supprimer cette région">
+                                <button
+                                    aria-label="Supprimer cette région"
+                                    onClick={() => {
+                                        setMasks((prev) =>
+                                            prev.filter(
+                                                (m) => m.id !== activeMask.id,
+                                            ),
+                                        );
+                                        setCurrentMask(0);
+                                        setPrompts([]);
+                                    }}
+                                    className="shrink-0 w-7 h-7 flex items-center justify-center rounded border border-red-500/30 text-red-400 hover:bg-red-500/15 transition-colors text-base leading-none">
+                                    ×
+                                </button>
+                            </Tooltip>
                         </div>
 
                         {/* Drawing tools */}
@@ -289,18 +292,22 @@ export const AnnotationPanel: React.FC = () => {
                 Only rendered in list mode and when there's something to save. */}
             {currentMask === 0 && masks.length > 0 ? (
                 <div className="shrink-0 border-t border-white/10 p-2 flex flex-col gap-1.5 bg-secondary">
-                    <button
-                        disabled={isSavingProject}
-                        className="border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                        onClick={handleSaveProject}>
-                        {isSavingProject ? t("saving") : t("saveProject")}
-                    </button>
-                    <button
-                        disabled={isSavingAnnotation}
-                        className="border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                        onClick={handleSaveAnnotation}>
-                        {isSavingAnnotation ? t("saving") : t("saveAnnotation")}
-                    </button>
+                    <Tooltip content="Sauvegarde le travail en cours pour le reprendre plus tard">
+                        <button
+                            disabled={isSavingProject}
+                            className="border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            onClick={handleSaveProject}>
+                            {isSavingProject ? t("saving") : t("saveProject")}
+                        </button>
+                    </Tooltip>
+                    <Tooltip content="Exporte l'annotation finale de l'image actuelle au format COCO">
+                        <button
+                            disabled={isSavingAnnotation}
+                            className="border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            onClick={handleSaveAnnotation}>
+                            {isSavingAnnotation ? t("saving") : t("saveAnnotation")}
+                        </button>
+                    </Tooltip>
                 </div>
             ) : null}
         </div>
