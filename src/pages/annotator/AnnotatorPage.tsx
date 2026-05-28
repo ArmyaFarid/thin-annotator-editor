@@ -16,6 +16,7 @@ import useLoadProject from "@/pages/annotator/useLoadProject.ts";
 import useSaveProject from "@/common/components/annotation-panel/useSaveProject.ts";
 import {activePairAtom} from "@/app/atom.ts";
 import {t} from "@/i18n/index.ts";
+import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
 
 export default function AnnotatorPage() {
     useAutosaveDraft();
@@ -101,20 +102,24 @@ export default function AnnotatorPage() {
                 </div>
             ) : null}
             <div className="w-full flex flex-row justify-between items-center">
-                <button
-                    onClick={() => setShowFinishModal(true)}
-                    className="flex items-center gap-1 bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    <ChevronLeftIcon className="w-3 h-3" />
-                    {t("openNewProject")}
-                </button>
+                <Tooltip content="Quitter ce projet pour en ouvrir un autre" side="bottom">
+                    <button
+                        onClick={() => setShowFinishModal(true)}
+                        className="flex items-center gap-1 bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">
+                        <ChevronLeftIcon className="w-3 h-3" />
+                        {t("openNewProject")}
+                    </button>
+                </Tooltip>
                 <span className="text-xs text-white/40 font-mono">
                     {pairsCode} / {sampleId}
                 </span>
-                <button
-                    onClick={() => setShowFinishModal(true)}
-                    className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">
-                    {t("finish")}
-                </button>
+                <Tooltip content="Terminer la session (avec option de sauvegarde)" side="bottom">
+                    <button
+                        onClick={() => setShowFinishModal(true)}
+                        className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">
+                        {t("finish")}
+                    </button>
+                </Tooltip>
             </div>
             <div className="w-full flex flex-row gap-2 items-stretch flex-1 min-h-0">
                 <div className="flex-none">
@@ -127,7 +132,7 @@ export default function AnnotatorPage() {
                     <ZoomPreferenceToggle />
                 </div>
 
-                <div className="w-72">
+                <div className="w-72 h-full min-h-0">
                     <AnnotationPanel />
                 </div>
             </div>

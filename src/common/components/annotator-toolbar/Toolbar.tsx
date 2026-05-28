@@ -25,6 +25,7 @@ import useAnnotatorToolbar from "@/common/components/annotator-toolbar/useAnnota
 import {TOOLS} from "@/app/AppConfig.tsx";
 import FilterGammaToolbarPanel from "@/common/components/annotator-toolbar/FilterGammaToolbarPanel.tsx";
 import {SHORTCUT_DEFS, keyLabel} from "@/canvas/shortcuts.ts";
+import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
 
 const TOOL_ICONS: Record<Tool, React.FC<React.SVGProps<SVGSVGElement>>> = {
     "select-add": SelectAddIcon,
@@ -53,11 +54,6 @@ const TOOL_BASE_LABELS: Record<Tool, string> = {
 const KEY_BADGE = new Map<Tool, string>(
     SHORTCUT_DEFS.map(d => [d.tool, keyLabel(d.key)]),
 );
-
-function toolTitle(tool: Tool): string {
-    const k = KEY_BADGE.get(tool);
-    return k ? `${TOOL_BASE_LABELS[tool]} (${k})` : TOOL_BASE_LABELS[tool];
-}
 
 interface ToolbarProps {}
 
@@ -118,35 +114,44 @@ export const Toolbar: React.FC<ToolbarProps> = () => {
             {TOOLS.map(tool => {
                 const active = activeTool === tool;
                 const Icon = TOOL_ICONS[tool];
+                const label = TOOL_BASE_LABELS[tool];
+                const shortcut = KEY_BADGE.get(tool);
 
                 return (
-                    <button
-                        key={tool}
-                        title={toolTitle(tool)}
-                        onClick={() => setActiveTool(tool)}
-                        className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${active ? "bg-[#2F2F2F] ring-1 ring-[#4FC3F7]/40" : "bg-transparent hover:bg-[#2F2F2F]/60"}`}>
-                        {Icon ? (
-                            <Icon className={`w-4 h-4 transition-colors ${active ? "text-[#4FC3F7]" : "text-[#B8B8B8]"}`} />
-                        ) : (
-                            <FallbackSquare active={active} />
-                        )}
-                    </button>
+                    <Tooltip key={tool} content={label} shortcut={shortcut} side="right">
+                        <button
+                            aria-label={label}
+                            onClick={() => setActiveTool(tool)}
+                            className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${active ? "bg-[#2F2F2F] ring-1 ring-[#4FC3F7]/40" : "bg-transparent hover:bg-[#2F2F2F]/60"}`}>
+                            {Icon ? (
+                                <Icon className={`w-4 h-4 transition-colors ${active ? "text-[#4FC3F7]" : "text-[#B8B8B8]"}`} />
+                            ) : (
+                                <FallbackSquare active={active} />
+                            )}
+                        </button>
+                    </Tooltip>
                 );
             })}
             <FilterGammaToolbarPanel />
             <div className="w-6 h-px bg-white/10 my-0.5" />
-            <button
-                title={borderOnly ? "Afficher le remplissage" : "Afficher contours seulement"}
-                onClick={() => setBorderOnly(v => !v)}
-                className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${borderOnly ? "bg-[#2F2F2F] ring-1 ring-emerald-500/50" : "bg-transparent hover:bg-[#2F2F2F]/60"}`}>
-                <BorderOnlyIcon active={borderOnly} />
-            </button>
-            <button
-                title="Raccourcis clavier (?)"
-                onClick={() => setShowShortcuts(v => !v)}
-                className={`flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold transition-colors ${showShortcuts ? "bg-[#2F2F2F] text-[#4FC3F7] ring-1 ring-[#4FC3F7]/40" : "bg-transparent text-[#B8B8B8] hover:bg-[#2F2F2F]/60"}`}>
-                ?
-            </button>
+            <Tooltip
+                content={borderOnly ? "Afficher le remplissage" : "Afficher contours seulement"}
+                side="right">
+                <button
+                    aria-label={borderOnly ? "Afficher le remplissage" : "Afficher contours seulement"}
+                    onClick={() => setBorderOnly(v => !v)}
+                    className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${borderOnly ? "bg-[#2F2F2F] ring-1 ring-emerald-500/50" : "bg-transparent hover:bg-[#2F2F2F]/60"}`}>
+                    <BorderOnlyIcon active={borderOnly} />
+                </button>
+            </Tooltip>
+            <Tooltip content="Raccourcis clavier" shortcut="?" side="right">
+                <button
+                    aria-label="Raccourcis clavier"
+                    onClick={() => setShowShortcuts(v => !v)}
+                    className={`flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold transition-colors ${showShortcuts ? "bg-[#2F2F2F] text-[#4FC3F7] ring-1 ring-[#4FC3F7]/40" : "bg-transparent text-[#B8B8B8] hover:bg-[#2F2F2F]/60"}`}>
+                    ?
+                </button>
+            </Tooltip>
         </div>
     );
 };

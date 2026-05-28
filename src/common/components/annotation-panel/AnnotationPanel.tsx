@@ -16,6 +16,7 @@ import {mergeToCanvas, canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {MaskEditTools} from "@/common/components/annotation-panel/MaskEditTools.tsx";
 import {MineralAnnotationForm} from "@/common/components/annotation-panel/MineralAnnotationForm.tsx";
 import useSaveAnnotation from "@/common/components/annotation-panel/useSaveAnnotation.ts";
+import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
 
 export const AnnotationPanel: React.FC = () => {
     const [masks, setMasks] = useAtom(masksAtom);
@@ -34,18 +35,18 @@ export const AnnotationPanel: React.FC = () => {
     async function handleSaveProject() {
         const ok = await saveProject();
         if (ok) {
-            toast.success("Projet sauvegardé");
+            toast.success(t("saveProjectSuccess"));
         } else {
-            toast.error("Échec de la sauvegarde");
+            toast.error(t("saveProjectError"));
         }
     }
 
     async function handleSaveAnnotation() {
         const ok = await saveAnnotation();
         if (ok) {
-            toast.success("Projet sauvegardé");
+            toast.success(t("exportAnnotationSuccess"));
         } else {
-            toast.error("Échec de la sauvegarde");
+            toast.error(t("exportAnnotationError"));
         }
     }
 
@@ -93,31 +94,31 @@ export const AnnotationPanel: React.FC = () => {
         setEditorOn(false);
     }
 
-    function handleExport() {
-        if (!imageSize) {
-            return;
-        }
-        const exported = masks.map((m) => {
-            const canvas = mergeToCanvas(m, imageSize.w, imageSize.h);
-            const rle = canvasToRLE(canvas);
-            return {
-                id: m.id,
-                label: m.label,
-                color: m.color,
-                annotation: m.annotation,
-                rle,
-            };
-        });
-        const blob = new Blob([JSON.stringify(exported, null, 2)], {
-            type: "application/json",
-        });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "annotations.json";
-        a.click();
-        URL.revokeObjectURL(url);
-    }
+    // function handleExport() {
+    //     if (!imageSize) {
+    //         return;
+    //     }
+    //     const exported = masks.map((m) => {
+    //         const canvas = mergeToCanvas(m, imageSize.w, imageSize.h);
+    //         const rle = canvasToRLE(canvas);
+    //         return {
+    //             id: m.id,
+    //             label: m.label,
+    //             color: m.color,
+    //             annotation: m.annotation,
+    //             rle,
+    //         };
+    //     });
+    //     const blob = new Blob([JSON.stringify(exported, null, 2)], {
+    //         type: "application/json",
+    //     });
+    //     const url = URL.createObjectURL(blob);
+    //     const a = document.createElement("a");
+    //     a.href = url;
+    //     a.download = "annotations.json";
+    //     a.click();
+    //     URL.revokeObjectURL(url);
+    // }
 
     return (
         <div className="h-full w-full flex flex-col bg-secondary border border-white/20 rounded-md overflow-hidden">
@@ -155,20 +156,22 @@ export const AnnotationPanel: React.FC = () => {
                                     )
                                 }
                             />
-                            <button
-                                title="Supprimer"
-                                onClick={() => {
-                                    setMasks((prev) =>
-                                        prev.filter(
-                                            (m) => m.id !== activeMask.id,
-                                        ),
-                                    );
-                                    setCurrentMask(0);
-                                    setPrompts([]);
-                                }}
-                                className="shrink-0 w-7 h-7 flex items-center justify-center rounded border border-red-500/30 text-red-400 hover:bg-red-500/15 transition-colors text-base leading-none">
-                                ×
-                            </button>
+                            <Tooltip content="Supprimer cette région">
+                                <button
+                                    aria-label="Supprimer cette région"
+                                    onClick={() => {
+                                        setMasks((prev) =>
+                                            prev.filter(
+                                                (m) => m.id !== activeMask.id,
+                                            ),
+                                        );
+                                        setCurrentMask(0);
+                                        setPrompts([]);
+                                    }}
+                                    className="shrink-0 w-7 h-7 flex items-center justify-center rounded border border-red-500/30 text-red-400 hover:bg-red-500/15 transition-colors text-base leading-none">
+                                    ×
+                                </button>
+                            </Tooltip>
                         </div>
 
                         {/* Drawing tools */}
@@ -280,35 +283,33 @@ export const AnnotationPanel: React.FC = () => {
                             onClick={() => setEditorOn(true)}>
                             {t("addRegion")}
                         </button>
-
-                        {masks.length > 0 ? (
-                            <div className="flex gap-1.5">
-                                <button
-                                    disabled={isSavingProject}
-                                    className="flex-1 border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                                    onClick={handleSaveProject}>
-                                    {isSavingProject
-                                        ? t("saving")
-                                        : t("saveProject")}
-                                </button>
-                                <button
-                                    className="flex-1 border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 transition-colors"
-                                    onClick={handleExport}>
-                                    {t("exportJson")}
-                                </button>
-                                <button
-                                    disabled={isSavingAnnotation}
-                                    className="flex-1 border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 transition-colors"
-                                    onClick={handleSaveAnnotation}>
-                                    {isSavingAnnotation
-                                        ? t("saving")
-                                        : t("saveAnnotation")}
-                                </button>
-                            </div>
-                        ) : null}
                     </>
                 ) : null}
             </div>
+
+            {/* Pinned footer — always visible. Sits OUTSIDE the scrolling
+                body so the mask list can grow without hiding the actions.
+                Only rendered in list mode and when there's something to save. */}
+            {currentMask === 0 && masks.length > 0 ? (
+                <div className="shrink-0 border-t border-white/10 p-2 flex flex-col gap-1.5 bg-secondary">
+                    <Tooltip content="Sauvegarde le travail en cours pour le reprendre plus tard">
+                        <button
+                            disabled={isSavingProject}
+                            className="border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            onClick={handleSaveProject}>
+                            {isSavingProject ? t("saving") : t("saveProject")}
+                        </button>
+                    </Tooltip>
+                    <Tooltip content="Exporte l'annotation finale de l'image actuelle au format COCO">
+                        <button
+                            disabled={isSavingAnnotation}
+                            className="border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            onClick={handleSaveAnnotation}>
+                            {isSavingAnnotation ? t("saving") : t("saveAnnotation")}
+                        </button>
+                    </Tooltip>
+                </div>
+            ) : null}
         </div>
     );
 };
