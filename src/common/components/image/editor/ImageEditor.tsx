@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {graphql, useLazyLoadQuery, useMutation} from "react-relay";
 import {useAtom, useAtomValue, useSetAtom} from "jotai";
 import {CanvasStack} from "@/canvas/CanvasStack.tsx";
@@ -76,6 +76,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
             }
         `,
         {pairsCode, sampleId},
+        {fetchKey: `${pairsCode}-${sampleId}`, fetchPolicy: "network-only"},
     );
 
     useEffect(() => {

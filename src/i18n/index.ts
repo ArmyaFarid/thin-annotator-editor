@@ -24,7 +24,8 @@ const T = {
         importNamingPattern: "<préfixe>_mod-<MOD>_comp-<COMP>_rot-<deg>.<ext>",
         importNamingExampleLabel: "Exemple :",
         importNamingExample: "echantillon01_mod-XPL_comp-add_rot-45.png",
-        importNamingMod: "mod : XPL ou PPL",
+        importNamingMod:
+            "mod : PPL (polarisé plan), XPL (polarisé croisé), RL (réfléchi), FL (fluorescence), TR (transmis)",
         importNamingComp:
             "comp : add (+λ), sous (−λ) ou na (sans compensateur)",
         importNamingRot: "rot : angle de rotation en degrés (entier)",
@@ -168,7 +169,8 @@ const T = {
         importNamingPattern: "<prefix>_mod-<MOD>_comp-<COMP>_rot-<deg>.<ext>",
         importNamingExampleLabel: "Example:",
         importNamingExample: "sample01_mod-XPL_comp-add_rot-45.png",
-        importNamingMod: "mod: XPL or PPL",
+        importNamingMod:
+            "mod : PPL (plane polarized), XPL (cross polarized), RL (reflected), FL (fluorescence), TR (transmitted)",
         importNamingComp: "comp: add (+λ), sous (−λ) or na (no compensator)",
         importNamingRot: "rot: rotation angle in degrees (integer)",
         importNamingPrefix: "prefix: free text (not used by the import)",

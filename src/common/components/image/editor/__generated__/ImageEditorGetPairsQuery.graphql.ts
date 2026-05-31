@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<bb4dcc1cfefa2b78536f5bbe3e64fb7e>>
+ * @generated SignedSource<<564cc0c87af905e15d2cdef8aa1b8025>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,7 +9,7 @@
 // @ts-nocheck
 
 import { ConcreteRequest, Query } from 'relay-runtime';
-export type PolarizedFilterType = "FL" | "OTHER" | "PPL" | "RL" | "XPL" | "XPL_GAMMA" | "%future added value";
+export type PolarizedFilterType = "FL" | "OTHER" | "PPL" | "RL" | "TR" | "XPL" | "XPL_GAMMA" | "%future added value";
 export type ImageEditorGetPairsQuery$variables = {
   pairsCode: string;
   sampleId: string;

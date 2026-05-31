@@ -137,6 +137,7 @@ enum PolarizedFilterType {
   XPL
   RL
   FL
+  TR
   XPL_GAMMA
   OTHER
 }
