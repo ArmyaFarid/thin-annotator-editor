@@ -1,7 +1,13 @@
+import {useEffect} from "react";
 import {useNavigate} from "react-router-dom";
 import {useSetAtom} from "jotai";
 import {FolderOpenIcon} from "@heroicons/react/24/outline";
-import {activePairAtom, pendingAnnotationsAtom} from "@/app/atom.ts";
+import {
+    activePairAtom,
+    pendingAnnotationsAtom,
+    resetProjectStateAtom,
+} from "@/app/atom.ts";
+import {clearHistoryAtom} from "@/app/history.ts";
 import {clearDraft} from "@/app/persistence.ts";
 import {t} from "@/i18n/index.ts";
 import usePickFolder from "@/pages/home/usePickFolder.ts";
@@ -10,7 +16,16 @@ export default function HomePage() {
     const navigate = useNavigate();
     const setActivePair = useSetAtom(activePairAtom);
     const setPendingAnnotations = useSetAtom(pendingAnnotationsAtom);
+    const resetProjectState = useSetAtom(resetProjectStateAtom);
+    const clearHistory = useSetAtom(clearHistoryAtom);
     const [pickFolder, {loading, error}] = usePickFolder();
+
+    // Always land on a clean slate — wipe any state leaked from a previous
+    // project (masks, SLIC overlay, refine mode, filter selection, history).
+    useEffect(() => {
+        resetProjectState();
+        clearHistory();
+    }, [resetProjectState, clearHistory]);
 
     async function handleOpen() {
         const result = await pickFolder();

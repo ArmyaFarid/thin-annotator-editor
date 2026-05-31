@@ -180,3 +180,24 @@ export interface ActivePair {
 export const activePairAtom = atom<ActivePair | null>(null);
 
 export const pendingAnnotationsAtom = atom<Mask[] | null>(null);
+
+// Wipe all project-scoped state. Trigger when landing on the home page so
+// switching projects (A → home → B) doesn't carry A's masks, SLIC overlay,
+// refine mode, filter, etc. into B. UI preferences (preserveZoom, minimap,
+// HUD, border-only, shortcuts) are intentionally preserved.
+export const resetProjectStateAtom = atom(null, (_get, set) => {
+    set(activeToolAtom, "select-add");
+    set(promptsAtom, []);
+    set(activeImage, null);
+    set(slicPromptsAtom, undefined);
+    set(masksAtom, []);
+    set(currentMaskAtom, 0);
+    set(editorOnAtom, false);
+    set(filterGammaCombinationAtom, {filter: null, gamma: null});
+    set(loadedFilterGammaConfigAtom, {filters: [], gammas: []});
+    set(refineModeAtom, 0);
+    set(subtractModeAtom, false);
+    set(activeImageSizeAtom, null);
+    set(slicOverlayAtom, null);
+    set(pendingAnnotationsAtom, null);
+});
