@@ -104,6 +104,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         return () => window.removeEventListener("keydown", onKey);
     }, [localUndo, localRedo]);
     const [tilesReady, setTilesReady] = useState(false);
+    // Only meaningful when targetMaskId !== 0. "add" → kept superpixels
+    // become a fill layer on the active mask; "remove" → a hole layer.
+    const [applyMode, setApplyMode] = useState<"add" | "remove">("add");
     const [zoom, setZoom] = useState(1);
     const [panX, setPanX] = useState(0);
     const [panY, setPanY] = useState(0);
@@ -357,10 +360,11 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         });
 
         if (targetMaskId !== 0) {
+            const layerKind = applyMode === "remove" ? "hole" as const : "fill" as const;
             setMasks(prev =>
                 prev.map(m => {
                     if (m.id !== targetMaskId) return m;
-                    return {...m, layers: [...m.layers, {id: layerId, rleMask: newRle, source: "manual" as const, layerKind: "fill" as const}]};
+                    return {...m, layers: [...m.layers, {id: layerId, rleMask: newRle, source: "manual" as const, layerKind}]};
                 })
             );
         } else {
@@ -403,6 +407,26 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                 <span className="text-sm font-medium text-white/80">
                     Superpixels SLIC — {slicOverlay.superpixels.length - deleted.size} / {slicOverlay.superpixels.length} conservés
                 </span>
+                {slicOverlay.targetMaskId !== 0 ? (
+                    <>
+                        <div className="w-px h-5 bg-white/20" />
+                        <div className="flex rounded overflow-hidden border border-white/15">
+                            <button
+                                onClick={() => setApplyMode("add")}
+                                title="Les superpixels conservés seront ajoutés au masque actif"
+                                className={`px-3 py-1 text-xs font-medium transition-colors ${applyMode === "add" ? "bg-[#4FC3F7]/20 text-[#4FC3F7]" : "text-white/60 hover:text-white hover:bg-white/5"}`}>
+                                Ajouter au masque
+                            </button>
+                            <div className="w-px bg-white/15" />
+                            <button
+                                onClick={() => setApplyMode("remove")}
+                                title="Les superpixels conservés seront retirés du masque actif"
+                                className={`px-3 py-1 text-xs font-medium transition-colors ${applyMode === "remove" ? "bg-[#4FC3F7]/20 text-[#4FC3F7]" : "text-white/60 hover:text-white hover:bg-white/5"}`}>
+                                Retirer du masque
+                            </button>
+                        </div>
+                    </>
+                ) : null}
                 <div className="w-px h-5 bg-white/20" />
                 <button
                     onClick={() => {

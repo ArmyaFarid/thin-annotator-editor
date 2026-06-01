@@ -1,5 +1,6 @@
 import React from "react";
 import {useAtom, useAtomValue, useSetAtom} from "jotai";
+import {EyeIcon, EyeSlashIcon} from "@heroicons/react/24/outline";
 import {
     activeToolAtom,
     activeImageSizeAtom,
@@ -21,7 +22,7 @@ export const MaskEditTools: React.FC = () => {
     const [currentMask] = useAtom(currentMaskAtom);
     const [, setRefineMode] = useAtom(refineModeAtom);
     const [subtractMode, setSubtractMode] = useAtom(subtractModeAtom);
-    const [activeTool, setActiveTool] = useAtom(activeToolAtom);
+    const setActiveTool = useSetAtom(activeToolAtom);
     const imageSize = useAtomValue(activeImageSizeAtom);
     const commitHistory = useSetAtom(commitHistoryAtom);
 
@@ -71,7 +72,7 @@ export const MaskEditTools: React.FC = () => {
 
     return (
         <div className="flex flex-col gap-1.5">
-            {/* Add / Subtract toggle */}
+            {/* Add / Subtract toggle. Drawing tools live in the left toolbar. */}
             <div className="flex rounded overflow-hidden border border-white/15">
                 <Tooltip content="Mode ajout : les tracés deviennent des zones de la région">
                     <button
@@ -90,26 +91,6 @@ export const MaskEditTools: React.FC = () => {
                 </Tooltip>
             </div>
 
-            {/* Hole drawing tools — only in subtract mode */}
-            {subtractMode ? (
-                <div className="flex gap-1">
-                    <Tooltip content="Tracé libre à main levée">
-                        <button
-                            onClick={() => setActiveTool("freeform-draw")}
-                            className={`flex-1 px-2 py-1 rounded text-xs border transition-colors ${activeTool === "freeform-draw" ? "border-orange-400 text-orange-400 bg-orange-400/10" : "border-white/20 text-white/40 hover:text-white"}`}>
-                            {t("freeform")}
-                        </button>
-                    </Tooltip>
-                    <Tooltip content="Polygone : cliquez pour placer chaque sommet">
-                        <button
-                            onClick={() => setActiveTool("polygon-lasso")}
-                            className={`flex-1 px-2 py-1 rounded text-xs border transition-colors ${activeTool === "polygon-lasso" ? "border-orange-400 text-orange-400 bg-orange-400/10" : "border-white/20 text-white/40 hover:text-white"}`}>
-                            {t("polygon")}
-                        </button>
-                    </Tooltip>
-                </div>
-            ) : null}
-
             {/* Refine + Anchors row */}
             <div className="flex gap-1.5">
                 <Tooltip content="Ouvrir l'outil de raffinement (gomme/pinceau)">
@@ -119,25 +100,20 @@ export const MaskEditTools: React.FC = () => {
                         {t("refine")}
                     </button>
                 </Tooltip>
-                <div className="flex flex-1 rounded overflow-hidden border border-white/15">
-                    <Tooltip content="Convertir le contour en sommets éditables (points d'ancrage)">
-                        <button
-                            onClick={handleActivateAnchors}
-                            disabled={isAnchorMode || !imageSize}
-                            className={`flex-1 px-2 py-1 text-xs font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${isAnchorMode ? "bg-emerald-500/20 text-emerald-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
-                            {t("anchors")}
-                        </button>
-                    </Tooltip>
-                    <div className="w-px bg-white/15" />
-                    <Tooltip content="Revenir au mode normal (fusionner les sommets en masque)">
-                        <button
-                            onClick={handleDeactivateAnchors}
-                            disabled={!isAnchorMode || !imageSize}
-                            className={`flex-1 px-2 py-1 text-xs font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${!isAnchorMode ? "bg-white/10 text-white/60" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
-                            {t("normal")}
-                        </button>
-                    </Tooltip>
-                </div>
+                <Tooltip content={isAnchorMode
+                    ? "Masquer les ancres (fusionner les sommets en masque)"
+                    : "Afficher les sommets éditables (points d'ancrage)"}>
+                    <button
+                        onClick={isAnchorMode ? handleDeactivateAnchors : handleActivateAnchors}
+                        disabled={!imageSize}
+                        aria-pressed={isAnchorMode}
+                        className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1 rounded text-xs border transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${isAnchorMode ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40" : "border-white/20 text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
+                        {isAnchorMode
+                            ? <EyeIcon className="w-3.5 h-3.5" />
+                            : <EyeSlashIcon className="w-3.5 h-3.5" />}
+                        {t("anchors")}
+                    </button>
+                </Tooltip>
             </div>
         </div>
     );

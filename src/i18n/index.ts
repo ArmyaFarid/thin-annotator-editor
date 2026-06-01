@@ -84,8 +84,7 @@ const T = {
         freeform: "Forme libre",
         polygon: "Polygone",
         refine: "Raffiner",
-        anchors: "Ancres",
-        normal: "Normal",
+        anchors: "Afficher les ancres",
 
         // Mineral annotation form
         mineralAnnotation: "Annotation minéralogique",
@@ -227,8 +226,7 @@ const T = {
         freeform: "Freeform",
         polygon: "Polygon",
         refine: "Refine",
-        anchors: "Anchors",
-        normal: "Normal",
+        anchors: "Show anchors",
 
         // Mineral annotation form
         mineralAnnotation: "Mineral annotation",
