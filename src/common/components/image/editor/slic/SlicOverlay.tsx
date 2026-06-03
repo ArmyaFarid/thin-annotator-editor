@@ -1,6 +1,6 @@
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {useAtom, useAtomValue, useSetAtom} from "jotai";
-import {ArrowUturnLeftIcon, ArrowUturnRightIcon} from "@heroicons/react/24/outline";
+import {ArrowUturnLeftIcon, ArrowUturnRightIcon, InformationCircleIcon} from "@heroicons/react/24/outline";
 import {masksAtom, slicOverlayAtom, currentMaskAtom, activeImageSizeAtom} from "@/app/atom.ts";
 import {decode} from "@/jscocotools/mask.ts";
 import {canvasToRLE} from "@/canvas/utils/maskMerge.ts";
@@ -472,6 +472,24 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                     className="w-24"
                 />
                 <span className="text-xs text-white/60 w-12">{Math.round(zoom * 100)}%</span>
+            </div>
+
+            {/* Mode hint — explains what the kept ("conservés") superpixels do */}
+            <div className="flex items-center gap-2 text-xs -mt-1">
+                <InformationCircleIcon className="w-4 h-4 shrink-0 text-white/50" />
+                {slicOverlay.targetMaskId === 0 ? (
+                    <span className="text-white/60">
+                        Les superpixels conservés formeront un nouveau masque.
+                    </span>
+                ) : applyMode === "add" ? (
+                    <span className="text-[#4FC3F7]">
+                        Ajout : les superpixels conservés seront <strong>dessinés</strong> dans le masque actif.
+                    </span>
+                ) : (
+                    <span className="text-rose-400">
+                        Retrait : les superpixels conservés seront <strong>effacés</strong> du masque actif.
+                    </span>
+                )}
             </div>
 
             {/* Image + overlay canvas */}
