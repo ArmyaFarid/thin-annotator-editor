@@ -36,7 +36,7 @@ import {ShortcutPanel} from "@/canvas/ShortcutPanel.tsx";
 import {SHORTCUT_MAP} from "@/canvas/shortcuts.ts";
 
 // ≤100 superpixels — backend: n_segments = w·h/400
-const MAX_SLIC_BBOX_AREA = 40_000;
+const MAX_SLIC_BBOX_AREA = 40_000000;
 
 interface CanvasStackProps {
     imageUrl: string | undefined;
@@ -102,9 +102,8 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
         engineRef.current?.setBorderOnly(borderOnly);
     }, [borderOnly]);
 
-    const [cursorHudVisible, setCursorHudVisible] = useAtom(
-        cursorHudVisibleAtom,
-    );
+    const [cursorHudVisible, setCursorHudVisible] =
+        useAtom(cursorHudVisibleAtom);
     useEffect(() => {
         engineRef.current?.setHudVisible(cursorHudVisible);
     }, [cursorHudVisible]);
@@ -175,7 +174,9 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
             // Skip when a modal owns the scope — that modal handles its own
             // local undo via its own keydown listener.
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
-                if (historyScopeRef.current !== "global") return;
+                if (historyScopeRef.current !== "global") {
+                    return;
+                }
                 e.preventDefault();
                 if (e.shiftKey) {
                     redo();
@@ -185,7 +186,9 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 return;
             }
             if (e.ctrlKey && e.key.toLowerCase() === "y") {
-                if (historyScopeRef.current !== "global") return;
+                if (historyScopeRef.current !== "global") {
+                    return;
+                }
                 e.preventDefault();
                 redo();
                 return;
