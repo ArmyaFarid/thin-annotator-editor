@@ -1,11 +1,20 @@
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {useAtom, useAtomValue, useSetAtom} from "jotai";
-import {ArrowUturnLeftIcon, ArrowUturnRightIcon, InformationCircleIcon} from "@heroicons/react/24/outline";
-import {masksAtom, slicOverlayAtom, currentMaskAtom, activeImageSizeAtom} from "@/app/atom.ts";
+import {
+    ArrowUturnLeftIcon,
+    ArrowUturnRightIcon,
+    InformationCircleIcon,
+} from "@heroicons/react/24/outline";
+import {
+    masksAtom,
+    slicOverlayAtom,
+    currentMaskAtom,
+    activeImageSizeAtom,
+} from "@/app/atom.ts";
 import {decode} from "@/jscocotools/mask.ts";
 import {canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
-import {MASK_FILL_ALPHA} from "@/canvas/canvas-theme.ts";
+import {SLIC_MASK_FILL_ALPHA} from "@/canvas/canvas-theme.ts";
 import {commitHistoryAtom, historyScopeAtom} from "@/app/history.ts";
 
 const MAX_SLIC_LOCAL_HISTORY = 50;
@@ -14,7 +23,12 @@ interface SlicOverlayProps {
     imageUrl: string;
 }
 
-interface PanDrag { startX: number; startY: number; startPanX: number; startPanY: number }
+interface PanDrag {
+    startX: number;
+    startY: number;
+    startPanX: number;
+    startPanY: number;
+}
 
 function hslToRgb(index: number, total: number): [number, number, number] {
     const h = (index / total) * 360;
@@ -25,7 +39,11 @@ function hslToRgb(index: number, total: number): [number, number, number] {
         const k = (n + h / 30) % 12;
         return l - a * Math.max(-1, Math.min(k - 3, Math.min(9 - k, 1)));
     };
-    return [Math.round(f(0) * 255), Math.round(f(8) * 255), Math.round(f(4) * 255)];
+    return [
+        Math.round(f(0) * 255),
+        Math.round(f(8) * 255),
+        Math.round(f(4) * 255),
+    ];
 }
 
 export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
@@ -62,7 +80,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
 
     const localUndo = useCallback(() => {
         setLocalPast((past) => {
-            if (past.length === 0) return past;
+            if (past.length === 0) {
+                return past;
+            }
             const previous = past[past.length - 1];
             setLocalFuture((f) => [...f, new Set(deletedRef.current)]);
             setDeleted(previous);
@@ -72,7 +92,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
 
     const localRedo = useCallback(() => {
         setLocalFuture((future) => {
-            if (future.length === 0) return future;
+            if (future.length === 0) {
+                return future;
+            }
             const next = future[future.length - 1];
             setLocalPast((p) => [...p, new Set(deletedRef.current)]);
             setDeleted(next);
@@ -90,11 +112,16 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
             const tag = (e.target as HTMLElement).tagName;
-            if (tag === "INPUT" || tag === "TEXTAREA") return;
+            if (tag === "INPUT" || tag === "TEXTAREA") {
+                return;
+            }
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
                 e.preventDefault();
-                if (e.shiftKey) localRedo();
-                else localUndo();
+                if (e.shiftKey) {
+                    localRedo();
+                } else {
+                    localUndo();
+                }
             } else if (e.ctrlKey && e.key.toLowerCase() === "y") {
                 e.preventDefault();
                 localRedo();
@@ -120,7 +147,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     const viewRef = useRef({zoom: 1, panX: 0, panY: 0});
     const panDragRef = useRef<PanDrag | null>(null);
 
-    useEffect(() => { viewRef.current = {zoom, panX, panY}; }, [zoom, panX, panY]);
+    useEffect(() => {
+        viewRef.current = {zoom, panX, panY};
+    }, [zoom, panX, panY]);
 
     // Decode all RLEs once → build label canvas (hit-test) + pre-render tile per superpixel.
     // rAF defers heavy work by one frame so the loading overlay paints first.
@@ -148,7 +177,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                 try {
                     const result = decode([sp.rle]);
                     decoded = result.data as Uint8Array;
-                } catch { continue; }
+                } catch {
+                    continue;
+                }
 
                 const [h, w] = sp.rle.size;
                 const storedId = sp.id + 1;
@@ -159,7 +190,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
 
                 for (let x = 0; x < w; x++) {
                     for (let y = 0; y < h; y++) {
-                        if (decoded[x * h + y] !== 1) continue;
+                        if (decoded[x * h + y] !== 1) {
+                            continue;
+                        }
 
                         const li = (y * iw + x) * 4;
                         lData.data[li] = rHi;
@@ -167,7 +200,10 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                         lData.data[li + 3] = 255;
 
                         const isEdge =
-                            x === 0 || y === 0 || x === w - 1 || y === h - 1 ||
+                            x === 0 ||
+                            y === 0 ||
+                            x === w - 1 ||
+                            y === h - 1 ||
                             decoded[(x - 1) * h + y] !== 1 ||
                             decoded[(x + 1) * h + y] !== 1 ||
                             decoded[x * h + (y - 1)] !== 1 ||
@@ -183,7 +219,11 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                 const tile = document.createElement("canvas");
                 tile.width = w;
                 tile.height = h;
-                tile.getContext("2d")!.putImageData(new ImageData(rgba, w, h), 0, 0);
+                tile.getContext("2d")!.putImageData(
+                    new ImageData(rgba, w, h),
+                    0,
+                    0,
+                );
                 tiles.set(sp.id, tile);
             }
 
@@ -199,33 +239,52 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     // Redraw: just composite pre-rendered tiles — no decoding, no allocation.
     // tilesReady in deps ensures this re-fires once the rAF build completes.
     const redrawOverlay = useCallback(() => {
-        if (!tilesReady || !slicOverlay || !imageSize || !overlayCanvasRef.current) return;
+        if (
+            !tilesReady ||
+            !slicOverlay ||
+            !imageSize ||
+            !overlayCanvasRef.current
+        ) {
+            return;
+        }
         const ctx = overlayCanvasRef.current.getContext("2d")!;
         const {w: iw, h: ih} = imageSize;
         ctx.clearRect(0, 0, iw, ih);
         for (const sp of slicOverlay.superpixels) {
-            if (deleted.has(sp.id)) continue;
+            if (deleted.has(sp.id)) {
+                continue;
+            }
             const tile = tilesRef.current.get(sp.id);
-            if (!tile) continue;
+            if (!tile) {
+                continue;
+            }
             ctx.drawImage(tile, 0, 0, tile.width, tile.height, 0, 0, iw, ih);
         }
     }, [slicOverlay, imageSize, deleted, tilesReady]);
 
-    useEffect(() => { redrawOverlay(); }, [redrawOverlay]);
+    useEffect(() => {
+        redrawOverlay();
+    }, [redrawOverlay]);
 
     // Auto-fit zoom once tiles are ready (container is visible at that point)
     useEffect(() => {
-        if (!slicOverlay || !imageSize || !tilesReady) return;
+        if (!slicOverlay || !imageSize || !tilesReady) {
+            return;
+        }
         setZoom(1);
         setPanX(0);
         setPanY(0);
 
         requestAnimationFrame(() => {
             const container = containerRef.current;
-            if (!container) return;
+            if (!container) {
+                return;
+            }
             const cw = container.clientWidth;
             const ch = container.clientHeight;
-            if (cw === 0 || ch === 0) return;
+            if (cw === 0 || ch === 0) {
+                return;
+            }
 
             const {bbox} = slicOverlay;
             const scaleX = cw / imageSize.w;
@@ -246,7 +305,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     // Scroll-to-zoom (native, non-passive)
     useEffect(() => {
         const el = containerRef.current;
-        if (!el) return;
+        if (!el) {
+            return;
+        }
         const onWheel = (e: WheelEvent) => {
             e.preventDefault();
             const rect = el.getBoundingClientRect();
@@ -256,8 +317,8 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
             const {zoom: z, panX: px, panY: py} = viewRef.current;
             const newZ = Math.max(0.25, Math.min(20, z * factor));
             setZoom(newZ);
-            setPanX(cx - (cx - px) * newZ / z);
-            setPanY(cy - (cy - py) * newZ / z);
+            setPanX(cx - ((cx - px) * newZ) / z);
+            setPanY(cy - ((cy - py) * newZ) / z);
         };
         el.addEventListener("wheel", onWheel, {passive: false});
         return () => el.removeEventListener("wheel", onWheel);
@@ -266,13 +327,23 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     function getSuperpixelAt(e: React.MouseEvent): number | null {
         const label = labelCanvasRef.current;
         const overlay = overlayCanvasRef.current;
-        if (!label || !overlay || !imageSize) return null;
+        if (!label || !overlay || !imageSize) {
+            return null;
+        }
         const rect = overlay.getBoundingClientRect();
-        const ix = Math.floor((e.clientX - rect.left) * (imageSize.w / rect.width));
-        const iy = Math.floor((e.clientY - rect.top) * (imageSize.h / rect.height));
-        if (ix < 0 || iy < 0 || ix >= imageSize.w || iy >= imageSize.h) return null;
+        const ix = Math.floor(
+            (e.clientX - rect.left) * (imageSize.w / rect.width),
+        );
+        const iy = Math.floor(
+            (e.clientY - rect.top) * (imageSize.h / rect.height),
+        );
+        if (ix < 0 || iy < 0 || ix >= imageSize.w || iy >= imageSize.h) {
+            return null;
+        }
         const px = label.getContext("2d")!.getImageData(ix, iy, 1, 1).data;
-        if (px[3] === 0) return null; // background — no superpixel written here
+        if (px[3] === 0) {
+            return null;
+        } // background — no superpixel written here
         const id = ((px[0] << 8) | px[1]) - 1; // undo the +1 offset applied at build time
         return id;
     }
@@ -281,16 +352,27 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         if (e.button === 1) {
             e.preventDefault();
             const {panX: px, panY: py} = viewRef.current;
-            panDragRef.current = {startX: e.clientX, startY: e.clientY, startPanX: px, startPanY: py};
+            panDragRef.current = {
+                startX: e.clientX,
+                startY: e.clientY,
+                startPanX: px,
+                startPanY: py,
+            };
             setIsPanning(true);
             return;
         }
-        if (e.button !== 0) return;
+        if (e.button !== 0) {
+            return;
+        }
         const id = getSuperpixelAt(e);
-        if (id === null) return;
-        if (deletedRef.current.has(id)) return;   // no-op click, no history entry
+        if (id === null) {
+            return;
+        }
+        if (deletedRef.current.has(id)) {
+            return;
+        } // no-op click, no history entry
         pushLocalHistory();
-        setDeleted(prev => {
+        setDeleted((prev) => {
             const next = new Set(prev);
             next.add(id);
             return next;
@@ -312,9 +394,15 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     }
 
     function handleApply() {
-        if (!slicOverlay || !imageSize) return;
-        const remaining = slicOverlay.superpixels.filter(sp => !deleted.has(sp.id));
-        if (remaining.length === 0) return;
+        if (!slicOverlay || !imageSize) {
+            return;
+        }
+        const remaining = slicOverlay.superpixels.filter(
+            (sp) => !deleted.has(sp.id),
+        );
+        if (remaining.length === 0) {
+            return;
+        }
         const {superpixels: _, targetMaskId} = slicOverlay;
         const superpixels = remaining;
         const {w: iw, h: ih} = imageSize;
@@ -329,7 +417,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
             try {
                 const result = decode([sp.rle]);
                 decoded = result.data as Uint8Array;
-            } catch { continue; }
+            } catch {
+                continue;
+            }
 
             const [h, w] = sp.rle.size;
             const rgba = new Uint8ClampedArray(w * h * 4);
@@ -347,7 +437,11 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
             const tile = document.createElement("canvas");
             tile.width = w;
             tile.height = h;
-            tile.getContext("2d")!.putImageData(new ImageData(rgba, w, h), 0, 0);
+            tile.getContext("2d")!.putImageData(
+                new ImageData(rgba, w, h),
+                0,
+                0,
+            );
             mCtx.drawImage(tile, 0, 0, w, h, 0, 0, iw, ih);
         }
 
@@ -360,22 +454,43 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         });
 
         if (targetMaskId !== 0) {
-            const layerKind = applyMode === "remove" ? "hole" as const : "fill" as const;
-            setMasks(prev =>
-                prev.map(m => {
-                    if (m.id !== targetMaskId) return m;
-                    return {...m, layers: [...m.layers, {id: layerId, rleMask: newRle, source: "manual" as const, layerKind}]};
-                })
+            const layerKind =
+                applyMode === "remove" ? ("hole" as const) : ("fill" as const);
+            setMasks((prev) =>
+                prev.map((m) => {
+                    if (m.id !== targetMaskId) {
+                        return m;
+                    }
+                    return {
+                        ...m,
+                        layers: [
+                            ...m.layers,
+                            {
+                                id: layerId,
+                                rleMask: newRle,
+                                source: "manual" as const,
+                                layerKind,
+                            },
+                        ],
+                    };
+                }),
             );
         } else {
             const newId = Date.now() + 1;
-            const color = getDistinctColor(masks.length, MASK_FILL_ALPHA);
-            setMasks(prev => [
+            const color = getDistinctColor(masks.length, SLIC_MASK_FILL_ALPHA);
+            setMasks((prev) => [
                 ...prev,
                 {
                     id: newId,
                     label: `SLIC ${prev.length + 1}`,
-                    layers: [{id: layerId, rleMask: newRle, source: "manual" as const, layerKind: "fill" as const}],
+                    layers: [
+                        {
+                            id: layerId,
+                            rleMask: newRle,
+                            source: "manual" as const,
+                            layerKind: "fill" as const,
+                        },
+                    ],
                     point_coords: [],
                     point_labels: [],
                     color,
@@ -387,7 +502,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         setSlicOverlay(null);
     }
 
-    if (!slicOverlay || !imageSize) return null;
+    if (!slicOverlay || !imageSize) {
+        return null;
+    }
 
     const {w: iw, h: ih} = imageSize;
     const transform = `matrix(${zoom},0,0,${zoom},${panX},${panY})`;
@@ -398,147 +515,196 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
             {!tilesReady ? (
                 <div className="flex flex-col items-center gap-3">
                     <div className="w-10 h-10 rounded-full border-2 border-white/20 border-t-[#4FC3F7] animate-spin" />
-                    <span className="text-white text-sm">Préparation des superpixels...</span>
+                    <span className="text-white text-sm">
+                        Préparation des superpixels...
+                    </span>
                 </div>
             ) : null}
             {/* Toolbar + canvas + actions — hidden while tiles are computing */}
             <div className={tilesReady ? "contents" : "hidden"}>
-            <div className="flex items-center gap-3 bg-[#1a1a1a] border border-white/20 rounded-lg px-4 py-2 flex-wrap">
-                <span className="text-sm font-medium text-white/80">
-                    Superpixels SLIC — {slicOverlay.superpixels.length - deleted.size} / {slicOverlay.superpixels.length} conservés
-                </span>
-                {slicOverlay.targetMaskId !== 0 ? (
-                    <>
-                        <div className="w-px h-5 bg-white/20" />
-                        <div className="flex rounded overflow-hidden border border-white/15">
-                            <button
-                                onClick={() => setApplyMode("add")}
-                                title="Les superpixels conservés seront ajoutés au masque actif"
-                                className={`px-3 py-1 text-xs font-medium transition-colors ${applyMode === "add" ? "bg-[#4FC3F7]/20 text-[#4FC3F7]" : "text-white/60 hover:text-white hover:bg-white/5"}`}>
-                                Ajouter au masque
-                            </button>
-                            <div className="w-px bg-white/15" />
-                            <button
-                                onClick={() => setApplyMode("remove")}
-                                title="Les superpixels conservés seront retirés du masque actif"
-                                className={`px-3 py-1 text-xs font-medium transition-colors ${applyMode === "remove" ? "bg-[#4FC3F7]/20 text-[#4FC3F7]" : "text-white/60 hover:text-white hover:bg-white/5"}`}>
-                                Retirer du masque
-                            </button>
-                        </div>
-                    </>
-                ) : null}
-                <div className="w-px h-5 bg-white/20" />
-                <button
-                    onClick={() => {
-                        if (deleted.size === 0) return;
-                        pushLocalHistory();
-                        setDeleted(new Set());
-                    }}
-                    disabled={deleted.size === 0}
-                    className="px-3 py-1 rounded text-sm text-white/60 hover:text-white transition-colors disabled:opacity-30">
-                    Réinitialiser
-                </button>
-                <div className="w-px h-5 bg-white/20" />
-                <button
-                    onClick={localUndo}
-                    disabled={localPast.length === 0}
-                    title="Annuler la dernière action (Ctrl+Z)"
-                    className="p-1.5 rounded text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
-                    <ArrowUturnLeftIcon className="w-4 h-4" strokeWidth={2.5} />
-                </button>
-                <button
-                    onClick={localRedo}
-                    disabled={localFuture.length === 0}
-                    title="Rétablir (Ctrl+Shift+Z)"
-                    className="p-1.5 rounded text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
-                    <ArrowUturnRightIcon className="w-4 h-4" strokeWidth={2.5} />
-                </button>
-                <div className="w-px h-5 bg-white/20" />
-                <span className="text-xs text-white/50">Zoom:</span>
-                <input
-                    type="range" min={25} max={2000} value={Math.round(zoom * 100)}
-                    onChange={e => {
-                        const newZ = +e.target.value / 100;
-                        const container = containerRef.current;
-                        if (container) {
-                            const cx = container.clientWidth / 2;
-                            const cy = container.clientHeight / 2;
-                            const {zoom: z, panX: px, panY: py} = viewRef.current;
-                            setPanX(cx - (cx - px) * newZ / z);
-                            setPanY(cy - (cy - py) * newZ / z);
-                        }
-                        setZoom(newZ);
-                    }}
-                    className="w-24"
-                />
-                <span className="text-xs text-white/60 w-12">{Math.round(zoom * 100)}%</span>
-            </div>
-
-            {/* Mode hint — explains what the kept ("conservés") superpixels do */}
-            <div className="flex items-center gap-2 text-xs -mt-1">
-                <InformationCircleIcon className="w-4 h-4 shrink-0 text-white/50" />
-                {slicOverlay.targetMaskId === 0 ? (
-                    <span className="text-white/60">
-                        Les superpixels conservés formeront un nouveau masque.
+                <div className="flex items-center gap-3 bg-[#1a1a1a] border border-white/20 rounded-lg px-4 py-2 flex-wrap">
+                    <span className="text-sm font-medium text-white/80">
+                        Superpixels SLIC —{" "}
+                        {slicOverlay.superpixels.length - deleted.size} /{" "}
+                        {slicOverlay.superpixels.length} conservés
                     </span>
-                ) : applyMode === "add" ? (
-                    <span className="text-[#4FC3F7]">
-                        Ajout : les superpixels conservés seront <strong>dessinés</strong> dans le masque actif.
-                    </span>
-                ) : (
-                    <span className="text-rose-400">
-                        Retrait : les superpixels conservés seront <strong>effacés</strong> du masque actif.
-                    </span>
-                )}
-            </div>
-
-            {/* Image + overlay canvas */}
-            <div
-                ref={containerRef}
-                style={{overflow: "hidden", display: "inline-block", lineHeight: 0, position: "relative", maxHeight: "72vh", maxWidth: "85vw"}}>
-                <div style={{display: "inline-block", lineHeight: 0, transform, transformOrigin: "0 0"}}>
-                    <img
-                        ref={imgRef}
-                        src={imageUrl}
-                        draggable={false}
-                        style={{maxHeight: "72vh", maxWidth: "85vw", display: "block", userSelect: "none"}}
-                        alt=""
-                    />
-                    <canvas
-                        ref={overlayCanvasRef}
-                        width={iw}
-                        height={ih}
-                        style={{
-                            position: "absolute",
-                            inset: 0,
-                            width: "100%",
-                            height: "100%",
-                            cursor,
+                    {slicOverlay.targetMaskId !== 0 ? (
+                        <>
+                            <div className="w-px h-5 bg-white/20" />
+                            <div className="flex rounded overflow-hidden border border-white/15">
+                                <button
+                                    onClick={() => setApplyMode("add")}
+                                    title="Les superpixels conservés seront ajoutés au masque actif"
+                                    className={`px-3 py-1 text-xs font-medium transition-colors ${applyMode === "add" ? "bg-[#4FC3F7]/20 text-[#4FC3F7]" : "text-white/60 hover:text-white hover:bg-white/5"}`}>
+                                    Ajouter au masque
+                                </button>
+                                <div className="w-px bg-white/15" />
+                                <button
+                                    onClick={() => setApplyMode("remove")}
+                                    title="Les superpixels conservés seront retirés du masque actif"
+                                    className={`px-3 py-1 text-xs font-medium transition-colors ${applyMode === "remove" ? "bg-[#4FC3F7]/20 text-[#4FC3F7]" : "text-white/60 hover:text-white hover:bg-white/5"}`}>
+                                    Retirer du masque
+                                </button>
+                            </div>
+                        </>
+                    ) : null}
+                    <div className="w-px h-5 bg-white/20" />
+                    <button
+                        onClick={() => {
+                            if (deleted.size === 0) {
+                                return;
+                            }
+                            pushLocalHistory();
+                            setDeleted(new Set());
                         }}
-                        onMouseDown={handleOverlayMouseDown}
-                        onMouseMove={handleOverlayMouseMove}
-                        onMouseUp={handleOverlayMouseUp}
-                        onMouseLeave={handleOverlayMouseUp}
+                        disabled={deleted.size === 0}
+                        className="px-3 py-1 rounded text-sm text-white/60 hover:text-white transition-colors disabled:opacity-30">
+                        Réinitialiser
+                    </button>
+                    <div className="w-px h-5 bg-white/20" />
+                    <button
+                        onClick={localUndo}
+                        disabled={localPast.length === 0}
+                        title="Annuler la dernière action (Ctrl+Z)"
+                        className="p-1.5 rounded text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                        <ArrowUturnLeftIcon
+                            className="w-4 h-4"
+                            strokeWidth={2.5}
+                        />
+                    </button>
+                    <button
+                        onClick={localRedo}
+                        disabled={localFuture.length === 0}
+                        title="Rétablir (Ctrl+Shift+Z)"
+                        className="p-1.5 rounded text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                        <ArrowUturnRightIcon
+                            className="w-4 h-4"
+                            strokeWidth={2.5}
+                        />
+                    </button>
+                    <div className="w-px h-5 bg-white/20" />
+                    <span className="text-xs text-white/50">Zoom:</span>
+                    <input
+                        type="range"
+                        min={25}
+                        max={2000}
+                        value={Math.round(zoom * 100)}
+                        onChange={(e) => {
+                            const newZ = +e.target.value / 100;
+                            const container = containerRef.current;
+                            if (container) {
+                                const cx = container.clientWidth / 2;
+                                const cy = container.clientHeight / 2;
+                                const {
+                                    zoom: z,
+                                    panX: px,
+                                    panY: py,
+                                } = viewRef.current;
+                                setPanX(cx - ((cx - px) * newZ) / z);
+                                setPanY(cy - ((cy - py) * newZ) / z);
+                            }
+                            setZoom(newZ);
+                        }}
+                        className="w-24"
                     />
+                    <span className="text-xs text-white/60 w-12">
+                        {Math.round(zoom * 100)}%
+                    </span>
+                </div>
+
+                {/* Mode hint — explains what the kept ("conservés") superpixels do */}
+                <div className="flex items-center gap-2 text-xs -mt-1">
+                    <InformationCircleIcon className="w-4 h-4 shrink-0 text-white/50" />
+                    {slicOverlay.targetMaskId === 0 ? (
+                        <span className="text-white/60">
+                            Les superpixels conservés formeront un nouveau
+                            masque.
+                        </span>
+                    ) : applyMode === "add" ? (
+                        <span className="text-[#4FC3F7]">
+                            Ajout : les superpixels conservés seront{" "}
+                            <strong>dessinés</strong> dans le masque actif.
+                        </span>
+                    ) : (
+                        <span className="text-rose-400">
+                            Retrait : les superpixels conservés seront{" "}
+                            <strong>effacés</strong> du masque actif.
+                        </span>
+                    )}
+                </div>
+
+                {/* Image + overlay canvas */}
+                <div
+                    ref={containerRef}
+                    style={{
+                        overflow: "hidden",
+                        display: "inline-block",
+                        lineHeight: 0,
+                        position: "relative",
+                        maxHeight: "72vh",
+                        maxWidth: "85vw",
+                    }}>
+                    <div
+                        style={{
+                            display: "inline-block",
+                            lineHeight: 0,
+                            transform,
+                            transformOrigin: "0 0",
+                        }}>
+                        <img
+                            ref={imgRef}
+                            src={imageUrl}
+                            draggable={false}
+                            style={{
+                                maxHeight: "72vh",
+                                maxWidth: "85vw",
+                                display: "block",
+                                userSelect: "none",
+                            }}
+                            alt=""
+                        />
+                        <canvas
+                            ref={overlayCanvasRef}
+                            width={iw}
+                            height={ih}
+                            style={{
+                                position: "absolute",
+                                inset: 0,
+                                width: "100%",
+                                height: "100%",
+                                cursor,
+                            }}
+                            onMouseDown={handleOverlayMouseDown}
+                            onMouseMove={handleOverlayMouseMove}
+                            onMouseUp={handleOverlayMouseUp}
+                            onMouseLeave={handleOverlayMouseUp}
+                        />
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-3">
+                    <span className="text-xs text-white/30">
+                        Cliquer pour supprimer un superpixel · Molette: zoom ·
+                        Clic molette: déplacer
+                    </span>
+                    <button
+                        onClick={() => setSlicOverlay(null)}
+                        className="px-5 py-2 rounded-lg border border-white/20 text-sm hover:bg-white/10 transition-colors">
+                        Annuler
+                    </button>
+                    <button
+                        onClick={handleApply}
+                        disabled={
+                            slicOverlay.superpixels.length - deleted.size === 0
+                        }
+                        className="px-5 py-2 rounded-lg bg-[#4FC3F7] text-black font-medium text-sm hover:bg-[#4FC3F7]/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                        Appliquer (
+                        {slicOverlay.superpixels.length - deleted.size})
+                    </button>
                 </div>
             </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-3">
-                <span className="text-xs text-white/30">Cliquer pour supprimer un superpixel · Molette: zoom · Clic molette: déplacer</span>
-                <button
-                    onClick={() => setSlicOverlay(null)}
-                    className="px-5 py-2 rounded-lg border border-white/20 text-sm hover:bg-white/10 transition-colors">
-                    Annuler
-                </button>
-                <button
-                    onClick={handleApply}
-                    disabled={slicOverlay.superpixels.length - deleted.size === 0}
-                    className="px-5 py-2 rounded-lg bg-[#4FC3F7] text-black font-medium text-sm hover:bg-[#4FC3F7]/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                    Appliquer ({slicOverlay.superpixels.length - deleted.size})
-                </button>
-            </div>
-            </div>{/* end tilesReady wrapper */}
+            {/* end tilesReady wrapper */}
         </div>
     );
 };

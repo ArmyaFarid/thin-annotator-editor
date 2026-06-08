@@ -180,6 +180,7 @@ export const theme = {
 // ── Backwards-compat re-exports for the old `mask-style.ts` symbols.
 // New code should read from `theme` directly.
 export const MASK_FILL_ALPHA = theme.mask.fillAlpha;
+export const SLIC_MASK_FILL_ALPHA = 0;
 export const MASK_STROKE_WIDTH = theme.mask.strokeWidth;
 export const MASK_BORDER_THICKNESS = theme.mask.borderThickness;
 export const MASK_BORDER_DARKEN = theme.mask.borderDarken;
