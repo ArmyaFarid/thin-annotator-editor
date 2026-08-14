@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {useAtom, useAtomValue, useSetAtom} from "jotai";
 import {
     ArrowUturnLeftIcon,
@@ -249,7 +249,38 @@ interface ToolGroupBlockProps {
 // A group's own icon and name are shown by the layouts that have room for them
 // ("pods", "flyout"); "separators" just clusters the buttons between hairlines.
 const ToolGroupBlock: React.FC<ToolGroupBlockProps> = ({group, layout, activeTool, onSelect}) => {
+    // `open` = visible. `pinned` = opened by a click, so it survives the mouse
+    // leaving; only selecting a tool, clicking the trigger again, clicking
+    // outside, or Escape closes it.
     const [open, setOpen] = useState(false);
+    const [pinned, setPinned] = useState(false);
+    const wrapRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLButtonElement>(null);
+
+    function close() {
+        setOpen(false);
+        setPinned(false);
+    }
+
+    useEffect(() => {
+        if (!pinned) return;
+
+        function onPointerDown(e: MouseEvent) {
+            if (!wrapRef.current?.contains(e.target as Node)) close();
+        }
+        function onKeyDown(e: KeyboardEvent) {
+            if (e.key !== "Escape") return;
+            close();
+            triggerRef.current?.focus();
+        }
+
+        document.addEventListener("mousedown", onPointerDown);
+        document.addEventListener("keydown", onKeyDown);
+        return () => {
+            document.removeEventListener("mousedown", onPointerDown);
+            document.removeEventListener("keydown", onKeyDown);
+        };
+    }, [pinned]);
 
     const buttons = group.tools.map(tool => (
         <ToolButton
@@ -268,14 +299,25 @@ const ToolGroupBlock: React.FC<ToolGroupBlockProps> = ({group, layout, activeToo
 
         return (
             <div
+                ref={wrapRef}
                 className="relative"
                 onMouseEnter={() => setOpen(true)}
-                onMouseLeave={() => setOpen(false)}>
+                onMouseLeave={() => {
+                    if (!pinned) setOpen(false);
+                }}>
                 <button
+                    ref={triggerRef}
                     aria-label={group.label}
                     aria-haspopup="true"
                     aria-expanded={open}
-                    onClick={() => setOpen(v => !v)}
+                    onClick={() => {
+                        if (pinned) {
+                            close();
+                            return;
+                        }
+                        setPinned(true);
+                        setOpen(true);
+                    }}
                     className={`relative flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${activeInGroup ? "bg-[#2F2F2F] ring-1 ring-[#4FC3F7]/40" : "bg-transparent hover:bg-[#2F2F2F]/60"}`}>
                     <TriggerIcon
                         className={`w-4 h-4 transition-colors ${activeInGroup ? "text-[#4FC3F7]" : "text-[#B8B8B8]"}`}
@@ -284,7 +326,10 @@ const ToolGroupBlock: React.FC<ToolGroupBlockProps> = ({group, layout, activeToo
                     <span className="absolute bottom-0.5 right-0.5 w-0 h-0 border-l-[3px] border-l-transparent border-b-[3px] border-b-white/40" />
                 </button>
                 {open ? (
-                    <div className="absolute left-full top-0 ml-1 z-30 flex flex-row gap-0.5 p-1 rounded-lg bg-secondary border border-white/10 shadow-xl">
+                    <div
+                        role="group"
+                        aria-label={group.label}
+                        className="absolute left-full top-0 ml-1 z-30 flex flex-row gap-0.5 p-1 rounded-lg bg-secondary border border-white/10 shadow-xl">
                         {group.tools.map(tool => (
                             <ToolButton
                                 key={tool}
@@ -292,7 +337,7 @@ const ToolGroupBlock: React.FC<ToolGroupBlockProps> = ({group, layout, activeToo
                                 active={activeTool === tool}
                                 onSelect={(t) => {
                                     onSelect(t);
-                                    setOpen(false);
+                                    close();
                                 }}
                             />
                         ))}
