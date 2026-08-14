@@ -5,6 +5,7 @@ export const IMAGE_API_ENDPOINT = 'http://localhost:7263';
 export const INFERENCE_API_ENDPOINT = 'http://localhost:7263';
 
 export const TOOLS: Tool[] = [
+    'idle',
     'select-add',
     'select-remove',
     'bounding-box',

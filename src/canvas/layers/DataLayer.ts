@@ -25,6 +25,7 @@ export class DataLayer {
     private naturalSize: {w: number; h: number} | null = null;
     private maskCache = new Map<number, {obj: Mask; sig: string}>();
     private currentMaskId: number = 0;
+    private hoveredMaskId: number = 0;
     private borderOnly = false;
 
     constructor(private readonly canvas: HTMLCanvasElement) {}
@@ -51,6 +52,25 @@ export class DataLayer {
     setCurrentMaskId(id: number): void {
         this.currentMaskId = id;
         this.render();
+    }
+
+    // Repaint only when the hovered mask actually changes — never per frame.
+    setHoveredMaskId(id: number): void {
+        if (this.hoveredMaskId === id) return;
+        this.hoveredMaskId = id;
+        this.render();
+    }
+
+    // Topmost mask under the point, or 0. Reverse order = last drawn wins.
+    // Reuses the cached Mask instances, whose RLE data is already decoded by
+    // rendering, so this is an array lookup rather than a decode.
+    hitTestTopmost(x: number, y: number): number {
+        for (let i = this.masks.length - 1; i >= 0; i--) {
+            const m = this.masks[i];
+            const entry = this.maskCache.get(m.id);
+            if (entry && entry.obj.hitTest(x, y)) return m.id;
+        }
+        return 0;
     }
 
     setBorderOnly(b: boolean): void {
@@ -100,7 +120,11 @@ export class DataLayer {
             const entry = this.maskCache.get(m.id);
             if (!entry) continue;
             const isActive = m.id === this.currentMaskId;
-            const state = isActive ? "active" : "idle";
+            const state = isActive
+                ? "active"
+                : m.id === this.hoveredMaskId
+                  ? "hovered"
+                  : "idle";
             ctx.save();
             if (hasActive && !isActive) ctx.globalAlpha = theme.dimming.inactiveAlpha;
             entry.obj.renderWithNatural(ctx, state, zoom, this.naturalSize);

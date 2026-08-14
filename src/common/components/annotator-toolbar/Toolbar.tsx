@@ -20,6 +20,7 @@ import FreeformDrawIcon from "@/assets/icons/freeform-draw.svg?react";
 import PolygonLassoIcon from "@/assets/icons/polygon-lasso.svg?react";
 import GrabIcon from "@/assets/icons/grab.svg?react";
 import SlicBboxIcon from "@/assets/icons/slic-bbox.svg?react";
+import PointerIcon from "@/assets/icons/pointer.svg?react";
 import {Tool} from "@/app/types.ts";
 import useAnnotatorToolbar from "@/common/components/annotator-toolbar/useAnnotatorToolbar.ts";
 import {TOOLS} from "@/app/AppConfig.tsx";
@@ -29,6 +30,7 @@ import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
 import {t} from "@/i18n/index.ts";
 
 const TOOL_ICONS: Record<Tool, React.FC<React.SVGProps<SVGSVGElement>>> = {
+    "idle": PointerIcon,
     "select-add": SelectAddIcon,
     "select-remove": SelectRemoveIcon,
     "bounding-box": BoundingBoxIcon,
@@ -41,6 +43,7 @@ const TOOL_ICONS: Record<Tool, React.FC<React.SVGProps<SVGSVGElement>>> = {
 };
 
 const TOOL_BASE_LABELS: Record<Tool, string> = {
+    "idle": t("toolIdle"),
     "select-add": t("toolSelectAdd"),
     "select-remove": t("toolSelectRemove"),
     "bounding-box": t("toolBoundingBox"),
