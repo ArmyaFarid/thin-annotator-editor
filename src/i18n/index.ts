@@ -147,6 +147,7 @@ const T = {
             "Zoom réinitialisé lors du changement d'image (cliquer pour activer la préservation)",
 
         // Toolbar tools
+        toolIdle: "Pointeur (aucun outil)",
         toolSelectAdd: "Ajouter un point",
         toolSelectRemove: "Retirer un point",
         toolBoundingBox: "Boîte englobante",
@@ -191,6 +192,8 @@ const T = {
 
         // Keyboard shortcuts panel
         keyboardShortcuts: "Raccourcis clavier",
+        shortcutIdleLabel: "Pointeur",
+        shortcutIdleHint: "Sélectionner sans dessiner",
         shortcutSelectAddLabel: "Select +",
         shortcutSelectAddHint: "Point positif SAM",
         shortcutSelectRemoveLabel: "Select −",
@@ -452,6 +455,7 @@ const T = {
             "Zoom reset when switching images (click to enable preservation)",
 
         // Toolbar tools
+        toolIdle: "Pointer (no tool)",
         toolSelectAdd: "Add point",
         toolSelectRemove: "Remove point",
         toolBoundingBox: "Bounding box",
@@ -496,6 +500,8 @@ const T = {
 
         // Keyboard shortcuts panel
         keyboardShortcuts: "Keyboard shortcuts",
+        shortcutIdleLabel: "Pointer",
+        shortcutIdleHint: "Select without drawing",
         shortcutSelectAddLabel: "Select +",
         shortcutSelectAddHint: "SAM positive point",
         shortcutSelectRemoveLabel: "Select −",
