@@ -7,7 +7,7 @@ import {
     type MineralOption,
 } from "@/app/atom.ts";
 import useAnnotationOptions from "@/common/components/annotation-panel/useAnnotationOptions.ts";
-import {t, LANG} from "@/i18n/index.ts";
+import {t, getLang} from "@/i18n/index.ts";
 
 const EMPTY_ANNOTATION: MineralAnnotation = {
     mineralIds: [null, null, null],
@@ -48,7 +48,7 @@ const PropertySelect: React.FC<PropertySelectProps> = ({value, options, onChange
         className={selectCls}>
         <option value="">—</option>
         {options.map((o) => (
-            <option key={o.value} value={o.value}>{o.label[LANG]}</option>
+            <option key={o.value} value={o.value}>{o.label[getLang()]}</option>
         ))}
         {isOrphan(value, options) ? <option value={value!}>{value}</option> : null}
     </select>
@@ -68,11 +68,11 @@ const MineralSelect: React.FC<MineralSelectProps> = ({value, groups, minerals, o
         className={`${selectCls} ${!value ? "border-white/25 text-white/40" : ""}`}>
         <option value="">{t("selectMineral")}</option>
         {groups.map((g) => (
-            <optgroup key={g.value} label={g.label[LANG]}>
+            <optgroup key={g.value} label={g.label[getLang()]}>
                 {minerals
                     .filter((m) => m.group === g.value)
                     .map((m) => (
-                        <option key={m.value} value={m.value}>{m.label[LANG]}</option>
+                        <option key={m.value} value={m.value}>{m.label[getLang()]}</option>
                     ))}
             </optgroup>
         ))}
@@ -110,7 +110,7 @@ export const MineralAnnotationForm: React.FC<MineralAnnotationFormProps> = ({mas
                 const annotation = {...(m.annotation ?? EMPTY_ANNOTATION), mineralIds: next};
                 // First hypothesis always names the mask
                 if (index === 0 && value) {
-                    const name = options.minerals.find((mi) => mi.value === value)?.label[LANG];
+                    const name = options.minerals.find((mi) => mi.value === value)?.label[getLang()];
                     if (name) return {...m, annotation, label: name};
                 }
                 return {...m, annotation};

@@ -1,5 +1,37 @@
-// Change this to switch the UI language
-export const LANG: "fr" | "en" = "en";
+export type Lang = "fr" | "en";
+
+export const LANGS: readonly Lang[] = ["fr", "en"];
+
+const LANG_STORAGE_KEY = "lang";
+
+function readStoredLang(): Lang {
+    try {
+        const v = localStorage.getItem(LANG_STORAGE_KEY);
+        return v === "fr" || v === "en" ? v : "en";
+    } catch {
+        return "en";
+    }
+}
+
+// The active language. Mutable, so switching it at runtime is picked up by
+// every `t()` call made during the next render — which is why translated
+// strings must be resolved at render time, never captured in a module-scope
+// constant. Definitions that need a label should carry a TranslationKey and
+// resolve it in the component (see tool-groups.ts, shortcuts.ts).
+let currentLang: Lang = readStoredLang();
+
+export function getLang(): Lang {
+    return currentLang;
+}
+
+export function setLang(lang: Lang): void {
+    currentLang = lang;
+    try {
+        localStorage.setItem(LANG_STORAGE_KEY, lang);
+    } catch {
+        /* ignore */
+    }
+}
 
 const T = {
     fr: {
@@ -150,6 +182,8 @@ const T = {
         groupSam: "Outils SAM",
         groupSlic: "Superpixels SLIC",
         customize: "Personnaliser",
+        language: "Langue",
+        maskDisplay: "Affichage des masques",
         customizeTitle: "Personnalisation",
         toolbarLayout: "Disposition de la barre d'outils",
         layoutSeparators: "Séparateurs",
@@ -469,6 +503,8 @@ const T = {
         groupSam: "SAM tools",
         groupSlic: "SLIC superpixels",
         customize: "Customize",
+        language: "Language",
+        maskDisplay: "Mask display",
         customizeTitle: "Customization",
         toolbarLayout: "Toolbar layout",
         layoutSeparators: "Separators",
@@ -645,5 +681,5 @@ const T = {
 export type TranslationKey = keyof typeof T.fr;
 
 export function t(key: TranslationKey): string {
-    return T[LANG][key];
+    return T[currentLang][key];
 }

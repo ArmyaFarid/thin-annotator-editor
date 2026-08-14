@@ -2,7 +2,7 @@ import type React from "react";
 import type {Tool} from "@/app/types.ts";
 import SamGroupIcon from "@/assets/icons/sam-group.svg?react";
 import SlicBboxIcon from "@/assets/icons/slic-bbox.svg?react";
-import {t} from "@/i18n/index.ts";
+import type {TranslationKey} from "@/i18n/index.ts";
 
 // Presentation-only clustering. This file says how the toolbar DISPLAYS tools,
 // never which tools exist or what they do — TOOLS (AppConfig) stays the source
@@ -13,7 +13,7 @@ import {t} from "@/i18n/index.ts";
 // on their own, exactly as they do today.
 export interface ToolGroup {
     id: string;
-    label: string;
+    labelKey: TranslationKey;
     icon: React.FC<React.SVGProps<SVGSVGElement>>;
     tools: Tool[];
 }
@@ -21,13 +21,13 @@ export interface ToolGroup {
 export const TOOL_GROUPS: ToolGroup[] = [
     {
         id: "sam",
-        label: t("groupSam"),
+        labelKey: "groupSam",
         icon: SamGroupIcon,
         tools: ["select-add", "select-remove", "bounding-box"],
     },
     {
         id: "slic",
-        label: t("groupSlic"),
+        labelKey: "groupSlic",
         icon: SlicBboxIcon,
         tools: ["slic-bbox"],
     },

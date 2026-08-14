@@ -3,7 +3,7 @@ import {useAtom} from "jotai";
 import {toast} from "sonner";
 import useAnnotationOptions from "@/common/components/annotation-panel/useAnnotationOptions.ts";
 import useSaveProject from "@/common/components/annotation-panel/useSaveProject.ts";
-import {t, LANG} from "@/i18n/index.ts";
+import {t, getLang} from "@/i18n/index.ts";
 import {
     activeImageSizeAtom,
     currentMaskAtom,
@@ -54,7 +54,7 @@ export const AnnotationPanel: React.FC = () => {
         if (!id) {
             return null;
         }
-        return options.minerals.find((m) => m.value === id)?.label[LANG] ?? id;
+        return options.minerals.find((m) => m.value === id)?.label[getLang()] ?? id;
     }
 
     function handleMaskClick(maskId: number) {

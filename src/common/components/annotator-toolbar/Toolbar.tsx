@@ -35,7 +35,7 @@ import {TOOLS} from "@/app/AppConfig.tsx";
 import FilterGammaToolbarPanel from "@/common/components/annotator-toolbar/FilterGammaToolbarPanel.tsx";
 import {SHORTCUT_DEFS, keyLabel} from "@/canvas/shortcuts.ts";
 import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
-import {t} from "@/i18n/index.ts";
+import {t, type TranslationKey} from "@/i18n/index.ts";
 import {GROUP_BY_TOOL, type ToolGroup} from "@/common/components/annotator-toolbar/tool-groups.ts";
 import useToolbarLayout from "@/common/components/annotator-toolbar/useToolbarLayout.ts";
 import {CustomizeModal} from "@/common/components/customize/CustomizeModal.tsx";
@@ -52,16 +52,16 @@ const TOOL_ICONS: Record<Tool, React.FC<React.SVGProps<SVGSVGElement>>> = {
     "grab": GrabIcon,
 };
 
-const TOOL_BASE_LABELS: Record<Tool, string> = {
-    "select-add": t("toolSelectAdd"),
-    "select-remove": t("toolSelectRemove"),
-    "bounding-box": t("toolBoundingBox"),
-    "freeform-draw": t("toolFreeformDraw"),
-    "polygon-lasso": t("toolPolygonLasso"),
-    "slic-bbox": t("toolSlicBbox"),
-    "zoom-in": t("toolZoomIn"),
-    "zoom-out": t("toolZoomOut"),
-    "grab": t("toolGrab"),
+const TOOL_LABEL_KEYS: Record<Tool, TranslationKey> = {
+    "select-add": "toolSelectAdd",
+    "select-remove": "toolSelectRemove",
+    "bounding-box": "toolBoundingBox",
+    "freeform-draw": "toolFreeformDraw",
+    "polygon-lasso": "toolPolygonLasso",
+    "slic-bbox": "toolSlicBbox",
+    "zoom-in": "toolZoomIn",
+    "zoom-out": "toolZoomOut",
+    "grab": "toolGrab",
 };
 
 const KEY_BADGE = new Map<Tool, string>(
@@ -221,7 +221,7 @@ interface ToolButtonProps {
 
 const ToolButton: React.FC<ToolButtonProps> = ({tool, active, onSelect}) => {
     const Icon = TOOL_ICONS[tool];
-    const label = TOOL_BASE_LABELS[tool];
+    const label = t(TOOL_LABEL_KEYS[tool]);
 
     return (
         <Tooltip content={label} shortcut={KEY_BADGE.get(tool)} side="right">
@@ -307,7 +307,7 @@ const ToolGroupBlock: React.FC<ToolGroupBlockProps> = ({group, layout, activeToo
                 }}>
                 <button
                     ref={triggerRef}
-                    aria-label={group.label}
+                    aria-label={t(group.labelKey)}
                     aria-haspopup="true"
                     aria-expanded={open}
                     onClick={() => {
@@ -328,7 +328,7 @@ const ToolGroupBlock: React.FC<ToolGroupBlockProps> = ({group, layout, activeToo
                 {open ? (
                     <div
                         role="group"
-                        aria-label={group.label}
+                        aria-label={t(group.labelKey)}
                         className="absolute left-full top-0 ml-1 z-30 flex flex-row gap-0.5 p-1 rounded-lg bg-secondary border border-white/10 shadow-xl">
                         {group.tools.map(tool => (
                             <ToolButton
@@ -354,9 +354,9 @@ const ToolGroupBlock: React.FC<ToolGroupBlockProps> = ({group, layout, activeToo
     const GroupIcon = group.icon;
     return (
         <div className="flex flex-col items-center gap-0.5 w-full rounded-lg bg-black/25 py-1 my-0.5">
-            <Tooltip content={group.label} side="right">
+            <Tooltip content={t(group.labelKey)} side="right">
                 <div
-                    aria-label={group.label}
+                    aria-label={t(group.labelKey)}
                     className="flex items-center justify-center w-8 h-4 text-white/30">
                     <GroupIcon className="w-3 h-3" />
                 </div>

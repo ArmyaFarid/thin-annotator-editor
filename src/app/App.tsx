@@ -30,6 +30,8 @@ import HomePage from "@/pages/home/home-page.tsx";
 import PageNotFoundPage from "@/routes/PageNotFoundPage";
 import useSettingsContext from "@/settings/useSettingsContext";
 import useLoadAnnotationOptions from "@/app/useLoadAnnotationOptions.ts";
+import {useAtomValue} from "jotai";
+import {langAtom} from "@/app/atom.ts";
 import {Route, Routes} from "react-router-dom";
 import {Toaster} from "sonner";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
@@ -37,6 +39,9 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 export default function AppWrapper() {
     const {settings} = useSettingsContext();
     useLoadAnnotationOptions();
+    // Subscribing here is what repaints the whole tree on a language change,
+    // so every `t()` below re-runs with the new language.
+    useAtomValue(langAtom);
     return (
         <RelayEnvironmentProvider
             endpoint={settings.videoAPIEndpoint}
