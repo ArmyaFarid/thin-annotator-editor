@@ -40,7 +40,6 @@ export default function AppWrapper() {
     const {settings} = useSettingsContext();
     useLoadAnnotationOptions();
     // Subscribing here is what repaints the whole tree on a language change,
-    // so every `t()` below re-runs with the new language.
     useAtomValue(langAtom);
     return (
         <RelayEnvironmentProvider
