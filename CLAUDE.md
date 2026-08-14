@@ -1,279 +1,251 @@
-# CLAUDE.md — Web Image Annotation Tool
+# CLAUDE.md — ThinAnnotator
 
-## Project overview
-
-A web-based image annotation tool for Computer Vision workflows, specifically
-for polarized-light microscopy images (thin section petrology). Supports
-Bounding Boxes, Keypoints, Masks (from AI segmentation), Freeform Drawing, and
-Polygon Lasso selection on high-resolution images.
-
-Built with **Vite + React + TypeScript**. Backend runs a SAM2-based image
-segmentation model accessible via GraphQL.
+Architecture and conventions for this codebase. Written for contributors and AI assistants.
+See [README.md](README.md) for what the tool does and how to run it.
 
 ---
 
-## Architecture — Layered Canvas Stack
+## What this is
 
-All annotation rendering lives on a stack of three canvas layers, **not in the
-DOM**. The `<img>` element is the reference image; everything drawn on top of
-it is canvas.
+A Vite + React + TypeScript frontend for annotating thin-section petrology images. A companion
+Python service (`http://localhost:7263`) runs SAM 2 and SLIC and serves the image files.
 
-### Layer 1 — Static Layer (background)
-- Renders the reference image once on load (or on image change)
-- Re-renders only when the image source changes
-- Does not participate in the render loop
+**Image only.** The video pipeline this codebase was forked from has been removed.
 
-### Layer 2 — Persistent Data Layer
-- Renders all committed annotation objects: Masks (from AI), BoundingBoxes,
-  Keypoints, FreeformPaths, Polygons
-- Redraws when the annotation state array changes
-- Source: the `annotations` state array
+## Commands
 
-### Layer 3 — Dynamic Interaction Layer (60 FPS)
-- Runs a `requestAnimationFrame` loop
-- Renders in-progress drawing previews (live bbox drag, polygon vertex
-  placement, freeform stroke)
-- Renders UI widgets: hover highlights, delete handles, vertex drag handles
-- Cleared and redrawn every frame from transient interaction state
-
----
-
-## Core design principles
-
-- **No DOM elements for annotations.** Every annotation — boxes, points,
-  masks, freeform paths, polygons — is drawn on canvas. Zero `<div>` overlays.
-- **Annotation objects are classes.** Each class owns its geometry (in image
-  coordinate space), its rendering logic (idle / hovered / active states), and
-  its hit-testing logic (math to detect mouse intersection).
-- **Coordinate system:** All geometry is stored in **image intrinsic space**
-  (natural pixel coordinates). Display-space mouse events are always converted
-  to image space before any logic runs.
-- **Render loop:** `requestAnimationFrame` for the Dynamic Layer. State array
-  is the source of truth. Render = read state → clear → draw.
-- **Action priority:** Before creating a new annotation, always check if the
-  mouse is over an existing one (hover → select → delete/edit).
-
----
-
-## Annotation object class interface
-
-Every annotation type implements this interface:
-
-```ts
-interface AnnotationObject {
-  id: number;
-  type: AnnotationType;
-
-  // Render to a canvas context. State = idle | hovered | active.
-  render(ctx: CanvasRenderingContext2D, state: RenderState): void;
-
-  // Returns true if the point (image-space) intersects this object.
-  hitTest(x: number, y: number): boolean;
-
-  // Bounding rect in image space, used for spatial queries.
-  getBounds(): Rect;
-}
+```bash
+yarn dev            # dev server
+yarn build          # tsc && vite build — run before every commit
+yarn lint           # eslint
+yarn relay          # regenerate Relay artifacts after touching a GraphQL operation
 ```
 
-### Annotation types to implement
-
-| Class | What it represents |
-|---|---|
-| `BoundingBox` | Rectangle defined by `{x, y, w, h}` in image space |
-| `Keypoint` | Single `{x, y}` point with positive/negative label |
-| `Mask` | RLE-encoded AI segmentation result rendered as pixel overlay |
-| `FreeformPath` | Sequence of `{x, y}` points captured from mouse drag |
-| `Polygon` | Closed polygon with draggable vertices |
+`yarn build` is the real gate: the codebase leans on `Record<Tool, …>`-style exhaustive types,
+so a missed registration point is a compile error rather than a runtime surprise.
 
 ---
 
-## Tool types
+## The domain model
 
-### Existing tools (migrate from DIV to canvas)
-- **SelectAdd** — places a positive-label Keypoint prompt; triggers
-  `addPointsImage` mutation
-- **SelectRemove** — places a negative-label Keypoint prompt
-- **BoundingBox** — drag to define a BoundingBox prompt; triggers
-  `addPointsImage` mutation with `bboxes`
+Three names for overlapping things — worth getting straight before touching anything.
 
-### New tools to add
-- **FreeformDraw**
-  - Captures mouse path as a stream of points on `mousemove`
-  - Renders live stroke on the Dynamic Layer using bezier curves
-  - On `mouseup`, commits path as a `FreeformPath` annotation object
-  - Configurable stroke color and width
-  - Hit-testing: point-on-stroke distance check
-
-- **PolygonLasso**
-  - Click to place vertices one by one
-  - Live preview line from last vertex to cursor on Dynamic Layer
-  - Close indicator appears when cursor is within threshold of first vertex
-  - Double-click or click on first vertex to close
-  - Committed polygon becomes a `Polygon` annotation object
-  - Supports: semi-transparent fill, edge hover highlight, per-vertex drag
-  - Hit-testing: point-in-polygon (ray casting), point-on-edge, point-near-vertex
-
-### Interaction states (all tools)
-| State | Appearance |
-|---|---|
-| Idle | Default stroke/fill, no handles |
-| Hovered | Highlighted stroke or nearest edge/vertex |
-| Active/Selected | Full handles visible, drag and edit allowed |
-| Drawing | Live preview on Dynamic Layer only |
-| Deleting | X delete handle appears on hover |
-
----
-
-## Tool Manager
-
-A plain TypeScript class (no React) that:
-- Tracks the active tool
-- Delegates `mousedown`, `mousemove`, `mouseup`, `click`, `dblclick`
-  events from the canvas to the correct tool handler
-- Owns the `hit-test loop`: on every mouse event, iterates the annotation
-  array to find the first object under the cursor before dispatching to tools
-
-```ts
-class ToolManager {
-  setActiveTool(tool: ToolType): void;
-  onMouseDown(e: ImageSpaceMouseEvent): void;
-  onMouseMove(e: ImageSpaceMouseEvent): void;
-  onMouseUp(e: ImageSpaceMouseEvent): void;
-  onClick(e: ImageSpaceMouseEvent): void;
-  onDblClick(e: ImageSpaceMouseEvent): void;
-}
-```
-
----
-
-## Coordinate conversion
-
-All mouse events arrive in viewport/DOM space and must be converted before
-any geometry logic:
-
-```ts
-function toImageSpace(
-  clientX: number,
-  clientY: number,
-  canvasRect: DOMRect,
-  imageNaturalWidth: number,
-  imageNaturalHeight: number,
-  displayWidth: number,
-  displayHeight: number,
-): { x: number; y: number }
-```
-
-Zoom and pan are applied as a transform on the canvas context, not by
-changing stored coordinates. Stored coordinates always remain in image space.
-
----
-
-## Separation of concerns
-
-| Layer | Technology | Responsibility |
+| Concept | Type | Meaning |
 |---|---|---|
-| Canvas engine | Pure TS classes | Rendering, hit-testing, coordinate math |
-| Tool handlers | Pure TS classes | Interaction logic per tool type |
-| React components | React + JSX | Toolbar, sidebars, modals, labels |
-| State | Jotai atoms | Source of truth for annotation array |
-| API | GraphQL/Relay | Backend calls (unchanged) |
+| **Object** / region | `Mask` (`app/atom.ts`) | One annotated mineral grain. Has an id, label, colour, `layers[]`, and mineral `annotation`. This is what the user creates, names, and exports. |
+| **Layer** | `MaskLayer` | A *piece* of an object: either an RLE bitmap (`rleMask`) or a vector `canvasShape`, tagged `layerKind: "fill" \| "hole"`. |
+| **Drawable** | `AnnotationObject` (`canvas/types.ts`) | A rendering interface — `render` / `hitTest` / `getBounds`. Implemented by `BoundingBox`, `Keypoint`, `Polygon`, `FreeformPath`, and the canvas-side `Mask`. Not a domain concept. |
 
-React components **do not** contain any canvas drawing code. Canvas classes
-**do not** contain any React or JSX.
+An object's final shape is *union of fills − union of holes*, flattened by `mergeToCanvas()`.
+While editing, an object accumulates layers; **Save** collapses them into a single RLE layer.
+
+Beware: **two different classes are called `Mask`** — the state interface in `app/atom.ts` and
+the renderer in `canvas/annotations/Mask.ts` that draws it.
+
+`objectId` in engine callbacks means *mask id*. `objectId` in GraphQL is SAM 2's own id (hardcoded
+to `1` for point prompts, reused as the superpixel index for SLIC). Same word, unrelated meanings.
 
 ---
 
-## State shape
+## Canvas architecture
 
-The central annotation array in Jotai:
+React owns the chrome; the engine is plain TypeScript. **No React or JSX inside `src/canvas/`
+engine classes, and no canvas drawing inside React components.**
+
+```
+CanvasStack.tsx          React host: refs, event forwarding, atom ↔ engine sync
+└── CanvasEngine.ts      coordinates everything below
+    ├── DataLayer.ts     committed annotations; repaints on state change
+    ├── DynamicLayer.ts  in-progress drawing + overlays; requestAnimationFrame loop
+    ├── ToolManager.ts   dispatches input to the active tool
+    └── ObjectEditor.ts  vertex dragging, per-layer delete handles
+```
+
+### The layout that must not be reverted
+
+Three siblings inside the editor container:
+
+```
+<container position:relative overflow:hidden>
+  <img>                                ← the image, CSS-transformed
+  <canvas dataRef  pointerEvents:none> ← committed annotations
+  <canvas dynRef>                      ← previews, handles, mouse events
+```
+
+The canvases sit **outside** the image's CSS transform and cover the whole container. Their
+backing size is `container.clientSize × DPR`, set by `ResizeObserver` — never on zoom. The view
+is applied *inside* the context:
 
 ```ts
-// In src/app/atom.ts
-export const annotationsAtom = atom<AnnotationObject[]>([]);
+ctx.setTransform(zoom * dpr, 0, 0, zoom * dpr, panX * dpr, panY * dpr);
 ```
 
-The existing atoms (`promptsAtom`, `masksAtom`, `currentMaskAtom`) are kept
-during the migration and removed once their canvas replacements are live.
+An earlier design sized the canvases to the image's natural resolution and let CSS stretch them,
+which made every stroke blurry above 1× zoom. Vector strokes are now re-rasterized per frame at
+screen resolution.
+
+### Two render passes in DynamicLayer
+
+- **Document pass** — view transform applied, geometry in image pixels. Sizes are CSS pixels, so
+  divide by zoom at the call site: `ctx.lineWidth = theme.bbox.lineWidth / zoom`.
+- **Overlay pass** — `setTransform(dpr,0,0,dpr,0,0)`, sizes are literal CSS pixels. Handles, HUD.
+
+### Coordinates
+
+All geometry is stored in **image intrinsic pixels**. Mouse events convert on entry:
+
+```ts
+x = (clientX - rect.left - view.panX) / view.zoom
+```
+
+This is only correct while the `<img>`'s CSS layout box equals its intrinsic size — hence the
+explicit `width` / `height` / `maxWidth: "none"` on that element. Tailwind's preflight sets
+`max-width: 100%`, which silently breaks every coordinate in the app. **Do not remove them.**
+
+### Visual constants
+
+`canvas/canvas-theme.ts` is the single source of truth for colours, widths, radii, dashes and
+alphas. All values are CSS pixels, with one labelled exception (`mask.borderThickness`, image
+pixels, used during RLE rasterization). No file outside it should hardcode a visual constant.
 
 ---
 
-## What NOT to touch
+## State
 
-- All GraphQL mutations and queries — do not rename, restructure, or move them
-- The `src/jscocotools/mask.ts` RLE decoder — do not modify
-- The `src/graphql/` infrastructure (RelayEnvironment, fetchGraphQL)
-- The `src/settings/` context and modal
-- The `src/common/components/filter-gamma-selector/` component
-- All `__generated__/` directories — these are Relay compiler output
-- The `hslToRgb` + `getDistinctColor` color utilities (move, don't rewrite)
+Jotai, global store, no `<Provider>`. Atoms live in `src/app/atom.ts`; feature-scoped hooks wrap
+them one call deep (`usePreserveZoom`, `useToolbarLayout`, `useLanguage`).
 
-If a canvas feature needs data that doesn't exist in the backend yet, fake it
-with mock data and mark with a comment: `// MOCK — replace with real API call`
-
----
-
-## What to delete
-
-- `src/common/codecs/` — MP4 video decode/encode
-- `src/common/components/video/` — entire video component tree
-- `src/common/tracker/` — SAM2 video tracker
-- `src/common/utils/MultipartStream.ts` — streaming response parser (video only)
-- `src/common/utils/ShaderUtils.ts` — WebGL shader utils (video effects only)
-- `src/demo/` — video demo app and atoms
-- `src/routes/DemoPage.tsx`, `DemoPageWrapper.tsx`, `MaskOverlayDemo.tsx`
-- `src/layouts/DemoPageLayout.tsx`
-- `src/types/mp4box/`
-- Stale import of `VideoData` in `AnnotatorPage.tsx`
-- npm packages: `mp4box`, `react-pts-canvas`, `pts`
-
----
-
-## Language and stack
-
-- All new code, components, types, file names: **English**
-- Keep existing UI-facing strings (French labels) as-is
-- Vite + React + TypeScript
-- Tailwind CSS + `cn()` for styling
-- Jotai for state
-- Relay for GraphQL
-- Favor native Canvas 2D API over annotation libraries
-
----
-
-## Future extensions — do not build now
-
-The architecture must allow adding these later without structural changes:
-- Polygon with holes (donut mask / compound path)
-- Spline / bezier curve tool
-- Smart lasso (snap to edges using image pixel data)
-
-Design the `AnnotationObject` interface and `Polygon` class to accommodate
-holes (array of ring arrays) without building the feature now.
-
----
-
-## File naming conventions
-
-| Content | Convention |
+| Atom | Holds |
 |---|---|
-| React components | `kebab-case.tsx` |
-| TS classes (canvas engine) | `PascalCase.ts` (e.g. `BoundingBox.ts`) |
-| Jotai atoms | `atoms.ts` co-located with feature |
-| Tool handlers | `<ToolName>Tool.ts` (e.g. `BoundingBoxTool.ts`) |
-| Canvas layer wrappers | `<Name>Layer.ts` |
+| `masksAtom` | the annotated objects — the document |
+| `currentMaskAtom` | active object id; `0` means "none", which is what puts the panel in list mode |
+| `promptsAtom` | pending SAM prompts; writing to it triggers the mutation |
+| `slicPromptsAtom` / `slicOverlayAtom` | SLIC request and its returned superpixels |
+| `activeToolAtom`, `borderOnlyAtom`, `minimapVisibleAtom`, … | UI state |
 
-Canvas engine classes live in `src/canvas/` (new directory):
+Preferences that survive reloads (`preserveZoom`, `toolbarLayout`, `lang`) read `localStorage`
+at atom creation and write it in their setter hook. Don't reach for `atomWithStorage`.
+
+`resetProjectStateAtom` wipes project state on returning home; UI preferences deliberately survive.
+
+---
+
+## i18n — the invariant that bites
+
+`t()` reads a **mutable module value**, and the language can change at runtime. Therefore:
+
+> **Never capture a translated string in a module-scope constant.** It freezes the language at
+> import time and silently stops updating.
+
+Definitions that need a label carry a `TranslationKey` and resolve it during render — see
+`canvas/shortcuts.ts` (`labelKey` / `hintKey`) and `annotator-toolbar/tool-groups.ts`.
+
+`AppWrapper` subscribes to `langAtom`, so switching language re-renders the tree and every `t()`
+re-runs. Nothing in the codebase uses `React.memo`; adding it somewhere high up would break this.
+
+All user-facing text goes in `src/i18n/index.ts` in **both** `fr` and `en`. No hardcoded strings.
+
+---
+
+## Undo / redo
+
+Snapshot-based, in `src/app/history.ts`. Before any user-driven mutation, call
+`commitHistoryAtom` with a structured label:
+
+```ts
+commitHistory({action: "keypoint.add", payload: {x, y, label}});
 ```
-src/canvas/
-  annotations/        ← annotation classes (BoundingBox.ts, Keypoint.ts, …)
-  tools/              ← tool handlers (BoundingBoxTool.ts, FreeformDrawTool.ts, …)
-  layers/             ← layer managers (StaticLayer.ts, DataLayer.ts, DynamicLayer.ts)
-  CanvasEngine.ts     ← coordinates all layers + ToolManager
-  ToolManager.ts
-  types.ts            ← shared canvas types (RenderState, Rect, ImageSpaceMouseEvent, …)
-  coordinates.ts      ← toImageSpace, toDisplaySpace helpers
-```
 
+- Snapshots four atoms: `prompts`, `masks`, `currentMask`, `slicPrompts`. Bounded at 50 entries;
+  immutable setters mean entries structurally share what didn't change.
+- Labels are a discriminated union so tooltips can read "Undo: Add point", and so a future move to
+  event sourcing is mechanical (add `apply`/`invert`, stop snapshotting, leave call sites alone).
+- **Scopes:** `historyScopeAtom` is `"global" | "slic" | "refine"`. A modal with its own transient
+  state sets the scope on mount, keeps a local stack, and calls `commitHistory` **once** on apply
+  so the whole session is one global step. Reset the scope on unmount.
+- **Reset rules:** switching lighting modality (PPL ↔ XPL) keeps history; switching *sample*
+  clears it.
 
-## Git 
-Commit changes with meaninngfull name for well management
+To add an undoable action: add a variant to `HistoryLabel`, a case to `labelToFrench`, and call
+`commitHistory` before the setter.
+
+---
+
+## Toolbar and tool groups
+
+- `TOOLS` in `app/AppConfig.tsx` is the source of truth for **which tools exist**.
+- `annotator-toolbar/tool-groups.ts` is **presentation only** — which tools cluster visually. It
+  carries each group's `id`, `labelKey`, `icon` and `tools`. Adding a group is one entry; tools in
+  no group render as standalone buttons. Nothing here affects `ToolManager` or the shortcuts.
+- The toolbar renders each group once at the slot of its first member, so `TOOLS` order wins.
+- Three layouts (`separators`, `pods`, `flyout`) chosen in the customize modal, persisted.
+
+A tool with no branch in `ToolManager` is inert by construction — that's how the `idle` pointer
+tool works, and why adding a no-op tool needs no handler.
+
+---
+
+## Backend integration
+
+**GraphQL (Relay)** — operations are defined inline with `graphql\`\`` next to the component that
+uses them; generated types land in a sibling `__generated__/`. Never move operations into the
+top-level `graphql/` folder, which is infrastructure only.
+
+- `addPointsImage` — SAM prompts (points + bboxes) → RLE mask
+- `computeSlicImage` — bbox → superpixel RLEs
+- `getPairs` — the lighting-modality and gamma variants of one field of view
+
+**REST** — `/api/pick-folder`, `/api/project/load`, `/api/project/save`, `/api/annotations/save`,
+`/api/annotation-options`.
+
+Bridge pattern: read the result with `useLazyLoadQuery` / `useMutation`, then write it into an
+atom in a callback or effect. Relay is transport; Jotai is the source of truth. Never store Relay
+results directly in atoms.
+
+---
+
+## Conventions
+
+| Thing | Rule |
+|---|---|
+| Quotes / indent | double quotes, 4 spaces, trailing commas |
+| React components | `kebab-case.tsx`; pages and wrappers as `function`, UI primitives as `const … : React.FC` |
+| Canvas classes | `PascalCase.ts` |
+| Tools | `<Name>Tool.ts` in `canvas/tools/` |
+| Props | `interface ComponentNameProps`, declared above the component |
+| Conditionals in JSX | ternaries, not `&&` chains |
+| Comments | only where the *why* isn't obvious; no JSDoc |
+| Icons | `@heroicons/react`, or an SVG in `assets/icons/` imported with `?react` |
+
+New code, file names, types and comments are in **English**. User-facing strings are translated,
+never hardcoded.
+
+---
+
+## Do not touch
+
+- `src/jscocotools/mask.ts` — the RLE codec
+- `src/settings/` — inherited SAM 2 endpoint settings modal (the gear in `RootLayout`, separate
+  from the customize modal)
+- `src/graphql/` infrastructure — `fetchGraphQL`, `RelayEnvironment`, the provider
+- every `__generated__/` directory — Relay compiler output
+- `src/common/components/filter-gamma-selector/`
+- the explicit `<img>` sizing in `CanvasStack` (see Coordinates above)
+
+---
+
+## Known follow-ups
+
+Real, unblocking, and safe to pick up:
+
+- **Stale dependencies.** `mp4box`, `pts` and `react-pts-canvas` survive in `package.json` from
+  the deleted video pipeline.
+- **`BorderOnlyToggle.tsx`** has no importers — the toolbar button replaced it.
+- **`editorOnAtom`** is written by two components and read by none; the panel switches on
+  `currentMask !== 0`.
+- **`Date.now()` ids** for masks and layers can collide within a millisecond;
+  `crypto.randomUUID()` is the fix, across roughly ten files.
+- **`hitTest` thresholds** in `Polygon`, `FreeformPath` and `Keypoint` use raw image-pixel
+  distances instead of `pixels / zoom`. `ObjectEditor` does it correctly. No impact today because
+  only `Mask.hitTest` is called from outside.
+- **`labelToFrench`** now returns whatever language is active; the name is a leftover.
