@@ -87,6 +87,8 @@ export const theme = {
         borderDarken: 1.0,
         /** CSS filter applied to the active mask for emphasis. */
         activeShadow: "drop-shadow(0 0 4px rgba(255,255,255,0.85))",
+        /** Additive re-blit opacity for the hovered (selectable) mask. */
+        hoverGlowAlpha: 0.35,
         /** Skeleton-mode stroke (active mask with only polygon layers). */
         skeletonStrokeWidth: 1.5,
         skeletonHoleStroke: "rgba(255,140,50,0.9)",

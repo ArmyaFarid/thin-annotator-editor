@@ -18,11 +18,13 @@ export class CanvasEngine {
     private naturalSize: {w: number; h: number} | null = null;
 
     private editorConsumed = false;
+    private activeObjectId = 0;
+    private hoveredObjectId = 0;
 
     constructor(
         dataCanvas: HTMLCanvasElement,
         private readonly dynCanvas: HTMLCanvasElement,
-        callbacks: EngineCallbacks,
+        private readonly callbacks: EngineCallbacks,
     ) {
         this.dataLayer = new DataLayer(dataCanvas);
         this.dynLayer = new DynamicLayer(dynCanvas);
@@ -88,11 +90,14 @@ export class CanvasEngine {
     setActiveObject(objectId: number, layers: MaskLayer[]): void {
         this.editor.setObject(objectId, layers);
         this.dataLayer.setCurrentMaskId(objectId);
+        this.activeObjectId = objectId;
+        this.setHovered(0);
     }
 
     clearActiveObject(): void {
         this.editor.clear();
         this.dataLayer.setCurrentMaskId(0);
+        this.activeObjectId = 0;
     }
 
     onMouseDown(e: MouseEvent): void {
@@ -110,6 +115,15 @@ export class CanvasEngine {
         // Editor hover/drag uses raw coord (handles can be near image edge).
         this.editor.tryMouseMove(p);
         if (this.editor.isDragging()) return;
+        // Selectable-mask hover — only while nothing is being edited, so this
+        // costs nothing during an edit session.
+        if (this.activeObjectId === 0) {
+            this.setHovered(
+                this.isInsideImage(p)
+                    ? this.dataLayer.hitTestTopmost(p.x, p.y)
+                    : 0,
+            );
+        }
         // Drawing previews follow the cursor but never leave the image.
         this.toolManager.onMouseMove(this.clampToImage(p));
     }
@@ -125,6 +139,7 @@ export class CanvasEngine {
         const p = this.toImageSpace(e);
         this.editor.tryMouseUp(p);
         this.toolManager.onMouseUp(this.clampToImage(p), this.view.zoom);
+        this.setHovered(0);
     }
 
     onClick(e: MouseEvent): void {
@@ -135,6 +150,16 @@ export class CanvasEngine {
         const p = this.toImageSpace(e);
         // Keypoint / polygon-vertex placement: drop clicks outside the image.
         if (!this.isInsideImage(p)) return;
+        // Action priority: with nothing being edited, clicking an existing mask
+        // selects it instead of starting a new annotation. While an object IS
+        // active, every click belongs to the tool.
+        if (this.activeObjectId === 0) {
+            const hit = this.dataLayer.hitTestTopmost(p.x, p.y);
+            if (hit !== 0) {
+                this.callbacks.onMaskSelected(hit);
+                return;
+            }
+        }
         this.toolManager.onClick(p, this.view.zoom);
     }
 
@@ -148,6 +173,15 @@ export class CanvasEngine {
 
     destroy(): void {
         this.dynLayer.stopLoop();
+    }
+
+    // Feed the hovered mask to the data layer (repaints only on change) and
+    // notify React once per change so it can switch the cursor.
+    private setHovered(id: number): void {
+        if (this.hoveredObjectId === id) return;
+        this.hoveredObjectId = id;
+        this.dataLayer.setHoveredMaskId(id);
+        this.callbacks.onMaskHoverChanged(id);
     }
 
     // True if the image-space point is within the natural image bounds.
