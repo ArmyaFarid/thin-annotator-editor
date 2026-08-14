@@ -164,9 +164,31 @@ function readLocalBool(key: string, fallback: boolean): boolean {
     }
 }
 
+function readLocalEnum<T extends string>(
+    key: string,
+    allowed: readonly T[],
+    fallback: T,
+): T {
+    try {
+        const v = localStorage.getItem(key);
+        return allowed.includes(v as T) ? (v as T) : fallback;
+    } catch {
+        return fallback;
+    }
+}
+
 export const preserveZoomAtom = atom<boolean>(
     readLocalBool("preserveZoom", true),
 );
+
+// How the toolbar clusters grouped tools. Purely visual — see tool-groups.ts.
+export const TOOLBAR_LAYOUTS = ["separators", "pods"] as const;
+export type ToolbarLayout = (typeof TOOLBAR_LAYOUTS)[number];
+
+export const toolbarLayoutAtom = atom<ToolbarLayout>(
+    readLocalEnum("toolbarLayout", TOOLBAR_LAYOUTS, "separators"),
+);
+export const customizeOpenAtom = atom<boolean>(false);
 export const showShortcutsAtom = atom<boolean>(false);
 export const minimapVisibleAtom = atom<boolean>(true);
 export const borderOnlyAtom = atom<boolean>(false);

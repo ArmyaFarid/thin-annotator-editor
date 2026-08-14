@@ -1,7 +1,16 @@
-import React from "react";
+import React, {useMemo} from "react";
 import {useAtom, useAtomValue, useSetAtom} from "jotai";
-import {ArrowUturnLeftIcon, ArrowUturnRightIcon} from "@heroicons/react/24/outline";
-import {borderOnlyAtom, showShortcutsAtom} from "@/app/atom.ts";
+import {
+    ArrowUturnLeftIcon,
+    ArrowUturnRightIcon,
+    Cog6ToothIcon,
+} from "@heroicons/react/24/outline";
+import {
+    borderOnlyAtom,
+    customizeOpenAtom,
+    showShortcutsAtom,
+    type ToolbarLayout,
+} from "@/app/atom.ts";
 import {
     historyAtom,
     canUndoAtom,
@@ -27,6 +36,9 @@ import FilterGammaToolbarPanel from "@/common/components/annotator-toolbar/Filte
 import {SHORTCUT_DEFS, keyLabel} from "@/canvas/shortcuts.ts";
 import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
 import {t} from "@/i18n/index.ts";
+import {GROUP_BY_TOOL, type ToolGroup} from "@/common/components/annotator-toolbar/tool-groups.ts";
+import useToolbarLayout from "@/common/components/annotator-toolbar/useToolbarLayout.ts";
+import {CustomizeModal} from "@/common/components/customize/CustomizeModal.tsx";
 
 const TOOL_ICONS: Record<Tool, React.FC<React.SVGProps<SVGSVGElement>>> = {
     "select-add": SelectAddIcon,
@@ -55,6 +67,26 @@ const TOOL_BASE_LABELS: Record<Tool, string> = {
 const KEY_BADGE = new Map<Tool, string>(
     SHORTCUT_DEFS.map(d => [d.tool, keyLabel(d.key)]),
 );
+
+// One slot in the rail: either a standalone tool or a whole group. Groups take
+// the slot of their first member so the TOOLS order still drives the layout.
+type RailItem = {kind: "tool"; tool: Tool} | {kind: "group"; group: ToolGroup};
+
+function buildRail(): RailItem[] {
+    const seen = new Set<string>();
+    const items: RailItem[] = [];
+    for (const tool of TOOLS) {
+        const group = GROUP_BY_TOOL.get(tool);
+        if (!group) {
+            items.push({kind: "tool", tool});
+            continue;
+        }
+        if (seen.has(group.id)) continue;
+        seen.add(group.id);
+        items.push({kind: "group", group});
+    }
+    return items;
+}
 
 interface ToolbarProps {}
 
@@ -85,8 +117,12 @@ export const Toolbar: React.FC<ToolbarProps> = () => {
     const undoDisabled = modalActive || !canUndo;
     const redoDisabled = modalActive || !canRedo;
 
+    const [layout] = useToolbarLayout();
+    const setCustomizeOpen = useSetAtom(customizeOpenAtom);
+    const rail = useMemo(buildRail, []);
+
     return (
-        <div className="flex flex-col items-center gap-0.5 p-1.5 rounded-xl bg-secondary w-12">
+        <div className="flex flex-col items-center gap-0.5 p-1.5 rounded-xl bg-secondary w-12 h-full">
             {/* Undo / redo — separated from the tool group below. */}
             <button
                 title={undoLabel}
@@ -112,25 +148,32 @@ export const Toolbar: React.FC<ToolbarProps> = () => {
             </button>
             <div className="w-6 h-px bg-white/10 my-1" />
 
-            {TOOLS.map(tool => {
-                const active = activeTool === tool;
-                const Icon = TOOL_ICONS[tool];
-                const label = TOOL_BASE_LABELS[tool];
-                const shortcut = KEY_BADGE.get(tool);
+            {rail.map((item, i) => {
+                // In "separators" mode a hairline marks every group boundary.
+                const prev = rail[i - 1];
+                const divider =
+                    layout === "separators" &&
+                    prev != null &&
+                    (prev.kind === "group" || item.kind === "group");
 
                 return (
-                    <Tooltip key={tool} content={label} shortcut={shortcut} side="right">
-                        <button
-                            aria-label={label}
-                            onClick={() => setActiveTool(tool)}
-                            className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${active ? "bg-[#2F2F2F] ring-1 ring-[#4FC3F7]/40" : "bg-transparent hover:bg-[#2F2F2F]/60"}`}>
-                            {Icon ? (
-                                <Icon className={`w-4 h-4 transition-colors ${active ? "text-[#4FC3F7]" : "text-[#B8B8B8]"}`} />
-                            ) : (
-                                <FallbackSquare active={active} />
-                            )}
-                        </button>
-                    </Tooltip>
+                    <React.Fragment key={item.kind === "tool" ? item.tool : item.group.id}>
+                        {divider ? <div className="w-6 h-px bg-white/10 my-0.5" /> : null}
+                        {item.kind === "tool" ? (
+                            <ToolButton
+                                tool={item.tool}
+                                active={activeTool === item.tool}
+                                onSelect={setActiveTool}
+                            />
+                        ) : (
+                            <ToolGroupBlock
+                                group={item.group}
+                                layout={layout}
+                                activeTool={activeTool}
+                                onSelect={setActiveTool}
+                            />
+                        )}
+                    </React.Fragment>
                 );
             })}
             <FilterGammaToolbarPanel />
@@ -153,6 +196,83 @@ export const Toolbar: React.FC<ToolbarProps> = () => {
                     ?
                 </button>
             </Tooltip>
+
+            {/* Customize — pinned to the bottom of the rail, under the tools. */}
+            <div className="mt-auto pt-1">
+                <Tooltip content={t("customize")} side="right">
+                    <button
+                        aria-label={t("customize")}
+                        onClick={() => setCustomizeOpen(true)}
+                        className="flex items-center justify-center w-8 h-8 rounded-lg text-[#B8B8B8] hover:bg-[#2F2F2F]/60 hover:text-white transition-colors">
+                        <Cog6ToothIcon className="w-4 h-4" />
+                    </button>
+                </Tooltip>
+            </div>
+            <CustomizeModal />
+        </div>
+    );
+};
+
+interface ToolButtonProps {
+    tool: Tool;
+    active: boolean;
+    onSelect: (tool: Tool) => void;
+}
+
+const ToolButton: React.FC<ToolButtonProps> = ({tool, active, onSelect}) => {
+    const Icon = TOOL_ICONS[tool];
+    const label = TOOL_BASE_LABELS[tool];
+
+    return (
+        <Tooltip content={label} shortcut={KEY_BADGE.get(tool)} side="right">
+            <button
+                aria-label={label}
+                onClick={() => onSelect(tool)}
+                className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${active ? "bg-[#2F2F2F] ring-1 ring-[#4FC3F7]/40" : "bg-transparent hover:bg-[#2F2F2F]/60"}`}>
+                {Icon ? (
+                    <Icon className={`w-4 h-4 transition-colors ${active ? "text-[#4FC3F7]" : "text-[#B8B8B8]"}`} />
+                ) : (
+                    <FallbackSquare active={active} />
+                )}
+            </button>
+        </Tooltip>
+    );
+};
+
+interface ToolGroupBlockProps {
+    group: ToolGroup;
+    layout: ToolbarLayout;
+    activeTool: Tool;
+    onSelect: (tool: Tool) => void;
+}
+
+// A group's own icon and name are shown by the layouts that have room for them
+// ("pods"); "separators" just clusters the buttons between hairlines.
+const ToolGroupBlock: React.FC<ToolGroupBlockProps> = ({group, layout, activeTool, onSelect}) => {
+    const buttons = group.tools.map(tool => (
+        <ToolButton
+            key={tool}
+            tool={tool}
+            active={activeTool === tool}
+            onSelect={onSelect}
+        />
+    ));
+
+    if (layout !== "pods") {
+        return <>{buttons}</>;
+    }
+
+    const GroupIcon = group.icon;
+    return (
+        <div className="flex flex-col items-center gap-0.5 w-full rounded-lg bg-black/25 py-1 my-0.5">
+            <Tooltip content={group.label} side="right">
+                <div
+                    aria-label={group.label}
+                    className="flex items-center justify-center w-8 h-4 text-white/30">
+                    <GroupIcon className="w-3 h-3" />
+                </div>
+            </Tooltip>
+            {buttons}
         </div>
     );
 };

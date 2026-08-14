@@ -146,6 +146,17 @@ const T = {
         zoomResetTitle:
             "Zoom réinitialisé lors du changement d'image (cliquer pour activer la préservation)",
 
+        // Tool groups + customization
+        groupSam: "Outils SAM",
+        groupSlic: "Superpixels SLIC",
+        customize: "Personnaliser",
+        customizeTitle: "Personnalisation",
+        toolbarLayout: "Disposition de la barre d'outils",
+        layoutSeparators: "Séparateurs",
+        layoutSeparatorsHint: "Une ligne fine entre les groupes",
+        layoutPods: "Groupes",
+        layoutPodsHint: "Chaque groupe sur son propre fond, avec son icône",
+
         // Toolbar tools
         toolSelectAdd: "Ajouter un point",
         toolSelectRemove: "Retirer un point",
@@ -450,6 +461,17 @@ const T = {
             "Zoom preserved when switching images (click to disable)",
         zoomResetTitle:
             "Zoom reset when switching images (click to enable preservation)",
+
+        // Tool groups + customization
+        groupSam: "SAM tools",
+        groupSlic: "SLIC superpixels",
+        customize: "Customize",
+        customizeTitle: "Customization",
+        toolbarLayout: "Toolbar layout",
+        layoutSeparators: "Separators",
+        layoutSeparatorsHint: "A thin line between groups",
+        layoutPods: "Groups",
+        layoutPodsHint: "Each group on its own panel, with its icon",
 
         // Toolbar tools
         toolSelectAdd: "Add point",
