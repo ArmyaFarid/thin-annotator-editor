@@ -1,25 +1,27 @@
 import type {Tool} from "@/app/types.ts";
-import {t} from "@/i18n/index.ts";
+import type {TranslationKey} from "@/i18n/index.ts";
 
 export interface ShortcutDef {
     key: string;   // lowercase key character sent by KeyboardEvent.key
     tool: Tool;
-    label: string; // short display name
-    hint: string;  // one-line description
+    // Keys, not strings: resolved with t() at render so a language change
+    // is picked up (module-scope t() calls would freeze the old language).
+    labelKey: TranslationKey;
+    hintKey: TranslationKey;
 }
 
 // ─── Edit this array to add / change / remove shortcuts ──────────────────────
 export const SHORTCUT_DEFS: ShortcutDef[] = [
-    {key: "v", tool: "idle",          label: t("shortcutIdleLabel"),         hint: t("shortcutIdleHint")},
-    {key: "s", tool: "select-add",    label: t("shortcutSelectAddLabel"),    hint: t("shortcutSelectAddHint")},
-    {key: "x", tool: "select-remove", label: t("shortcutSelectRemoveLabel"), hint: t("shortcutSelectRemoveHint")},
-    {key: "b", tool: "bounding-box",  label: t("shortcutBboxLabel"),         hint: t("shortcutBboxHint")},
-    {key: "p", tool: "polygon-lasso", label: t("shortcutPolygonLabel"),      hint: t("shortcutPolygonHint")},
-    {key: "f", tool: "freeform-draw", label: t("shortcutFreeformLabel"),     hint: t("shortcutFreeformHint")},
-    {key: "l", tool: "slic-bbox",     label: t("shortcutSlicLabel"),         hint: t("shortcutSlicHint")},
-    {key: "g", tool: "grab",          label: t("shortcutGrabLabel"),         hint: t("shortcutGrabHint")},
-    {key: "=", tool: "zoom-in",       label: t("shortcutZoomInLabel"),       hint: t("shortcutZoomInHint")},
-    {key: "-", tool: "zoom-out",      label: t("shortcutZoomOutLabel"),      hint: t("shortcutZoomOutHint")},
+    {key: "v", tool: "idle",          labelKey: "shortcutIdleLabel",         hintKey: "shortcutIdleHint"},
+    {key: "s", tool: "select-add",    labelKey: "shortcutSelectAddLabel",    hintKey: "shortcutSelectAddHint"},
+    {key: "x", tool: "select-remove", labelKey: "shortcutSelectRemoveLabel", hintKey: "shortcutSelectRemoveHint"},
+    {key: "b", tool: "bounding-box",  labelKey: "shortcutBboxLabel",         hintKey: "shortcutBboxHint"},
+    {key: "p", tool: "polygon-lasso", labelKey: "shortcutPolygonLabel",      hintKey: "shortcutPolygonHint"},
+    {key: "f", tool: "freeform-draw", labelKey: "shortcutFreeformLabel",     hintKey: "shortcutFreeformHint"},
+    {key: "l", tool: "slic-bbox",     labelKey: "shortcutSlicLabel",         hintKey: "shortcutSlicHint"},
+    {key: "g", tool: "grab",          labelKey: "shortcutGrabLabel",         hintKey: "shortcutGrabHint"},
+    {key: "=", tool: "zoom-in",       labelKey: "shortcutZoomInLabel",       hintKey: "shortcutZoomInHint"},
+    {key: "-", tool: "zoom-out",      labelKey: "shortcutZoomOutLabel",      hintKey: "shortcutZoomOutHint"},
 ];
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -40,17 +42,17 @@ export function keyLabel(key: string): string {
 // ─── Non-tool UI shortcuts (shown in the panel, handled separately) ───────────
 export interface UiShortcutDef {
     key: string;
-    label: string;
-    hint: string;
+    labelKey: TranslationKey;
+    hintKey: TranslationKey;
 }
 
 export const UI_SHORTCUT_DEFS: UiShortcutDef[] = [
-    {key: "m",         label: t("shortcutMinimapLabel"),   hint: t("shortcutMinimapHint")},
-    {key: "h",         label: t("shortcutCursorLabel"),    hint: t("shortcutCursorHint")},
-    {key: "Ctrl+Z",    label: t("undo"),                   hint: t("shortcutUndoHint")},
-    {key: "Ctrl+⇧+Z",  label: t("redo"),                   hint: t("shortcutRedoHint")},
-    {key: "?",         label: t("shortcutHelpLabel"),      hint: t("keyboardShortcuts")},
-    {key: "Escape",    label: t("shortcutEscapeLabel"),    hint: t("shortcutEscapeHint")},
-    {key: "Backspace", label: t("shortcutBackspaceLabel"), hint: t("shortcutBackspaceHint")},
-    {key: "Delete",    label: t("shortcutDeleteLabel"),    hint: t("shortcutDeleteHint")},
+    {key: "m",         labelKey: "shortcutMinimapLabel",   hintKey: "shortcutMinimapHint"},
+    {key: "h",         labelKey: "shortcutCursorLabel",    hintKey: "shortcutCursorHint"},
+    {key: "Ctrl+Z",    labelKey: "undo",                   hintKey: "shortcutUndoHint"},
+    {key: "Ctrl+⇧+Z",  labelKey: "redo",                   hintKey: "shortcutRedoHint"},
+    {key: "?",         labelKey: "shortcutHelpLabel",      hintKey: "keyboardShortcuts"},
+    {key: "Escape",    labelKey: "shortcutEscapeLabel",    hintKey: "shortcutEscapeHint"},
+    {key: "Backspace", labelKey: "shortcutBackspaceLabel", hintKey: "shortcutBackspaceHint"},
+    {key: "Delete",    labelKey: "shortcutDeleteLabel",    hintKey: "shortcutDeleteHint"},
 ];

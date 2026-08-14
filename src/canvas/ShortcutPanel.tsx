@@ -59,8 +59,8 @@ export const ShortcutPanel: React.FC<ShortcutPanelProps> = ({visible, onClose}) 
                 {SHORTCUT_DEFS.map(d => (
                     <div key={d.key} style={{display: "flex", alignItems: "center", gap: 8}}>
                         <kbd style={KBD_STYLE}>{keyLabel(d.key)}</kbd>
-                        <span style={{fontSize: 12, color: "rgba(255,255,255,0.78)", flexShrink: 0}}>{d.label}</span>
-                        <span style={{fontSize: 11, color: "rgba(255,255,255,0.32)", flexShrink: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>{d.hint}</span>
+                        <span style={{fontSize: 12, color: "rgba(255,255,255,0.78)", flexShrink: 0}}>{t(d.labelKey)}</span>
+                        <span style={{fontSize: 11, color: "rgba(255,255,255,0.32)", flexShrink: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>{t(d.hintKey)}</span>
                     </div>
                 ))}
 
@@ -69,8 +69,8 @@ export const ShortcutPanel: React.FC<ShortcutPanelProps> = ({visible, onClose}) 
                     {UI_SHORTCUT_DEFS.map(d => (
                         <div key={d.key} style={{display: "flex", alignItems: "center", gap: 8}}>
                             <kbd style={KBD_STYLE}>{keyLabel(d.key)}</kbd>
-                            <span style={{fontSize: 12, color: "rgba(255,255,255,0.78)", flexShrink: 0}}>{d.label}</span>
-                            <span style={{fontSize: 11, color: "rgba(255,255,255,0.32)"}}>{d.hint}</span>
+                            <span style={{fontSize: 12, color: "rgba(255,255,255,0.78)", flexShrink: 0}}>{t(d.labelKey)}</span>
+                            <span style={{fontSize: 11, color: "rgba(255,255,255,0.32)"}}>{t(d.hintKey)}</span>
                         </div>
                     ))}
                 </div>

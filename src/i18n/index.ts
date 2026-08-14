@@ -1,5 +1,37 @@
-// Change this to switch the UI language
-export const LANG: "fr" | "en" = "en";
+export type Lang = "fr" | "en";
+
+export const LANGS: readonly Lang[] = ["fr", "en"];
+
+const LANG_STORAGE_KEY = "lang";
+
+function readStoredLang(): Lang {
+    try {
+        const v = localStorage.getItem(LANG_STORAGE_KEY);
+        return v === "fr" || v === "en" ? v : "en";
+    } catch {
+        return "en";
+    }
+}
+
+// The active language. Mutable, so switching it at runtime is picked up by
+// every `t()` call made during the next render — which is why translated
+// strings must be resolved at render time, never captured in a module-scope
+// constant. Definitions that need a label should carry a TranslationKey and
+// resolve it in the component (see tool-groups.ts, shortcuts.ts).
+let currentLang: Lang = readStoredLang();
+
+export function getLang(): Lang {
+    return currentLang;
+}
+
+export function setLang(lang: Lang): void {
+    currentLang = lang;
+    try {
+        localStorage.setItem(LANG_STORAGE_KEY, lang);
+    } catch {
+        /* ignore */
+    }
+}
 
 const T = {
     fr: {
@@ -145,6 +177,22 @@ const T = {
             "Zoom préservé lors du changement d'image (cliquer pour désactiver)",
         zoomResetTitle:
             "Zoom réinitialisé lors du changement d'image (cliquer pour activer la préservation)",
+
+        // Tool groups + customization
+        groupSam: "Outils SAM",
+        groupSlic: "Superpixels SLIC",
+        customize: "Personnaliser",
+        language: "Langue",
+        maskDisplay: "Affichage des masques",
+        customizeTitle: "Personnalisation",
+        toolbarLayout: "Disposition de la barre d'outils",
+        layoutSeparators: "Séparateurs",
+        layoutSeparatorsHint: "Une ligne fine entre les groupes",
+        layoutPods: "Groupes",
+        layoutPodsHint: "Chaque groupe sur son propre fond, avec son icône",
+        layoutFlyout: "Menus déroulants",
+        layoutFlyoutHint:
+            "Une seule icône par groupe ; survolez ou cliquez pour choisir",
 
         // Toolbar tools
         toolIdle: "Pointeur (aucun outil)",
@@ -454,6 +502,22 @@ const T = {
         zoomResetTitle:
             "Zoom reset when switching images (click to enable preservation)",
 
+        // Tool groups + customization
+        groupSam: "SAM tools",
+        groupSlic: "SLIC superpixels",
+        customize: "Customize",
+        language: "Language",
+        maskDisplay: "Mask display",
+        customizeTitle: "Customization",
+        toolbarLayout: "Toolbar layout",
+        layoutSeparators: "Separators",
+        layoutSeparatorsHint: "A thin line between groups",
+        layoutPods: "Groups",
+        layoutPodsHint: "Each group on its own panel, with its icon",
+        layoutFlyout: "Flyout menus",
+        layoutFlyoutHint:
+            "One icon per group; hover or click to pick a tool",
+
         // Toolbar tools
         toolIdle: "Pointer (no tool)",
         toolSelectAdd: "Add point",
@@ -623,5 +687,5 @@ const T = {
 export type TranslationKey = keyof typeof T.fr;
 
 export function t(key: TranslationKey): string {
-    return T[LANG][key];
+    return T[currentLang][key];
 }
