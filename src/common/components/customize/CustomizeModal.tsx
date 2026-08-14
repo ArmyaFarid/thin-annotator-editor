@@ -7,11 +7,13 @@ import {t} from "@/i18n/index.ts";
 const LAYOUT_LABELS: Record<ToolbarLayout, () => string> = {
     separators: () => t("layoutSeparators"),
     pods: () => t("layoutPods"),
+    flyout: () => t("layoutFlyout"),
 };
 
 const LAYOUT_HINTS: Record<ToolbarLayout, () => string> = {
     separators: () => t("layoutSeparatorsHint"),
     pods: () => t("layoutPodsHint"),
+    flyout: () => t("layoutFlyoutHint"),
 };
 
 export const CustomizeModal: React.FC = () => {

@@ -156,6 +156,9 @@ const T = {
         layoutSeparatorsHint: "Une ligne fine entre les groupes",
         layoutPods: "Groupes",
         layoutPodsHint: "Chaque groupe sur son propre fond, avec son icône",
+        layoutFlyout: "Menus déroulants",
+        layoutFlyoutHint:
+            "Une seule icône par groupe ; survolez ou cliquez pour choisir",
 
         // Toolbar tools
         toolSelectAdd: "Ajouter un point",
@@ -472,6 +475,9 @@ const T = {
         layoutSeparatorsHint: "A thin line between groups",
         layoutPods: "Groups",
         layoutPodsHint: "Each group on its own panel, with its icon",
+        layoutFlyout: "Flyout menus",
+        layoutFlyoutHint:
+            "One icon per group; hover or click to pick a tool",
 
         // Toolbar tools
         toolSelectAdd: "Add point",

@@ -182,7 +182,7 @@ export const preserveZoomAtom = atom<boolean>(
 );
 
 // How the toolbar clusters grouped tools. Purely visual — see tool-groups.ts.
-export const TOOLBAR_LAYOUTS = ["separators", "pods"] as const;
+export const TOOLBAR_LAYOUTS = ["separators", "pods", "flyout"] as const;
 export type ToolbarLayout = (typeof TOOLBAR_LAYOUTS)[number];
 
 export const toolbarLayoutAtom = atom<ToolbarLayout>(

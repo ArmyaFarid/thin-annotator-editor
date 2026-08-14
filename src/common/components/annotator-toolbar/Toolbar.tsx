@@ -1,4 +1,4 @@
-import React, {useMemo} from "react";
+import React, {useMemo, useState} from "react";
 import {useAtom, useAtomValue, useSetAtom} from "jotai";
 import {
     ArrowUturnLeftIcon,
@@ -247,8 +247,10 @@ interface ToolGroupBlockProps {
 }
 
 // A group's own icon and name are shown by the layouts that have room for them
-// ("pods"); "separators" just clusters the buttons between hairlines.
+// ("pods", "flyout"); "separators" just clusters the buttons between hairlines.
 const ToolGroupBlock: React.FC<ToolGroupBlockProps> = ({group, layout, activeTool, onSelect}) => {
+    const [open, setOpen] = useState(false);
+
     const buttons = group.tools.map(tool => (
         <ToolButton
             key={tool}
@@ -257,6 +259,48 @@ const ToolGroupBlock: React.FC<ToolGroupBlockProps> = ({group, layout, activeToo
             onSelect={onSelect}
         />
     ));
+
+    // Collapsed: one button for the whole group, opened on hover or click. A
+    // single-tool group has nothing to collapse, so it stays a plain button.
+    if (layout === "flyout" && group.tools.length > 1) {
+        const activeInGroup = group.tools.find(tool => tool === activeTool);
+        const TriggerIcon = activeInGroup ? TOOL_ICONS[activeInGroup] : group.icon;
+
+        return (
+            <div
+                className="relative"
+                onMouseEnter={() => setOpen(true)}
+                onMouseLeave={() => setOpen(false)}>
+                <button
+                    aria-label={group.label}
+                    aria-haspopup="true"
+                    aria-expanded={open}
+                    onClick={() => setOpen(v => !v)}
+                    className={`relative flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${activeInGroup ? "bg-[#2F2F2F] ring-1 ring-[#4FC3F7]/40" : "bg-transparent hover:bg-[#2F2F2F]/60"}`}>
+                    <TriggerIcon
+                        className={`w-4 h-4 transition-colors ${activeInGroup ? "text-[#4FC3F7]" : "text-[#B8B8B8]"}`}
+                    />
+                    {/* Corner notch marking the group as expandable. */}
+                    <span className="absolute bottom-0.5 right-0.5 w-0 h-0 border-l-[3px] border-l-transparent border-b-[3px] border-b-white/40" />
+                </button>
+                {open ? (
+                    <div className="absolute left-full top-0 ml-1 z-30 flex flex-row gap-0.5 p-1 rounded-lg bg-secondary border border-white/10 shadow-xl">
+                        {group.tools.map(tool => (
+                            <ToolButton
+                                key={tool}
+                                tool={tool}
+                                active={activeTool === tool}
+                                onSelect={(t) => {
+                                    onSelect(t);
+                                    setOpen(false);
+                                }}
+                            />
+                        ))}
+                    </div>
+                ) : null}
+            </div>
+        );
+    }
 
     if (layout !== "pods") {
         return <>{buttons}</>;
