@@ -77,6 +77,14 @@ export class Mask implements AnnotationObject {
         const prevSmoothing = ctx.imageSmoothingEnabled;
         ctx.imageSmoothingEnabled = false;
         ctx.drawImage(composite, 0, 0, natW, natH, 0, 0, natW, natH);
+        // Hover glow: re-blit the same cached composite additively. No geometry
+        // work and the composite cache key is untouched, so hovering never
+        // triggers the expensive per-pixel border pass.
+        if (state === "hovered") {
+            ctx.globalCompositeOperation = "lighter";
+            ctx.globalAlpha = theme.mask.hoverGlowAlpha;
+            ctx.drawImage(composite, 0, 0, natW, natH, 0, 0, natW, natH);
+        }
         ctx.imageSmoothingEnabled = prevSmoothing;
         ctx.restore();
     }

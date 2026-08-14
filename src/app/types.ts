@@ -1,4 +1,5 @@
 export type Tool =
+    | 'idle'
     | 'select-add'
     | 'select-remove'
     | 'bounding-box'

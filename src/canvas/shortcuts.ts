@@ -12,6 +12,7 @@ export interface ShortcutDef {
 
 // ─── Edit this array to add / change / remove shortcuts ──────────────────────
 export const SHORTCUT_DEFS: ShortcutDef[] = [
+    {key: "v", tool: "idle",          labelKey: "shortcutIdleLabel",         hintKey: "shortcutIdleHint"},
     {key: "s", tool: "select-add",    labelKey: "shortcutSelectAddLabel",    hintKey: "shortcutSelectAddHint"},
     {key: "x", tool: "select-remove", labelKey: "shortcutSelectRemoveLabel", hintKey: "shortcutSelectRemoveHint"},
     {key: "b", tool: "bounding-box",  labelKey: "shortcutBboxLabel",         hintKey: "shortcutBboxHint"},

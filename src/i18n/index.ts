@@ -195,6 +195,7 @@ const T = {
             "Une seule icône par groupe ; survolez ou cliquez pour choisir",
 
         // Toolbar tools
+        toolIdle: "Pointeur (aucun outil)",
         toolSelectAdd: "Ajouter un point",
         toolSelectRemove: "Retirer un point",
         toolBoundingBox: "Boîte englobante",
@@ -239,6 +240,8 @@ const T = {
 
         // Keyboard shortcuts panel
         keyboardShortcuts: "Raccourcis clavier",
+        shortcutIdleLabel: "Pointeur",
+        shortcutIdleHint: "Sélectionner sans dessiner",
         shortcutSelectAddLabel: "Select +",
         shortcutSelectAddHint: "Point positif SAM",
         shortcutSelectRemoveLabel: "Select −",
@@ -516,6 +519,7 @@ const T = {
             "One icon per group; hover or click to pick a tool",
 
         // Toolbar tools
+        toolIdle: "Pointer (no tool)",
         toolSelectAdd: "Add point",
         toolSelectRemove: "Remove point",
         toolBoundingBox: "Bounding box",
@@ -560,6 +564,8 @@ const T = {
 
         // Keyboard shortcuts panel
         keyboardShortcuts: "Keyboard shortcuts",
+        shortcutIdleLabel: "Pointer",
+        shortcutIdleHint: "Select without drawing",
         shortcutSelectAddLabel: "Select +",
         shortcutSelectAddHint: "SAM positive point",
         shortcutSelectRemoveLabel: "Select −",

@@ -62,4 +62,8 @@ export interface EngineCallbacks {
         layerId: number,
         vertices: ImageSpacePoint[],
     ): void;
+    // Click on an existing mask while no object is being edited.
+    onMaskSelected(maskId: number): void;
+    // Hovered mask changed (0 = none). Drives the cursor only.
+    onMaskHoverChanged(maskId: number): void;
 }

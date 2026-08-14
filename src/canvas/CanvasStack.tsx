@@ -8,6 +8,7 @@ import {
     borderOnlyAtom,
     currentMaskAtom,
     cursorHudVisibleAtom,
+    editorOnAtom,
     masksAtom,
     promptsAtom,
     subtractModeAtom,
@@ -79,6 +80,9 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     const setMasks = useSetAtom(masksAtom);
     const currentMask = useAtomValue(currentMaskAtom);
     const setCurrentMask = useSetAtom(currentMaskAtom);
+    const setEditorOn = useSetAtom(editorOnAtom);
+    // Mask under the cursor (0 = none). Only used to switch the cursor.
+    const [hoveredMaskId, setHoveredMaskId] = useState(0);
     const subtractMode = useAtomValue(subtractModeAtom);
     const subtractModeRef = useRef(subtractMode);
     useEffect(() => {
@@ -536,8 +540,23 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                     }),
                 );
             },
+            onMaskSelected(maskId: number) {
+                setPrompts([]);
+                setCurrentMask(maskId);
+                setEditorOn(true);
+            },
+            onMaskHoverChanged(maskId: number) {
+                setHoveredMaskId(maskId);
+            },
         }),
-        [setPrompts, setMasks, setCurrentMask, setSlicPrompts, commitHistory],
+        [
+            setPrompts,
+            setMasks,
+            setCurrentMask,
+            setSlicPrompts,
+            commitHistory,
+            setEditorOn,
+        ],
     );
 
     // Mount engine once
@@ -733,6 +752,8 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
         [isZoomTool, isGrabTool, activeTool],
     );
 
+    const selectable =
+        hoveredMaskId !== 0 && currentMask === 0 && !isZoomTool && !isGrabTool;
     const cursor =
         activeTool === "zoom-in"
             ? "zoom-in"
@@ -742,7 +763,9 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                 ? grabbing
                     ? "grabbing"
                     : "grab"
-                : getCursor(activeTool);
+                : selectable
+                  ? "pointer"
+                  : getCursor(activeTool);
 
     const transform = `matrix(${view.zoom},0,0,${view.zoom},${view.panX},${view.panY})`;
 
