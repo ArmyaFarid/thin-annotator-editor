@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 import LoadingStateScreen from '@/common/loading/LoadingStateScreen';
+import {t} from '@/i18n/index.ts';
 
 export default function PageNotFoundPage() {
   return (
     <LoadingStateScreen
-      title="Page not found"
-      description="It looks like you might be in the wrong place."
+      title={t("pageNotFoundTitle")}
+      description={t("pageNotFoundDescription")}
       linkProps={{
         to: '..',
-        label: 'Click here to access the SAM 2 Demo',
+        label: t("pageNotFoundLink"),
       }}
     />
   );

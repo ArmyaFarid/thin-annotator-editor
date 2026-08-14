@@ -1,5 +1,6 @@
 import React from "react";
 import {SHORTCUT_DEFS, UI_SHORTCUT_DEFS, keyLabel} from "@/canvas/shortcuts.ts";
+import {t} from "@/i18n/index.ts";
 
 interface ShortcutPanelProps {
     visible: boolean;
@@ -44,7 +45,7 @@ export const ShortcutPanel: React.FC<ShortcutPanelProps> = ({visible, onClose}) 
             {/* Header */}
             <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10}}>
                 <span style={{fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.07em", fontWeight: 600}}>
-                    Raccourcis clavier
+                    {t("keyboardShortcuts")}
                 </span>
                 <button
                     onClick={onClose}

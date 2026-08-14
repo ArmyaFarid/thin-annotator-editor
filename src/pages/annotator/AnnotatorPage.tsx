@@ -54,10 +54,10 @@ export default function AnnotatorPage() {
     async function handleSaveAndLeave() {
         const ok = await saveAnnotations();
         if (ok) {
-            toast.success("Projet sauvegardé");
+            toast.success(t("projectSaved"));
             navigate("/");
         } else {
-            toast.error("Échec de la sauvegarde");
+            toast.error(t("projectSaveError"));
         }
     }
 
@@ -102,7 +102,7 @@ export default function AnnotatorPage() {
                 </div>
             ) : null}
             <div className="w-full flex flex-row justify-between items-center">
-                <Tooltip content="Quitter ce projet pour en ouvrir un autre" side="bottom">
+                <Tooltip content={t("openNewProjectTooltip")} side="bottom">
                     <button
                         onClick={() => setShowFinishModal(true)}
                         className="flex items-center gap-1 bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">
@@ -113,7 +113,7 @@ export default function AnnotatorPage() {
                 <span className="text-xs text-white/40 font-mono">
                     {pairsCode} / {sampleId}
                 </span>
-                <Tooltip content="Terminer la session (avec option de sauvegarde)" side="bottom">
+                <Tooltip content={t("finishTooltip")} side="bottom">
                     <button
                         onClick={() => setShowFinishModal(true)}
                         className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">

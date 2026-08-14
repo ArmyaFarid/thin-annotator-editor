@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 import LoadingStateScreen from '@/common/loading/LoadingStateScreen';
+import {t} from '@/i18n/index.ts';
 import {FallbackProps} from 'react-error-boundary';
 
 export default function DemoErrorFallback(_props: FallbackProps) {
   return (
     <LoadingStateScreen
-      title="Well, this is embarrassing..."
-      description="This app is not optimized for your device. Please try again on a different device with a larger screen."
-      linkProps={{to: '..', label: 'Back to homepage'}}
+      title={t("unsupportedDeviceTitle")}
+      description={t("unsupportedDeviceDescription")}
+      linkProps={{to: '..', label: t("backToHomepage")}}
     />
   );
 }

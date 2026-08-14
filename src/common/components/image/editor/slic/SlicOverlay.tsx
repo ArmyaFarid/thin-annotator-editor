@@ -16,6 +16,7 @@ import {canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
 import {SLIC_MASK_FILL_ALPHA} from "@/canvas/canvas-theme.ts";
 import {commitHistoryAtom, historyScopeAtom} from "@/app/history.ts";
+import {t} from "@/i18n/index.ts";
 
 const MAX_SLIC_LOCAL_HISTORY = 50;
 
@@ -516,7 +517,7 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                 <div className="flex flex-col items-center gap-3">
                     <div className="w-10 h-10 rounded-full border-2 border-white/20 border-t-[#4FC3F7] animate-spin" />
                     <span className="text-white text-sm">
-                        Préparation des superpixels...
+                        {t("slicPreparing")}
                     </span>
                 </div>
             ) : null}
@@ -524,9 +525,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
             <div className={tilesReady ? "contents" : "hidden"}>
                 <div className="flex items-center gap-3 bg-[#1a1a1a] border border-white/20 rounded-lg px-4 py-2 flex-wrap">
                     <span className="text-sm font-medium text-white/80">
-                        Superpixels SLIC —{" "}
+                        {t("slicTitle")} —{" "}
                         {slicOverlay.superpixels.length - deleted.size} /{" "}
-                        {slicOverlay.superpixels.length} conservés
+                        {slicOverlay.superpixels.length} {t("slicKept")}
                     </span>
                     {slicOverlay.targetMaskId !== 0 ? (
                         <>
@@ -534,16 +535,16 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                             <div className="flex rounded overflow-hidden border border-white/15">
                                 <button
                                     onClick={() => setApplyMode("add")}
-                                    title="Les superpixels conservés seront ajoutés au masque actif"
+                                    title={t("slicAddToMaskTooltip")}
                                     className={`px-3 py-1 text-xs font-medium transition-colors ${applyMode === "add" ? "bg-[#4FC3F7]/20 text-[#4FC3F7]" : "text-white/60 hover:text-white hover:bg-white/5"}`}>
-                                    Ajouter au masque
+                                    {t("slicAddToMask")}
                                 </button>
                                 <div className="w-px bg-white/15" />
                                 <button
                                     onClick={() => setApplyMode("remove")}
-                                    title="Les superpixels conservés seront retirés du masque actif"
+                                    title={t("slicRemoveFromMaskTooltip")}
                                     className={`px-3 py-1 text-xs font-medium transition-colors ${applyMode === "remove" ? "bg-[#4FC3F7]/20 text-[#4FC3F7]" : "text-white/60 hover:text-white hover:bg-white/5"}`}>
-                                    Retirer du masque
+                                    {t("slicRemoveFromMask")}
                                 </button>
                             </div>
                         </>
@@ -559,13 +560,13 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                         }}
                         disabled={deleted.size === 0}
                         className="px-3 py-1 rounded text-sm text-white/60 hover:text-white transition-colors disabled:opacity-30">
-                        Réinitialiser
+                        {t("reset")}
                     </button>
                     <div className="w-px h-5 bg-white/20" />
                     <button
                         onClick={localUndo}
                         disabled={localPast.length === 0}
-                        title="Annuler la dernière action (Ctrl+Z)"
+                        title={t("undoLastActionTitle")}
                         className="p-1.5 rounded text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
                         <ArrowUturnLeftIcon
                             className="w-4 h-4"
@@ -575,7 +576,7 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                     <button
                         onClick={localRedo}
                         disabled={localFuture.length === 0}
-                        title="Rétablir (Ctrl+Shift+Z)"
+                        title={t("redoTitle")}
                         className="p-1.5 rounded text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
                         <ArrowUturnRightIcon
                             className="w-4 h-4"
@@ -583,7 +584,7 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                         />
                     </button>
                     <div className="w-px h-5 bg-white/20" />
-                    <span className="text-xs text-white/50">Zoom:</span>
+                    <span className="text-xs text-white/50">{t("zoomLabel")}</span>
                     <input
                         type="range"
                         min={25}
@@ -612,23 +613,24 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                     </span>
                 </div>
 
-                {/* Mode hint — explains what the kept ("conservés") superpixels do */}
+                {/* Mode hint — explains what the kept superpixels do */}
                 <div className="flex items-center gap-2 text-xs -mt-1">
                     <InformationCircleIcon className="w-4 h-4 shrink-0 text-white/50" />
                     {slicOverlay.targetMaskId === 0 ? (
                         <span className="text-white/60">
-                            Les superpixels conservés formeront un nouveau
-                            masque.
+                            {t("slicHintNewMask")}
                         </span>
                     ) : applyMode === "add" ? (
                         <span className="text-[#4FC3F7]">
-                            Ajout : les superpixels conservés seront{" "}
-                            <strong>dessinés</strong> dans le masque actif.
+                            {t("slicHintAddPrefix")}{" "}
+                            <strong>{t("slicHintAddEmphasis")}</strong>{" "}
+                            {t("slicHintAddSuffix")}
                         </span>
                     ) : (
                         <span className="text-rose-400">
-                            Retrait : les superpixels conservés seront{" "}
-                            <strong>effacés</strong> du masque actif.
+                            {t("slicHintRemovePrefix")}{" "}
+                            <strong>{t("slicHintRemoveEmphasis")}</strong>{" "}
+                            {t("slicHintRemoveSuffix")}
                         </span>
                     )}
                 </div>
@@ -685,13 +687,12 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                 {/* Actions */}
                 <div className="flex items-center gap-3">
                     <span className="text-xs text-white/30">
-                        Cliquer pour supprimer un superpixel · Molette: zoom ·
-                        Clic molette: déplacer
+                        {t("slicFooterHint")}
                     </span>
                     <button
                         onClick={() => setSlicOverlay(null)}
                         className="px-5 py-2 rounded-lg border border-white/20 text-sm hover:bg-white/10 transition-colors">
-                        Annuler
+                        {t("cancel")}
                     </button>
                     <button
                         onClick={handleApply}
@@ -699,7 +700,7 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                             slicOverlay.superpixels.length - deleted.size === 0
                         }
                         className="px-5 py-2 rounded-lg bg-[#4FC3F7] text-black font-medium text-sm hover:bg-[#4FC3F7]/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                        Appliquer (
+                        {t("apply")} (
                         {slicOverlay.superpixels.length - deleted.size})
                     </button>
                 </div>

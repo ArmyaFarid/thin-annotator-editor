@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import {getErrorTitle} from '@/common/error/ErrorUtils';
+import {t} from '@/i18n/index.ts';
 import errorReportAtom from '@/common/error/errorReportAtom';
 import emptyFunction from '@/common/utils/emptyFunction';
 import {BugAntIcon} from '@heroicons/react/24/outline';
@@ -63,7 +64,7 @@ export default function ErrorReport({onReport = emptyFunction}: Props) {
   return (
     <Modal ref={errorModalRef} className="max-w-[800px]">
       <Modal.Header>
-        {error != null ? getErrorTitle(error) : 'Unknown error'}
+        {error != null ? getErrorTitle(error) : t("unknownError")}
       </Modal.Header>
       <Modal.Body>
         <Editor
@@ -85,9 +86,9 @@ export default function ErrorReport({onReport = emptyFunction}: Props) {
           color="error"
           startIcon={<BugAntIcon className="w-4 h-4" />}
           onClick={handleReport}>
-          Report
+          {t("report")}
         </Button>
-        <Button onClick={handleCloseModal}>Close</Button>
+        <Button onClick={handleCloseModal}>{t("close")}</Button>
       </Modal.Actions>
     </Modal>
   );

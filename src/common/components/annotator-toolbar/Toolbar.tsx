@@ -26,6 +26,7 @@ import {TOOLS} from "@/app/AppConfig.tsx";
 import FilterGammaToolbarPanel from "@/common/components/annotator-toolbar/FilterGammaToolbarPanel.tsx";
 import {SHORTCUT_DEFS, keyLabel} from "@/canvas/shortcuts.ts";
 import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
+import {t} from "@/i18n/index.ts";
 
 const TOOL_ICONS: Record<Tool, React.FC<React.SVGProps<SVGSVGElement>>> = {
     "select-add": SelectAddIcon,
@@ -40,15 +41,15 @@ const TOOL_ICONS: Record<Tool, React.FC<React.SVGProps<SVGSVGElement>>> = {
 };
 
 const TOOL_BASE_LABELS: Record<Tool, string> = {
-    "select-add": "Ajouter un point",
-    "select-remove": "Retirer un point",
-    "bounding-box": "Boîte englobante",
-    "freeform-draw": "Dessin libre",
-    "polygon-lasso": "Lasso polygone",
-    "slic-bbox": "Superpixels (SLIC)",
-    "zoom-in": "Zoom avant",
-    "zoom-out": "Zoom arrière",
-    "grab": "Déplacer",
+    "select-add": t("toolSelectAdd"),
+    "select-remove": t("toolSelectRemove"),
+    "bounding-box": t("toolBoundingBox"),
+    "freeform-draw": t("toolFreeformDraw"),
+    "polygon-lasso": t("toolPolygonLasso"),
+    "slic-bbox": t("toolSlicBbox"),
+    "zoom-in": t("toolZoomIn"),
+    "zoom-out": t("toolZoomOut"),
+    "grab": t("toolGrab"),
 };
 
 const KEY_BADGE = new Map<Tool, string>(
@@ -72,15 +73,15 @@ export const Toolbar: React.FC<ToolbarProps> = () => {
     // the modal has its own buttons in its own toolbar.
     const modalActive = historyScope !== "global";
     const undoLabel = modalActive
-        ? "Annuler (géré par la fenêtre active)"
+        ? t("undoModalActive")
         : canUndo
-        ? `Annuler : ${labelToFrench(history.past[history.past.length - 1].label)}`
-        : "Aucune action à annuler";
+        ? `${t("undo")} : ${labelToFrench(history.past[history.past.length - 1].label)}`
+        : t("undoEmpty");
     const redoLabel = modalActive
-        ? "Rétablir (géré par la fenêtre active)"
+        ? t("redoModalActive")
         : canRedo
-        ? `Rétablir : ${labelToFrench(history.future[history.future.length - 1].label)}`
-        : "Aucune action à rétablir";
+        ? `${t("redo")} : ${labelToFrench(history.future[history.future.length - 1].label)}`
+        : t("redoEmpty");
     const undoDisabled = modalActive || !canUndo;
     const redoDisabled = modalActive || !canRedo;
 
@@ -135,18 +136,18 @@ export const Toolbar: React.FC<ToolbarProps> = () => {
             <FilterGammaToolbarPanel />
             <div className="w-6 h-px bg-white/10 my-0.5" />
             <Tooltip
-                content={borderOnly ? "Afficher le remplissage" : "Afficher contours seulement"}
+                content={borderOnly ? t("showFill") : t("showBordersOnly")}
                 side="right">
                 <button
-                    aria-label={borderOnly ? "Afficher le remplissage" : "Afficher contours seulement"}
+                    aria-label={borderOnly ? t("showFill") : t("showBordersOnly")}
                     onClick={() => setBorderOnly(v => !v)}
                     className={`flex items-center justify-center w-8 h-8 rounded-lg transition-colors ${borderOnly ? "bg-[#2F2F2F] ring-1 ring-emerald-500/50" : "bg-transparent hover:bg-[#2F2F2F]/60"}`}>
                     <BorderOnlyIcon active={borderOnly} />
                 </button>
             </Tooltip>
-            <Tooltip content="Raccourcis clavier" shortcut="?" side="right">
+            <Tooltip content={t("keyboardShortcuts")} shortcut="?" side="right">
                 <button
-                    aria-label="Raccourcis clavier"
+                    aria-label={t("keyboardShortcuts")}
                     onClick={() => setShowShortcuts(v => !v)}
                     className={`flex items-center justify-center w-8 h-8 rounded-lg text-sm font-bold transition-colors ${showShortcuts ? "bg-[#2F2F2F] text-[#4FC3F7] ring-1 ring-[#4FC3F7]/40" : "bg-transparent text-[#B8B8B8] hover:bg-[#2F2F2F]/60"}`}>
                     ?

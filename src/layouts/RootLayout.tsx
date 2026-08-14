@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import LoadingStateScreen from '@/common/loading/LoadingStateScreen';
+import {t} from '@/i18n/index.ts';
 import useSettingsContext from '@/settings/useSettingsContext';
 import {Cog6ToothIcon} from '@heroicons/react/24/outline';
 import stylex from '@stylexjs/stylex';
@@ -56,8 +57,8 @@ export default function RootLayout() {
         <Suspense
           fallback={
             <LoadingStateScreen
-              title="Loading demo..."
-              description="This may take a few moments, you're almost there!"
+              title={t("loadingTitle")}
+              description={t("loadingDescription")}
             />
           }>
           <Outlet />
