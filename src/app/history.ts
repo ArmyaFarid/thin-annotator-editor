@@ -30,6 +30,7 @@ import {
     type Mask,
     type SlicPrompt,
 } from "@/app/atom.ts";
+import {t} from "@/i18n/index.ts";
 
 const MAX_HISTORY = 50;
 
@@ -153,22 +154,22 @@ export const clearHistoryAtom = atom(null, (_get, set) => {
 export const canUndoAtom = atom((get) => get(historyAtom).past.length > 0);
 export const canRedoAtom = atom((get) => get(historyAtom).future.length > 0);
 
-// ── French label for UI tooltips. ────────────────────────────────────────
+// ── Localized label for UI tooltips. ─────────────────────────────────────
 export function labelToFrench(label: HistoryLabel): string {
     switch (label.action) {
-        case "keypoint.add":          return "Ajout de point";
-        case "bbox.add":              return "Ajout de boîte";
-        case "slic-bbox.set":         return "Définition zone SLIC";
-        case "polygon.add":           return "Ajout de polygone";
-        case "freeform.add":          return "Tracé libre";
-        case "layer.delete":          return "Suppression de calque";
-        case "vertex.move":           return "Déplacement de sommet";
-        case "mask.delete":           return "Suppression de masque";
-        case "mask.rename":           return "Renommage";
-        case "mask.merge":            return "Fusion de masque";
-        case "mask.extract-contours": return "Extraction de contours";
-        case "sam.result":            return "Résultat SAM";
-        case "slic.result":           return "Résultat SLIC";
+        case "keypoint.add":          return t("historyKeypointAdd");
+        case "bbox.add":              return t("historyBboxAdd");
+        case "slic-bbox.set":         return t("historySlicBboxSet");
+        case "polygon.add":           return t("historyPolygonAdd");
+        case "freeform.add":          return t("historyFreeformAdd");
+        case "layer.delete":          return t("historyLayerDelete");
+        case "vertex.move":           return t("historyVertexMove");
+        case "mask.delete":           return t("historyMaskDelete");
+        case "mask.rename":           return t("historyMaskRename");
+        case "mask.merge":            return t("historyMaskMerge");
+        case "mask.extract-contours": return t("historyMaskExtractContours");
+        case "sam.result":            return t("historySamResult");
+        case "slic.result":           return t("historySlicResult");
         case "other":                 return label.payload.note;
     }
 }

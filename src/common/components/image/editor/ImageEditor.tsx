@@ -22,6 +22,7 @@ import {SlicOverlay} from "@/common/components/image/editor/slic/SlicOverlay.tsx
 import type {ImageEditorGetPairsQuery} from "@/common/components/image/editor/__generated__/ImageEditorGetPairsQuery.graphql.ts";
 import useSlicPrompts from "@/common/components/image/editor/useSlicPrompts.ts";
 import useActiveImage from "@/common/components/image/editor/useActiveImage.ts";
+import {t} from "@/i18n/index.ts";
 
 interface RLEMask {
     counts: string;
@@ -302,7 +303,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/25 pointer-events-none z-10">
                     <div className="w-7 h-7 rounded-full border-2 border-white/20 border-t-white animate-spin" />
                     <span className="text-white text-xs font-medium">
-                        {slicInFlight ? "Calcul SLIC..." : "Traitement..."}
+                        {slicInFlight ? t("slicComputing") : t("processing")}
                     </span>
                 </div>
             ) : null}

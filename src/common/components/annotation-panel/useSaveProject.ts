@@ -3,6 +3,7 @@ import {useAtomValue} from "jotai";
 import {useParams} from "react-router-dom";
 import {IMAGE_API_ENDPOINT} from "@/app/AppConfig.tsx";
 import {masksAtom} from "@/app/atom.ts";
+import {t} from "@/i18n/index.ts";
 
 type State = [
     save: () => Promise<boolean>,
@@ -35,7 +36,7 @@ export default function useSaveProject(): State {
             }
             return true;
         } catch (e) {
-            setError(e instanceof Error ? e.message : "Erreur inconnue");
+            setError(e instanceof Error ? e.message : t("unknownError"));
             return false;
         } finally {
             setSaving(false);

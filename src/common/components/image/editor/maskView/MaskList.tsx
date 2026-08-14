@@ -14,6 +14,7 @@ import {commitHistoryAtom} from "@/app/history.ts";
 import {mergeToCanvas, canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {rleToEditableContours} from "@/canvas/utils/contourExtract.ts";
 import {MASK_FILL_ALPHA} from "@/canvas/canvas-theme.ts";
+import {t} from "@/i18n/index.ts";
 
 export default function MaskList() {
     const [masks, setMasks] = useAtom(masksAtom);
@@ -140,7 +141,7 @@ export default function MaskList() {
                         />
                         <textarea
                             className="flex-1 bg-transparent border border-white/20 rounded px-2 py-1 text-sm resize-none"
-                            placeholder="Nom du minerai"
+                            placeholder={t("mineralNamePlaceholder")}
                             value={activeMask.label}
                             onChange={(e) =>
                                 setMasks((prev) =>
@@ -160,19 +161,19 @@ export default function MaskList() {
                             <button
                                 onClick={() => setSubtractMode(false)}
                                 className={`flex-1 px-2 py-1 text-xs font-medium transition-colors ${!subtractMode ? "bg-blue-500/20 text-blue-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
-                                + Ajout
+                                {t("add")}
                             </button>
                             <div className="w-px bg-white/15" />
                             <button
                                 onClick={() => setSubtractMode(true)}
                                 className={`flex-1 px-2 py-1 text-xs font-medium transition-colors ${subtractMode ? "bg-red-500/20 text-red-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
-                                − Soustraction
+                                {t("subtract")}
                             </button>
                         </div>
                         <button
                             onClick={() => setRefineMode(currentMask)}
                             className="flex-1 px-2 py-1 rounded text-sm border border-[#4FC3F7]/40 text-[#4FC3F7] hover:bg-[#4FC3F7]/10 transition-colors">
-                            Raffiner
+                            {t("refine")}
                         </button>
                     </div>
 
@@ -182,14 +183,14 @@ export default function MaskList() {
                             onClick={handleActivateAnchors}
                             disabled={isAnchorMode || !imageSize}
                             className={`flex-1 px-2 py-1 text-xs font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${isAnchorMode ? "bg-emerald-500/20 text-emerald-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
-                            Ancres
+                            {t("anchorsOn")}
                         </button>
                         <div className="w-px bg-white/15" />
                         <button
                             onClick={handleDeactivateAnchors}
                             disabled={!isAnchorMode || !imageSize}
                             className={`flex-1 px-2 py-1 text-xs font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${!isAnchorMode ? "bg-white/10 text-white/60" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
-                            Pas d'ancres
+                            {t("anchorsOff")}
                         </button>
                     </div>
 
@@ -199,12 +200,12 @@ export default function MaskList() {
                             <button
                                 onClick={() => setActiveTool("freeform-draw")}
                                 className={`flex-1 px-2 py-1 rounded text-xs border transition-colors ${activeTool === "freeform-draw" ? "border-orange-400 text-orange-400 bg-orange-400/10" : "border-white/20 text-white/40 hover:text-white"}`}>
-                                Forme libre
+                                {t("freeform")}
                             </button>
                             <button
                                 onClick={() => setActiveTool("polygon-lasso")}
                                 className={`flex-1 px-2 py-1 rounded text-xs border transition-colors ${activeTool === "polygon-lasso" ? "border-orange-400 text-orange-400 bg-orange-400/10" : "border-white/20 text-white/40 hover:text-white"}`}>
-                                Polygone
+                                {t("polygon")}
                             </button>
                         </div>
                     ) : null}
@@ -281,7 +282,7 @@ export default function MaskList() {
                             setCurrentMask(0);
                             setEditorOn(false);
                         }}>
-                        Enregistrer
+                        {t("save")}
                     </button>
                 </>
             ) : null}
@@ -302,7 +303,7 @@ export default function MaskList() {
                                     }}
                                 />
                                 <span className="text-sm truncate">
-                                    {mask.label || "Sans nom"}
+                                    {mask.label || t("unnamed")}
                                 </span>
                             </button>
                         ))}
@@ -312,7 +313,7 @@ export default function MaskList() {
                     <button
                         className="mt-2 border border-white/20 text-sm py-2 rounded hover:bg-[#2F2F2F]"
                         onClick={() => setEditorOn(true)}>
-                        Ajouter un objet
+                        {t("addObject")}
                     </button>
 
                     {/* Export */}
@@ -320,7 +321,7 @@ export default function MaskList() {
                         <button
                             className="border border-white/20 text-sm py-2 rounded hover:bg-[#2F2F2F] text-white/70"
                             onClick={handleExport}>
-                            Exporter JSON
+                            {t("exportJson")}
                         </button>
                     ) : null}
                 </>

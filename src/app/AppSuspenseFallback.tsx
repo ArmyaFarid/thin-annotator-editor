@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 import LoadingStateScreen from '@/common/loading/LoadingStateScreen';
+import {t} from '@/i18n/index.ts';
 
 export default function DemoSuspenseFallback() {
-  return <LoadingStateScreen title="Fetching data" />;
+  return <LoadingStateScreen title={t("fetchingData")} />;
 }

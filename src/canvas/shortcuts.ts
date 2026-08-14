@@ -1,23 +1,24 @@
 import type {Tool} from "@/app/types.ts";
+import {t} from "@/i18n/index.ts";
 
 export interface ShortcutDef {
     key: string;   // lowercase key character sent by KeyboardEvent.key
     tool: Tool;
     label: string; // short display name
-    hint: string;  // one-line French description
+    hint: string;  // one-line description
 }
 
 // ─── Edit this array to add / change / remove shortcuts ──────────────────────
 export const SHORTCUT_DEFS: ShortcutDef[] = [
-    {key: "s", tool: "select-add",    label: "Select +",  hint: "Point positif SAM"},
-    {key: "x", tool: "select-remove", label: "Select −",  hint: "Point négatif SAM"},
-    {key: "b", tool: "bounding-box",  label: "Bbox SAM",  hint: "Boîte englobante"},
-    {key: "p", tool: "polygon-lasso", label: "Polygone",  hint: "Lasso polygonal"},
-    {key: "f", tool: "freeform-draw", label: "Dessin",    hint: "Tracé libre"},
-    {key: "l", tool: "slic-bbox",     label: "SLIC",      hint: "Superpixels SLIC"},
-    {key: "g", tool: "grab",          label: "Déplacer",  hint: "Panoramique (clic molette)"},
-    {key: "=", tool: "zoom-in",       label: "Zoom +",    hint: "Zoom avant"},
-    {key: "-", tool: "zoom-out",      label: "Zoom −",    hint: "Zoom arrière"},
+    {key: "s", tool: "select-add",    label: t("shortcutSelectAddLabel"),    hint: t("shortcutSelectAddHint")},
+    {key: "x", tool: "select-remove", label: t("shortcutSelectRemoveLabel"), hint: t("shortcutSelectRemoveHint")},
+    {key: "b", tool: "bounding-box",  label: t("shortcutBboxLabel"),         hint: t("shortcutBboxHint")},
+    {key: "p", tool: "polygon-lasso", label: t("shortcutPolygonLabel"),      hint: t("shortcutPolygonHint")},
+    {key: "f", tool: "freeform-draw", label: t("shortcutFreeformLabel"),     hint: t("shortcutFreeformHint")},
+    {key: "l", tool: "slic-bbox",     label: t("shortcutSlicLabel"),         hint: t("shortcutSlicHint")},
+    {key: "g", tool: "grab",          label: t("shortcutGrabLabel"),         hint: t("shortcutGrabHint")},
+    {key: "=", tool: "zoom-in",       label: t("shortcutZoomInLabel"),       hint: t("shortcutZoomInHint")},
+    {key: "-", tool: "zoom-out",      label: t("shortcutZoomOutLabel"),      hint: t("shortcutZoomOutHint")},
 ];
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -43,12 +44,12 @@ export interface UiShortcutDef {
 }
 
 export const UI_SHORTCUT_DEFS: UiShortcutDef[] = [
-    {key: "m",         label: "Minimap",  hint: "Afficher / masquer"},
-    {key: "h",         label: "Position", hint: "Afficher / masquer le curseur en pixels"},
-    {key: "Ctrl+Z",    label: "Annuler",  hint: "Annuler la dernière action"},
-    {key: "Ctrl+⇧+Z",  label: "Rétablir", hint: "Rétablir l'action annulée"},
-    {key: "?",         label: "Aide",     hint: "Raccourcis clavier"},
-    {key: "Escape",    label: "Annuler",  hint: "Annuler le dessin en cours"},
-    {key: "Backspace", label: "Défaire",  hint: "Dernier point (polygone) / supprimer"},
-    {key: "Delete",    label: "Sup.",     hint: "Supprimer l'objet sélectionné"},
+    {key: "m",         label: t("shortcutMinimapLabel"),   hint: t("shortcutMinimapHint")},
+    {key: "h",         label: t("shortcutCursorLabel"),    hint: t("shortcutCursorHint")},
+    {key: "Ctrl+Z",    label: t("undo"),                   hint: t("shortcutUndoHint")},
+    {key: "Ctrl+⇧+Z",  label: t("redo"),                   hint: t("shortcutRedoHint")},
+    {key: "?",         label: t("shortcutHelpLabel"),      hint: t("keyboardShortcuts")},
+    {key: "Escape",    label: t("shortcutEscapeLabel"),    hint: t("shortcutEscapeHint")},
+    {key: "Backspace", label: t("shortcutBackspaceLabel"), hint: t("shortcutBackspaceHint")},
+    {key: "Delete",    label: t("shortcutDeleteLabel"),    hint: t("shortcutDeleteHint")},
 ];

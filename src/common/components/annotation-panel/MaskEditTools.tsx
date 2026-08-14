@@ -74,7 +74,7 @@ export const MaskEditTools: React.FC = () => {
         <div className="flex flex-col gap-1.5">
             {/* Add / Subtract toggle. Drawing tools live in the left toolbar. */}
             <div className="flex rounded overflow-hidden border border-white/15">
-                <Tooltip content="Mode ajout : les tracés deviennent des zones de la région">
+                <Tooltip content={t("addModeTooltip")}>
                     <button
                         onClick={() => setSubtractMode(false)}
                         className={`flex-1 px-2 py-1 text-xs font-medium transition-colors ${!subtractMode ? "bg-blue-500/20 text-blue-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
@@ -82,7 +82,7 @@ export const MaskEditTools: React.FC = () => {
                     </button>
                 </Tooltip>
                 <div className="w-px bg-white/15" />
-                <Tooltip content="Mode soustraction : les tracés creusent des trous dans la région">
+                <Tooltip content={t("subtractModeTooltip")}>
                     <button
                         onClick={() => setSubtractMode(true)}
                         className={`flex-1 px-2 py-1 text-xs font-medium transition-colors ${subtractMode ? "bg-red-500/20 text-red-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
@@ -93,7 +93,7 @@ export const MaskEditTools: React.FC = () => {
 
             {/* Refine + Anchors row */}
             <div className="flex gap-1.5">
-                <Tooltip content="Ouvrir l'outil de raffinement (gomme/pinceau)">
+                <Tooltip content={t("refineTooltip")}>
                     <button
                         onClick={() => setRefineMode(currentMask)}
                         className="flex-1 px-2 py-1 rounded text-xs border border-[#4FC3F7]/40 text-[#4FC3F7] hover:bg-[#4FC3F7]/10 transition-colors">
@@ -101,8 +101,8 @@ export const MaskEditTools: React.FC = () => {
                     </button>
                 </Tooltip>
                 <Tooltip content={isAnchorMode
-                    ? "Masquer les ancres (fusionner les sommets en masque)"
-                    : "Afficher les sommets éditables (points d'ancrage)"}>
+                    ? t("hideAnchorsTooltip")
+                    : t("showAnchorsTooltip")}>
                     <button
                         onClick={isAnchorMode ? handleDeactivateAnchors : handleActivateAnchors}
                         disabled={!imageSize}

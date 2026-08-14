@@ -6,6 +6,7 @@ import {activeImageSizeAtom, masksAtom} from "@/app/atom.ts";
 import {canvasToRLE, mergeToCanvas} from "@/canvas/utils/maskMerge.ts";
 import useActiveImage from "@/common/components/image/editor/useActiveImage.ts";
 import useFilterGamma from "@/common/components/filter-gamma-selector/useFilterGamma.ts";
+import {t} from "@/i18n/index.ts";
 
 type State = [
     save: () => Promise<boolean>,
@@ -100,7 +101,7 @@ export default function useSaveAnnotation(): State {
             }
             return true;
         } catch (e) {
-            setError(e instanceof Error ? e.message : "Erreur inconnue");
+            setError(e instanceof Error ? e.message : t("unknownError"));
             return false;
         } finally {
             setSaving(false);

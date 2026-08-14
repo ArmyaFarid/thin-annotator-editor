@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import useReportError from '@/common/error/useReportError';
+import {t} from '@/i18n/index.ts';
 import {Button} from 'react-daisyui';
 import {FallbackProps} from 'react-error-boundary';
 
@@ -29,16 +30,16 @@ export default function ErrorFallback({
 
   return (
     <div className="h-full flex flex-col gap-2 items-center justify-center">
-      <p>Please check your connection and retry or report error.</p>
+      <p>{t("errorConnection")}</p>
       <div className="flex flex-row gap-2">
         <Button color="ghost" onClick={resetErrorBoundary}>
-          Retry
+          {t("retry")}
         </Button>
         <Button
           className="text-error"
           color="ghost"
           onClick={handleReportError}>
-          Report Error
+          {t("reportError")}
         </Button>
       </div>
     </div>

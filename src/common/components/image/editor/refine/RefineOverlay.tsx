@@ -5,6 +5,7 @@ import {masksAtom, refineModeAtom} from "@/app/atom.ts";
 import {canvasToRLE, mergeToCanvas} from "@/canvas/utils/maskMerge.ts";
 import {decode} from "@/jscocotools/mask.ts";
 import {commitHistoryAtom, historyScopeAtom} from "@/app/history.ts";
+import {t} from "@/i18n/index.ts";
 
 interface RLE {
     counts: string;
@@ -119,11 +120,11 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
             const eCtx = eroded.getContext("2d")!;
             eCtx.drawImage(working, 0, 0);
             eCtx.globalCompositeOperation = "destination-in";
-            const t = 3;
-            eCtx.drawImage(working, t, 0);
-            eCtx.drawImage(working, -t, 0);
-            eCtx.drawImage(working, 0, t);
-            eCtx.drawImage(working, 0, -t);
+            const erosion = 3;
+            eCtx.drawImage(working, erosion, 0);
+            eCtx.drawImage(working, -erosion, 0);
+            eCtx.drawImage(working, 0, erosion);
+            eCtx.drawImage(working, 0, -erosion);
             eCtx.globalCompositeOperation = "source-over";
 
             // Draw full mask then subtract interior → only border remains
@@ -387,36 +388,36 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
             {/* Toolbar */}
             <div className="flex items-center gap-3 bg-[#1a1a1a] border border-white/20 rounded-lg px-4 py-2 flex-wrap">
                 <span className="text-sm font-medium text-white/80">
-                    Raffinement — {targetMask.label}
+                    {t("refineTitle")} — {targetMask.label}
                 </span>
                 <div className="w-px h-5 bg-white/20" />
                 <button
                     onClick={() => setTool("erase")}
                     className={`px-3 py-1 rounded text-sm transition-colors ${tool === "erase" ? "bg-[#4FC3F7]/20 text-[#4FC3F7] ring-1 ring-[#4FC3F7]/40" : "text-white/60 hover:text-white"}`}>
-                    Gomme
+                    {t("refineEraser")}
                 </button>
                 <button
                     onClick={() => setTool("add")}
                     className={`px-3 py-1 rounded text-sm transition-colors ${tool === "add" ? "bg-[#4FC3F7]/20 text-[#4FC3F7] ring-1 ring-[#4FC3F7]/40" : "text-white/60 hover:text-white"}`}>
-                    Ajouter
+                    {t("refineAdd")}
                 </button>
                 <div className="w-px h-5 bg-white/20" />
                 <button
                     onClick={localUndo}
                     disabled={localPast.length === 0}
-                    title="Annuler le dernier trait (Ctrl+Z)"
+                    title={t("undoLastStrokeTitle")}
                     className="p-1.5 rounded text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
                     <ArrowUturnLeftIcon className="w-4 h-4" strokeWidth={2.5} />
                 </button>
                 <button
                     onClick={localRedo}
                     disabled={localFuture.length === 0}
-                    title="Rétablir (Ctrl+Shift+Z)"
+                    title={t("redoTitle")}
                     className="p-1.5 rounded text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
                     <ArrowUturnRightIcon className="w-4 h-4" strokeWidth={2.5} />
                 </button>
                 <div className="w-px h-5 bg-white/20" />
-                <span className="text-xs text-white/50">Pinceau:</span>
+                <span className="text-xs text-white/50">{t("brushLabel")}</span>
                 <input
                     type="range" min={5} max={100} value={brushSize}
                     onChange={e => setBrushSize(+e.target.value)}
@@ -424,7 +425,7 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
                 />
                 <span className="text-xs text-white/60 w-8">{brushSize}px</span>
                 <div className="w-px h-5 bg-white/20" />
-                <span className="text-xs text-white/50">Zoom:</span>
+                <span className="text-xs text-white/50">{t("zoomLabel")}</span>
                 <input
                     type="range" min={25} max={2000} value={Math.round(zoom * 100)}
                     onChange={e => {
@@ -446,7 +447,7 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
                 <button
                     onClick={() => setBorderOnly(!borderOnly)}
                     className={`px-3 py-1 rounded text-sm transition-colors ${borderOnly ? "bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/40" : "text-white/60 hover:text-white"}`}>
-                    Contours
+                    {t("borders")}
                 </button>
             </div>
 
@@ -495,16 +496,16 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
 
             {/* Actions */}
             <div className="flex items-center gap-3">
-                <span className="text-xs text-white/30">Molette: zoom · Clic molette: déplacer</span>
+                <span className="text-xs text-white/30">{t("refineFooterHint")}</span>
                 <button
                     onClick={() => setRefineMode(0)}
                     className="px-5 py-2 rounded-lg border border-white/20 text-sm hover:bg-white/10 transition-colors">
-                    Annuler
+                    {t("cancel")}
                 </button>
                 <button
                     onClick={handleApply}
                     className="px-5 py-2 rounded-lg bg-[#4FC3F7] text-black font-medium text-sm hover:bg-[#4FC3F7]/90 transition-colors">
-                    Appliquer
+                    {t("apply")}
                 </button>
             </div>
         </div>

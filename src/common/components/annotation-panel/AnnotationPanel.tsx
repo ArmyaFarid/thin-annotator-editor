@@ -156,9 +156,9 @@ export const AnnotationPanel: React.FC = () => {
                                     )
                                 }
                             />
-                            <Tooltip content="Supprimer cette région">
+                            <Tooltip content={t("deleteRegion")}>
                                 <button
-                                    aria-label="Supprimer cette région"
+                                    aria-label={t("deleteRegion")}
                                     onClick={() => {
                                         setMasks((prev) =>
                                             prev.filter(
@@ -292,7 +292,7 @@ export const AnnotationPanel: React.FC = () => {
                 Only rendered in list mode and when there's something to save. */}
             {currentMask === 0 && masks.length > 0 ? (
                 <div className="shrink-0 border-t border-white/10 p-2 flex flex-col gap-1.5 bg-secondary">
-                    <Tooltip content="Sauvegarde le travail en cours pour le reprendre plus tard">
+                    <Tooltip content={t("saveProjectTooltip")}>
                         <button
                             disabled={isSavingProject}
                             className="border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
@@ -300,7 +300,7 @@ export const AnnotationPanel: React.FC = () => {
                             {isSavingProject ? t("saving") : t("saveProject")}
                         </button>
                     </Tooltip>
-                    <Tooltip content="Exporte l'annotation finale de l'image actuelle au format COCO">
+                    <Tooltip content={t("exportAnnotationTooltip")}>
                         <button
                             disabled={isSavingAnnotation}
                             className="border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
