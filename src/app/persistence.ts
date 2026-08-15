@@ -1,5 +1,5 @@
 import type {Mask} from "@/app/atom.ts";
-import {PROJECT_FORMAT_VERSION, type MaskDTO} from "@/lib/services/api/task/dto.ts";
+import {TASK_FORMAT_VERSION, type MaskDTO} from "@/lib/services/api/task/dto.ts";
 import {dtoToMasks, masksToDto} from "@/lib/services/api/task/mappers.ts";
 
 // Drafts are the same document as a backend save, just stored locally, so they
@@ -21,7 +21,7 @@ export function saveDraft(pairsCode: string, sampleId: string, masks: Mask[]): v
             localStorage.removeItem(key);
         } else {
             const draft: DraftDTO = {
-                version: PROJECT_FORMAT_VERSION,
+                version: TASK_FORMAT_VERSION,
                 masks: masksToDto(masks),
             };
             localStorage.setItem(key, JSON.stringify(draft));

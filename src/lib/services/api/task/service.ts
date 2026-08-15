@@ -1,13 +1,12 @@
 import api from "@/lib/services/api/axios.ts";
 import type {Mask} from "@/app/atom.ts";
 import {
-    PROJECT_FORMAT_VERSION,
+    TASK_FORMAT_VERSION,
     type LoadTaskResponseDTO,
     type SaveTaskRequestDTO,
 } from "@/lib/services/api/task/dto.ts";
 import {dtoToMasks, masksToDto} from "@/lib/services/api/task/mappers.ts";
 
-// The backend still calls this resource a project; only the URL keeps that name.
 const BASE = "/api/task";
 
 export interface TaskRef {
@@ -32,7 +31,7 @@ export const taskService = {
         const body: SaveTaskRequestDTO = {
             pairsCode,
             sampleId,
-            version: PROJECT_FORMAT_VERSION,
+            version: TASK_FORMAT_VERSION,
             data: masksToDto(masks),
         };
         await api.post(`${BASE}/save`, body);

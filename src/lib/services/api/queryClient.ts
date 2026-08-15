@@ -4,7 +4,7 @@ import {QueryClient} from "@tanstack/react-query";
 export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            // Required. The default (true) would refetch project/load when the
+            // Required. The default (true) would refetch task/load when the
             // window regains focus, which re-triggers the restore-annotations
             // modal in the middle of a session.
             refetchOnWindowFocus: false,

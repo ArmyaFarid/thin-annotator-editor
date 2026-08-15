@@ -204,9 +204,8 @@ top-level `graphql/` folder, which is infrastructure only.
 ### The persisted format is not the in-memory model
 
 `Mask` is the editing model and is expected to keep changing. The bytes written to disk are
-`task/dto.ts` — a separate declaration, stamped `PROJECT_FORMAT_VERSION` (the constant kept its
-original name; the format it versions is the task document). Backend saves and localStorage
-drafts go through the same mappers, so there is one definition of the stored shape.
+`task/dto.ts` — a separate declaration, stamped `TASK_FORMAT_VERSION`. Backend saves and
+localStorage drafts go through the same mappers, so there is one definition of the stored shape.
 
 Rules when touching either side:
 
@@ -266,7 +265,6 @@ Real, unblocking, and safe to pick up:
 - **`Date.now()` ids** for masks and layers can collide within a millisecond;
   `crypto.randomUUID()` is the fix, across roughly ten files. Saved documents are protected by
   the DTO boundary — read the old numeric ids in `task/mappers.ts` and bump the format version.
-- **`PROJECT_FORMAT_VERSION`** still carries the old resource name now that the API says task.
 - **`hitTest` thresholds** in `Polygon`, `FreeformPath` and `Keypoint` use raw image-pixel
   distances instead of `pixels / zoom`. `ObjectEditor` does it correctly. No impact today because
   only `Mask.hitTest` is called from outside.

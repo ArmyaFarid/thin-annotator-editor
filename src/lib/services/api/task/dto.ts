@@ -1,17 +1,12 @@
 // Wire + on-disk shapes for a saved task.
 //
-// NOTE: the identifiers here deliberately keep the backend's vocabulary
-// ("project"), because they mirror a contract this app does not own — the
-// endpoints are still /api/project/*. Everything above the mappers speaks the
-// domain language ("task"); mappers.ts is the seam between the two.
-//
 // These are deliberately declared separately from the `Mask` domain type rather
 // than reusing it. `Mask` is the in-memory editing model and is expected to keep
 // changing (ids are scheduled to move from Date.now() numbers to UUID strings);
 // this file is the format already written to disk, which must keep loading.
 // When the two diverge, absorb it in mappers.ts — never by editing history.
 
-export const PROJECT_FORMAT_VERSION = 1;
+export const TASK_FORMAT_VERSION = 1;
 
 export interface RLEDTO {
     counts: string;
@@ -57,7 +52,7 @@ export interface SaveTaskRequestDTO {
  * The response envelope says `annotations` while the request says `data` — an
  * existing asymmetry in the backend contract, documented here rather than
  * silently absorbed.
- * `version` is absent on projects saved before this format existed (v0).
+ * `version` is absent on tasks saved before this format existed (v0).
  */
 export interface LoadTaskResponseDTO {
     version?: number;

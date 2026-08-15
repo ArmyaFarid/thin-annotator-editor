@@ -1,6 +1,6 @@
 import type {Mask, MaskLayer, RLEMask} from "@/app/atom.ts";
 import {
-    PROJECT_FORMAT_VERSION,
+    TASK_FORMAT_VERSION,
     type MaskDTO,
     type MaskLayerDTO,
     type RLEDTO,
@@ -104,4 +104,4 @@ export function masksToDto(masks: Mask[]): MaskDTO[] {
     }));
 }
 
-export {PROJECT_FORMAT_VERSION};
+export {TASK_FORMAT_VERSION};
