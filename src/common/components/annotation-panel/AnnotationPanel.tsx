@@ -2,7 +2,8 @@ import React from "react";
 import {useAtom} from "jotai";
 import {toast} from "sonner";
 import useAnnotationOptions from "@/common/components/annotation-panel/useAnnotationOptions.ts";
-import useSaveProject from "@/common/components/annotation-panel/useSaveProject.ts";
+import {useParams} from "react-router-dom";
+import {useSaveProject} from "@/lib/services/api/project/hooks.ts";
 import {t, getLang} from "@/i18n/index.ts";
 import {
     activeImageSizeAtom,
@@ -15,7 +16,7 @@ import {
 import {mergeToCanvas, canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {MaskEditTools} from "@/common/components/annotation-panel/MaskEditTools.tsx";
 import {MineralAnnotationForm} from "@/common/components/annotation-panel/MineralAnnotationForm.tsx";
-import useSaveAnnotation from "@/common/components/annotation-panel/useSaveAnnotation.ts";
+import {useExportAnnotation} from "@/lib/services/api/annotations/hooks.ts";
 import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
 
 export const AnnotationPanel: React.FC = () => {
@@ -29,23 +30,29 @@ export const AnnotationPanel: React.FC = () => {
     const activeMask =
         currentMask !== 0 ? masks.find((m) => m.id === currentMask) : null;
     const options = useAnnotationOptions();
-    const [saveProject, {saving: isSavingProject}] = useSaveProject();
-    const [saveAnnotation, {saving: isSavingAnnotation}] = useSaveAnnotation();
+    const {pairsCode = "", sampleId = ""} = useParams<{
+        pairsCode: string;
+        sampleId: string;
+    }>();
+    const {mutateAsync: saveProject, isPending: isSavingProject} =
+        useSaveProject({pairsCode, sampleId});
+    const {mutateAsync: saveAnnotation, isPending: isSavingAnnotation} =
+        useExportAnnotation({pairsCode, sampleId});
 
     async function handleSaveProject() {
-        const ok = await saveProject();
-        if (ok) {
+        try {
+            await saveProject();
             toast.success(t("saveProjectSuccess"));
-        } else {
+        } catch {
             toast.error(t("saveProjectError"));
         }
     }
 
     async function handleSaveAnnotation() {
-        const ok = await saveAnnotation();
-        if (ok) {
+        try {
+            await saveAnnotation();
             toast.success(t("exportAnnotationSuccess"));
-        } else {
+        } catch {
             toast.error(t("exportAnnotationError"));
         }
     }

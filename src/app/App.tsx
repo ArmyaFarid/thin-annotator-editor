@@ -29,7 +29,9 @@ import AnnotatorPage from "@/pages/annotator/AnnotatorPageWrapper.tsx";
 import HomePage from "@/pages/home/home-page.tsx";
 import PageNotFoundPage from "@/routes/PageNotFoundPage";
 import useSettingsContext from "@/settings/useSettingsContext";
-import useLoadAnnotationOptions from "@/app/useLoadAnnotationOptions.ts";
+import useLoadAnnotationOptions from "@/lib/services/api/options/hooks.ts";
+import {QueryClientProvider} from "@tanstack/react-query";
+import {queryClient} from "@/lib/services/api/queryClient.ts";
 import {useAtomValue} from "jotai";
 import {langAtom} from "@/app/atom.ts";
 import {Route, Routes} from "react-router-dom";
@@ -37,6 +39,14 @@ import {Toaster} from "sonner";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
 export default function AppWrapper() {
+    return (
+        <QueryClientProvider client={queryClient}>
+            <App />
+        </QueryClientProvider>
+    );
+}
+
+function App() {
     const {settings} = useSettingsContext();
     useLoadAnnotationOptions();
     // Subscribing here is what repaints the whole tree on a language change,

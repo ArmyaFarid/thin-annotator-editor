@@ -13,7 +13,7 @@ import {RestoreDraftBanner} from "@/common/components/restore-draft/RestoreDraft
 import {RestoreAnnotationsModal} from "@/common/components/restore-annotations/RestoreAnnotationsModal.tsx";
 import useAutosaveDraft from "@/app/useAutosaveDraft.ts";
 import useLoadProject from "@/pages/annotator/useLoadProject.ts";
-import useSaveProject from "@/common/components/annotation-panel/useSaveProject.ts";
+import {useSaveProject} from "@/lib/services/api/project/hooks.ts";
 import {activePairAtom} from "@/app/atom.ts";
 import {t} from "@/i18n/index.ts";
 import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
@@ -49,14 +49,15 @@ export default function AnnotatorPage() {
     );
 
     const [showFinishModal, setShowFinishModal] = useState(false);
-    const [saveAnnotations, {saving: savingProject}] = useSaveProject();
+    const {mutateAsync: saveAnnotations, isPending: savingProject} =
+        useSaveProject({pairsCode, sampleId});
 
     async function handleSaveAndLeave() {
-        const ok = await saveAnnotations();
-        if (ok) {
+        try {
+            await saveAnnotations();
             toast.success(t("projectSaved"));
             navigate("/");
-        } else {
+        } catch {
             toast.error(t("projectSaveError"));
         }
     }

@@ -17,6 +17,8 @@
     "@monaco-editor/react": "^4.6.0",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@stylexjs/stylex": "^0.6.1",
+    "@tanstack/react-query": "^5.101.4",
+    "axios": "^1.19.0",
     "graphql": "^16.8.1",
     "immer": "^10.0.3",
     "immutability-helper": "^3.1.1",

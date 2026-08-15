@@ -10,7 +10,8 @@ import {
 import {clearHistoryAtom} from "@/app/history.ts";
 import {clearDraft} from "@/app/persistence.ts";
 import {t} from "@/i18n/index.ts";
-import usePickFolder from "@/pages/home/usePickFolder.ts";
+import {usePickFolder} from "@/lib/services/api/folder/hooks.ts";
+import {EmptyFolderError} from "@/lib/services/api/folder/service.ts";
 
 export default function HomePage() {
     const navigate = useNavigate();
@@ -18,7 +19,7 @@ export default function HomePage() {
     const setPendingAnnotations = useSetAtom(pendingAnnotationsAtom);
     const resetProjectState = useSetAtom(resetProjectStateAtom);
     const clearHistory = useSetAtom(clearHistoryAtom);
-    const [pickFolder, {loading, error}] = usePickFolder();
+    const {mutateAsync: pickFolder, isPending: loading, error} = usePickFolder();
 
     // Always land on a clean slate — wipe any state leaked from a previous
     // project (masks, SLIC overlay, refine mode, filter selection, history).
@@ -28,8 +29,12 @@ export default function HomePage() {
     }, [resetProjectState, clearHistory]);
 
     async function handleOpen() {
-        const result = await pickFolder();
-        if (!result) return;
+        let result;
+        try {
+            result = await pickFolder();
+        } catch {
+            return; // surfaced through `error` below
+        }
 
         clearDraft(result.pairsCode, result.sampleId);
         setActivePair({pairsCode: result.pairsCode, sampleId: result.sampleId});
@@ -54,7 +59,11 @@ export default function HomePage() {
                 {loading ? t("picking") : t("openFolder")}
             </button>
             {error ? (
-                <p className="text-xs text-red-400">{error}</p>
+                <p className="text-xs text-red-400">
+                    {error instanceof EmptyFolderError
+                        ? t("noImagesInFolder")
+                        : t("importFailed")}
+                </p>
             ) : null}
         </div>
     );
