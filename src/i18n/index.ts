@@ -40,12 +40,12 @@ const T = {
         appSubtitle: "Sélectionnez un dossier de lame mince pour commencer",
         openFolder: "Ouvrir un dossier",
         picking: "Chargement...",
-        importFailed: "Échec de l'import du projet",
+        importFailed: "Échec de l'import de la tâche",
         noImagesInFolder:
-            "Aucune image dans ce dossier. Sélectionnez un dossier de projet valide.",
+            "Aucune image dans ce dossier. Sélectionnez un dossier de tâche valide.",
 
         // Import instructions (shown on the home page above the picker button)
-        importInstructionsTitle: "Préparer le dossier de projet",
+        importInstructionsTitle: "Préparer le dossier de la tâche",
         importStructureHeading: "Structure du dossier",
         importStructureBody:
             "Sélectionnez le dossier FOV (champ de vision). Son dossier parent doit être nommé d'après la lame mince.",
@@ -69,16 +69,16 @@ const T = {
         // Restore annotations modal
         restoreTitle: "Annotations sauvegardées trouvées",
         restoreFound:
-            "Ce projet contient des annotations sauvegardées. Voulez-vous les restaurer ?",
+            "Cette tâche contient des annotations sauvegardées. Voulez-vous les restaurer ?",
         restoreYes: "Restaurer",
         restoreNo: "Ignorer",
 
-        // Save project
-        saveProject: "Enregistrer le brouillon",
+        // Save task
+        saveTask: "Enregistrer le brouillon",
         saveAnnotation: "Exporter l'annotation (image actuelle)",
         saving: "Sauvegarde...",
-        saveProjectSuccess: "Brouillon enregistré",
-        saveProjectError: "Échec de l'enregistrement du brouillon",
+        saveTaskSuccess: "Brouillon enregistré",
+        saveTaskError: "Échec de l'enregistrement du brouillon",
         exportAnnotationSuccess: "Annotation exportée",
         exportAnnotationError: "Échec de l'export de l'annotation",
 
@@ -90,10 +90,10 @@ const T = {
         draftDiscard: "Ignorer",
 
         // Top bar
-        openNewProject: "Ouvrir un nouveau projet",
+        openNewTask: "Ouvrir une nouvelle tâche",
         loadImage: "Charger une image",
         finish: "Terminer",
-        finishTitle: "Terminer le projet",
+        finishTitle: "Terminer la tâche",
         finishConfirm:
             "Voulez-vous enregistrer les modifications avant de quitter ?",
         finishSave: "Enregistrer et quitter",
@@ -276,7 +276,7 @@ const T = {
 
         // Annotation panel tooltips
         deleteRegion: "Supprimer cette région",
-        saveProjectTooltip:
+        saveTaskTooltip:
             "Sauvegarde le travail en cours pour le reprendre plus tard",
         exportAnnotationTooltip:
             "Exporte l'annotation finale de l'image actuelle au format COCO",
@@ -287,7 +287,7 @@ const T = {
         refineTooltip: "Ouvrir l'outil de raffinement (gomme/pinceau)",
         hideAnchorsTooltip: "Masquer les ancres (fusionner les sommets en masque)",
         showAnchorsTooltip: "Afficher les sommets éditables (points d'ancrage)",
-        openNewProjectTooltip: "Quitter ce projet pour en ouvrir un autre",
+        openNewTaskTooltip: "Quitter cette tâche pour en ouvrir une autre",
         finishTooltip: "Terminer la session (avec option de sauvegarde)",
 
         // Mask list (legacy panel)
@@ -296,9 +296,9 @@ const T = {
         anchorsOff: "Pas d'ancres",
         addObject: "Ajouter un objet",
 
-        // Project toasts
-        projectSaved: "Projet sauvegardé",
-        projectSaveError: "Échec de la sauvegarde",
+        // Task toasts
+        taskSaved: "Tâche sauvegardée",
+        taskSaveError: "Échec de la sauvegarde",
         unknownError: "Erreur inconnue",
 
         // Canvas
@@ -367,12 +367,12 @@ const T = {
         appSubtitle: "Select a thin section folder to begin",
         openFolder: "Open folder",
         picking: "Loading...",
-        importFailed: "Failed to import project",
+        importFailed: "Failed to import task",
         noImagesInFolder:
-            "No image in this folder. Please select a valid project folder.",
+            "No image in this folder. Please select a valid task folder.",
 
         // Import instructions (shown on the home page above the picker button)
-        importInstructionsTitle: "Prepare your project folder",
+        importInstructionsTitle: "Prepare your task folder",
         importStructureHeading: "Folder structure",
         importStructureBody:
             "Select the FOV (field of view) folder. Its parent folder must be named after the thin section.",
@@ -395,16 +395,16 @@ const T = {
         // Restore annotations modal
         restoreTitle: "Saved annotations found",
         restoreFound:
-            "This project has saved annotations. Do you want to restore them?",
+            "This task has saved annotations. Do you want to restore them?",
         restoreYes: "Restore",
         restoreNo: "Ignore",
 
-        // Save project
-        saveProject: "Save draft",
+        // Save task
+        saveTask: "Save draft",
         saveAnnotation: "Export annotation (current image)",
         saving: "Saving...",
-        saveProjectSuccess: "Draft saved",
-        saveProjectError: "Failed to save draft",
+        saveTaskSuccess: "Draft saved",
+        saveTaskError: "Failed to save draft",
         exportAnnotationSuccess: "Annotation exported",
         exportAnnotationError: "Failed to export annotation",
 
@@ -416,10 +416,10 @@ const T = {
         draftDiscard: "Discard",
 
         // Top bar
-        openNewProject: "Open a new project",
+        openNewTask: "Open a new task",
         loadImage: "Load image",
         finish: "Finish",
-        finishTitle: "Finish project",
+        finishTitle: "Finish task",
         finishConfirm: "Do you want to save your changes before leaving?",
         finishSave: "Save and leave",
         finishDiscard: "Leave without saving",
@@ -600,7 +600,7 @@ const T = {
 
         // Annotation panel tooltips
         deleteRegion: "Delete this region",
-        saveProjectTooltip: "Save the work in progress to resume it later",
+        saveTaskTooltip: "Save the work in progress to resume it later",
         exportAnnotationTooltip:
             "Export the final annotation of the current image in COCO format",
         addModeTooltip: "Add mode: strokes become areas of the region",
@@ -609,7 +609,7 @@ const T = {
         refineTooltip: "Open the refine tool (eraser/brush)",
         hideAnchorsTooltip: "Hide the anchors (merge the vertices into a mask)",
         showAnchorsTooltip: "Show the editable vertices (anchor points)",
-        openNewProjectTooltip: "Leave this project to open another one",
+        openNewTaskTooltip: "Leave this task to open another one",
         finishTooltip: "Finish the session (with a save option)",
 
         // Mask list (legacy panel)
@@ -618,9 +618,9 @@ const T = {
         anchorsOff: "No anchors",
         addObject: "Add object",
 
-        // Project toasts
-        projectSaved: "Project saved",
-        projectSaveError: "Failed to save",
+        // Task toasts
+        taskSaved: "Task saved",
+        taskSaveError: "Failed to save",
         unknownError: "Unknown error",
 
         // Canvas

@@ -1,7 +1,7 @@
 import api from "@/lib/services/api/axios.ts";
 import type {Mask} from "@/app/atom.ts";
-import type {MaskDTO} from "@/lib/services/api/project/dto.ts";
-import {dtoToMasks} from "@/lib/services/api/project/mappers.ts";
+import type {MaskDTO} from "@/lib/services/api/task/dto.ts";
+import {dtoToMasks} from "@/lib/services/api/task/mappers.ts";
 
 /**
  * The backend answers HTTP 200 with `image_count: 0` when the chosen directory

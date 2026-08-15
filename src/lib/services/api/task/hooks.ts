@@ -1,10 +1,10 @@
 import {useMutation, useQuery} from "@tanstack/react-query";
 import {useAtomValue} from "jotai";
 import {masksAtom} from "@/app/atom.ts";
-import {projectService, type ProjectRef} from "@/lib/services/api/project/service.ts";
+import {taskService, type TaskRef} from "@/lib/services/api/task/service.ts";
 
-export const projectKey = (pairsCode: string, sampleId: string) =>
-    ["project", pairsCode, sampleId] as const;
+export const taskKey = (pairsCode: string, sampleId: string) =>
+    ["task", pairsCode, sampleId] as const;
 
 /**
  * Saved annotations for one sample.
@@ -16,21 +16,21 @@ export const projectKey = (pairsCode: string, sampleId: string) =>
  * `enabled` carries the conditions the old hook applied by hand — don't fetch
  * when the caller already has state that supersedes the backend copy.
  */
-export function useProject(
-    {pairsCode, sampleId}: ProjectRef,
+export function useTask(
+    {pairsCode, sampleId}: TaskRef,
     enabled: boolean,
 ) {
     return useQuery({
-        queryKey: projectKey(pairsCode, sampleId),
-        queryFn: () => projectService.load({pairsCode, sampleId}),
+        queryKey: taskKey(pairsCode, sampleId),
+        queryFn: () => taskService.load({pairsCode, sampleId}),
         enabled: enabled && pairsCode !== "" && sampleId !== "",
     });
 }
 
 /** Saves the current masks for a sample. */
-export function useSaveProject({pairsCode, sampleId}: ProjectRef) {
+export function useSaveTask({pairsCode, sampleId}: TaskRef) {
     const masks = useAtomValue(masksAtom);
     return useMutation({
-        mutationFn: () => projectService.save({pairsCode, sampleId, masks}),
+        mutationFn: () => taskService.save({pairsCode, sampleId, masks}),
     });
 }

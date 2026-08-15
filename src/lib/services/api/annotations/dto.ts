@@ -1,4 +1,4 @@
-import type {RLEDTO} from "@/lib/services/api/project/dto.ts";
+import type {RLEDTO} from "@/lib/services/api/task/dto.ts";
 
 // The exported annotation document — COCO-flavoured, and genuinely different
 // from the domain model: masks are flattened to a single RLE segmentation and

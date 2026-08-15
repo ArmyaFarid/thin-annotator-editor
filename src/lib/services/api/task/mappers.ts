@@ -4,7 +4,7 @@ import {
     type MaskDTO,
     type MaskLayerDTO,
     type RLEDTO,
-} from "@/lib/services/api/project/dto.ts";
+} from "@/lib/services/api/task/dto.ts";
 import Logger from "@/common/logger/Logger.ts";
 
 // Validation lives here because 21 files consume the Mask shape: a payload that
@@ -80,7 +80,7 @@ export function dtoToMasks(raw: unknown): Mask[] {
     }
     if (dropped > 0) {
         Logger.warn(
-            `[project] dropped ${dropped} malformed mask(s) while loading — saved file may be from an incompatible version`,
+            `[task] dropped ${dropped} malformed mask(s) while loading — saved file may be from an incompatible version`,
         );
     }
     return kept;

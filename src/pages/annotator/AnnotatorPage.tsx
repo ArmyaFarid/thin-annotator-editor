@@ -12,8 +12,8 @@ import {ZoomPreferenceToggle} from "@/common/components/zoom-preference/ZoomPref
 import {RestoreDraftBanner} from "@/common/components/restore-draft/RestoreDraftBanner.tsx";
 import {RestoreAnnotationsModal} from "@/common/components/restore-annotations/RestoreAnnotationsModal.tsx";
 import useAutosaveDraft from "@/app/useAutosaveDraft.ts";
-import useLoadProject from "@/pages/annotator/useLoadProject.ts";
-import {useSaveProject} from "@/lib/services/api/project/hooks.ts";
+import useLoadTask from "@/pages/annotator/useLoadTask.ts";
+import {useSaveTask} from "@/lib/services/api/task/hooks.ts";
 import {activePairAtom} from "@/app/atom.ts";
 import {t} from "@/i18n/index.ts";
 import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
@@ -42,23 +42,23 @@ export default function AnnotatorPage() {
     // pick-folder already loaded annotations into the atom — skip both restores
     const isPickFolder =
         (location.state as {source?: string} | null)?.source === "pick-folder";
-    const refetchAnnotations = useLoadProject(
+    const refetchAnnotations = useLoadTask(
         pairsCode,
         sampleId,
         isPickFolder,
     );
 
     const [showFinishModal, setShowFinishModal] = useState(false);
-    const {mutateAsync: saveAnnotations, isPending: savingProject} =
-        useSaveProject({pairsCode, sampleId});
+    const {mutateAsync: saveAnnotations, isPending: savingTask} =
+        useSaveTask({pairsCode, sampleId});
 
     async function handleSaveAndLeave() {
         try {
             await saveAnnotations();
-            toast.success(t("projectSaved"));
+            toast.success(t("taskSaved"));
             navigate("/");
         } catch {
-            toast.error(t("projectSaveError"));
+            toast.error(t("taskSaveError"));
         }
     }
 
@@ -88,13 +88,13 @@ export default function AnnotatorPage() {
                         <div className="flex gap-2">
                             <button
                                 onClick={handleSaveAndLeave}
-                                disabled={savingProject}
+                                disabled={savingTask}
                                 className="flex-1 py-2 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm font-medium">
-                                {savingProject ? t("saving") : t("finishSave")}
+                                {savingTask ? t("saving") : t("finishSave")}
                             </button>
                             <button
                                 onClick={() => navigate("/")}
-                                disabled={savingProject}
+                                disabled={savingTask}
                                 className="flex-1 py-2 rounded-lg text-white/50 border border-white/15 hover:bg-white/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-sm">
                                 {t("finishDiscard")}
                             </button>
@@ -103,12 +103,12 @@ export default function AnnotatorPage() {
                 </div>
             ) : null}
             <div className="w-full flex flex-row justify-between items-center">
-                <Tooltip content={t("openNewProjectTooltip")} side="bottom">
+                <Tooltip content={t("openNewTaskTooltip")} side="bottom">
                     <button
                         onClick={() => setShowFinishModal(true)}
                         className="flex items-center gap-1 bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">
                         <ChevronLeftIcon className="w-3 h-3" />
-                        {t("openNewProject")}
+                        {t("openNewTask")}
                     </button>
                 </Tooltip>
                 <span className="text-xs text-white/40 font-mono">

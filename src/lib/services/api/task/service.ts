@@ -4,19 +4,20 @@ import {
     PROJECT_FORMAT_VERSION,
     type LoadProjectResponseDTO,
     type SaveProjectRequestDTO,
-} from "@/lib/services/api/project/dto.ts";
-import {dtoToMasks, masksToDto} from "@/lib/services/api/project/mappers.ts";
+} from "@/lib/services/api/task/dto.ts";
+import {dtoToMasks, masksToDto} from "@/lib/services/api/task/mappers.ts";
 
+// The backend still calls this resource a project; only the URL keeps that name.
 const BASE = "/api/project";
 
-export interface ProjectRef {
+export interface TaskRef {
     pairsCode: string;
     sampleId: string;
 }
 
-export const projectService = {
-    /** Returns the saved masks, or an empty array when the project has none. */
-    load: async ({pairsCode, sampleId}: ProjectRef): Promise<Mask[]> => {
+export const taskService = {
+    /** Returns the saved masks, or an empty array when the task has none. */
+    load: async ({pairsCode, sampleId}: TaskRef): Promise<Mask[]> => {
         const res = await api.get<LoadProjectResponseDTO>(`${BASE}/load`, {
             params: {pairsCode, sampleId},
         });
@@ -27,7 +28,7 @@ export const projectService = {
         pairsCode,
         sampleId,
         masks,
-    }: ProjectRef & {masks: Mask[]}): Promise<void> => {
+    }: TaskRef & {masks: Mask[]}): Promise<void> => {
         const body: SaveProjectRequestDTO = {
             pairsCode,
             sampleId,

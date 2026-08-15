@@ -2,10 +2,10 @@ import {useEffect, useMemo} from "react";
 import {useAtom, useAtomValue} from "jotai";
 import {masksAtom, pendingAnnotationsAtom} from "@/app/atom.ts";
 import {loadDraft} from "@/app/persistence.ts";
-import {useProject} from "@/lib/services/api/project/hooks.ts";
+import {useTask} from "@/lib/services/api/task/hooks.ts";
 
 /**
- * Page-level adapter over the project query: decides *whether* the backend copy
+ * Page-level adapter over the task query: decides *whether* the backend copy
  * should be loaded at all, and routes the result into the restore-prompt atom.
  *
  * The conditions stay here rather than in the service because they are about
@@ -13,7 +13,7 @@ import {useProject} from "@/lib/services/api/project/hooks.ts";
  *
  * Returns a refetch callback used after the draft banner is dismissed.
  */
-export default function useLoadProject(
+export default function useLoadTask(
     pairsCode: string,
     sampleId: string,
     skip: boolean,
@@ -33,7 +33,7 @@ export default function useLoadProject(
     // or a local draft is newer than the last save.
     const enabled = !skip && pending === null && masks.length === 0 && !hasDraft;
 
-    const {data, refetch} = useProject({pairsCode, sampleId}, enabled);
+    const {data, refetch} = useTask({pairsCode, sampleId}, enabled);
 
     useEffect(() => {
         if (data && data.length > 0) {

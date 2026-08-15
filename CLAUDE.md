@@ -126,7 +126,11 @@ them one call deep (`usePreserveZoom`, `useToolbarLayout`, `useLanguage`).
 Preferences that survive reloads (`preserveZoom`, `toolbarLayout`, `lang`) read `localStorage`
 at atom creation and write it in their setter hook. Don't reach for `atomWithStorage`.
 
-`resetProjectStateAtom` wipes project state on returning home; UI preferences deliberately survive.
+`resetTaskStateAtom` wipes task state on returning home; UI preferences deliberately survive.
+
+A **task** is one field of view being annotated. The backend still calls this a *project* — its
+endpoints are `/api/project/*` — so the DTOs in `lib/services/api/task/dto.ts` keep that name and
+`mappers.ts` is the seam. Everything above the mappers says task.
 
 ---
 

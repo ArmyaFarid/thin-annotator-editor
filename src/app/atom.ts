@@ -208,11 +208,11 @@ export const activePairAtom = atom<ActivePair | null>(null);
 
 export const pendingAnnotationsAtom = atom<Mask[] | null>(null);
 
-// Wipe all project-scoped state. Trigger when landing on the home page so
-// switching projects (A → home → B) doesn't carry A's masks, SLIC overlay,
+// Wipe all task-scoped state. Trigger when landing on the home page so
+// switching tasks (A → home → B) doesn't carry A's masks, SLIC overlay,
 // refine mode, filter, etc. into B. UI preferences (preserveZoom, minimap,
 // HUD, border-only, shortcuts) are intentionally preserved.
-export const resetProjectStateAtom = atom(null, (_get, set) => {
+export const resetTaskStateAtom = atom(null, (_get, set) => {
     set(activeToolAtom, "select-add");
     set(promptsAtom, []);
     set(activeImage, null);

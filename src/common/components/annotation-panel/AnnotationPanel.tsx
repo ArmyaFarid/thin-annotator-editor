@@ -3,7 +3,7 @@ import {useAtom} from "jotai";
 import {toast} from "sonner";
 import useAnnotationOptions from "@/common/components/annotation-panel/useAnnotationOptions.ts";
 import {useParams} from "react-router-dom";
-import {useSaveProject} from "@/lib/services/api/project/hooks.ts";
+import {useSaveTask} from "@/lib/services/api/task/hooks.ts";
 import {t, getLang} from "@/i18n/index.ts";
 import {
     activeImageSizeAtom,
@@ -34,17 +34,17 @@ export const AnnotationPanel: React.FC = () => {
         pairsCode: string;
         sampleId: string;
     }>();
-    const {mutateAsync: saveProject, isPending: isSavingProject} =
-        useSaveProject({pairsCode, sampleId});
+    const {mutateAsync: saveTask, isPending: isSavingTask} =
+        useSaveTask({pairsCode, sampleId});
     const {mutateAsync: saveAnnotation, isPending: isSavingAnnotation} =
         useExportAnnotation({pairsCode, sampleId});
 
-    async function handleSaveProject() {
+    async function handleSaveTask() {
         try {
-            await saveProject();
-            toast.success(t("saveProjectSuccess"));
+            await saveTask();
+            toast.success(t("saveTaskSuccess"));
         } catch {
-            toast.error(t("saveProjectError"));
+            toast.error(t("saveTaskError"));
         }
     }
 
@@ -299,12 +299,12 @@ export const AnnotationPanel: React.FC = () => {
                 Only rendered in list mode and when there's something to save. */}
             {currentMask === 0 && masks.length > 0 ? (
                 <div className="shrink-0 border-t border-white/10 p-2 flex flex-col gap-1.5 bg-secondary">
-                    <Tooltip content={t("saveProjectTooltip")}>
+                    <Tooltip content={t("saveTaskTooltip")}>
                         <button
-                            disabled={isSavingProject}
+                            disabled={isSavingTask}
                             className="border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                            onClick={handleSaveProject}>
-                            {isSavingProject ? t("saving") : t("saveProject")}
+                            onClick={handleSaveTask}>
+                            {isSavingTask ? t("saving") : t("saveTask")}
                         </button>
                     </Tooltip>
                     <Tooltip content={t("exportAnnotationTooltip")}>

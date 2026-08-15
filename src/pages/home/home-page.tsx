@@ -5,7 +5,7 @@ import {FolderOpenIcon} from "@heroicons/react/24/outline";
 import {
     activePairAtom,
     pendingAnnotationsAtom,
-    resetProjectStateAtom,
+    resetTaskStateAtom,
 } from "@/app/atom.ts";
 import {clearHistoryAtom} from "@/app/history.ts";
 import {clearDraft} from "@/app/persistence.ts";
@@ -17,16 +17,16 @@ export default function HomePage() {
     const navigate = useNavigate();
     const setActivePair = useSetAtom(activePairAtom);
     const setPendingAnnotations = useSetAtom(pendingAnnotationsAtom);
-    const resetProjectState = useSetAtom(resetProjectStateAtom);
+    const resetTaskState = useSetAtom(resetTaskStateAtom);
     const clearHistory = useSetAtom(clearHistoryAtom);
     const {mutateAsync: pickFolder, isPending: loading, error} = usePickFolder();
 
     // Always land on a clean slate — wipe any state leaked from a previous
-    // project (masks, SLIC overlay, refine mode, filter selection, history).
+    // task (masks, SLIC overlay, refine mode, filter selection, history).
     useEffect(() => {
-        resetProjectState();
+        resetTaskState();
         clearHistory();
-    }, [resetProjectState, clearHistory]);
+    }, [resetTaskState, clearHistory]);
 
     async function handleOpen() {
         let result;

@@ -1,4 +1,9 @@
-// Wire + on-disk shapes for a saved project.
+// Wire + on-disk shapes for a saved task.
+//
+// NOTE: the identifiers here deliberately keep the backend's vocabulary
+// ("project"), because they mirror a contract this app does not own — the
+// endpoints are still /api/project/*. Everything above the mappers speaks the
+// domain language ("task"); mappers.ts is the seam between the two.
 //
 // These are deliberately declared separately from the `Mask` domain type rather
 // than reusing it. `Mask` is the in-memory editing model and is expected to keep

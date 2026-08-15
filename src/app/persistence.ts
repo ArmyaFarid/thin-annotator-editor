@@ -1,6 +1,6 @@
 import type {Mask} from "@/app/atom.ts";
-import {PROJECT_FORMAT_VERSION, type MaskDTO} from "@/lib/services/api/project/dto.ts";
-import {dtoToMasks, masksToDto} from "@/lib/services/api/project/mappers.ts";
+import {PROJECT_FORMAT_VERSION, type MaskDTO} from "@/lib/services/api/task/dto.ts";
+import {dtoToMasks, masksToDto} from "@/lib/services/api/task/mappers.ts";
 
 // Drafts are the same document as a backend save, just stored locally, so they
 // share one format definition. A draft written before versioning has no
