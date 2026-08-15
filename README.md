@@ -45,10 +45,16 @@ mineral actually is.
 
 ## How a session goes
 
+One **task** is one field of view: the folder of lighting variants for it, the regions you draw,
+and the mineral data you record. You open a task, work on it, and finish it.
+
 1. **Prepare a folder** of images for one field of view (see the layout below)
 2. **Open it** — the app lists the lighting variants it found
 3. **Annotate** — one region per mineral grain, naming each one and filling in its properties
 4. **Export** — a JSON file with RLE mask segmentations plus your mineral data
+
+Work is saved as you go: **Save draft** keeps a task to resume later, **Export** writes the final
+annotation for the current image.
 
 ### Expected folder layout
 
@@ -179,8 +185,9 @@ src/
 ├── canvas/       annotation engine — plain TypeScript, no React
 ├── common/       React UI: toolbar, annotation panel, overlays, modals
 ├── app/          Jotai state, undo/redo history, config
+├── lib/services/ REST access: one folder per resource (dto → mappers → service → hooks)
 ├── i18n/         translation dictionary (fr / en)
-├── graphql/      Relay environment and fetching
+├── graphql/      Relay environment and fetching (GraphQL only)
 └── pages/        home (folder picker) and annotator routes
 ```
 
