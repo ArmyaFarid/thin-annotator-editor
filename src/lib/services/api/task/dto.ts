@@ -44,8 +44,8 @@ export interface MaskDTO {
     annotation?: unknown;
 }
 
-/** POST /api/project/save */
-export interface SaveProjectRequestDTO {
+/** POST /api/task/save */
+export interface SaveTaskRequestDTO {
     pairsCode: string;
     sampleId: string;
     version: number;
@@ -53,13 +53,13 @@ export interface SaveProjectRequestDTO {
 }
 
 /**
- * GET /api/project/load.
+ * GET /api/task/load.
  * The response envelope says `annotations` while the request says `data` — an
  * existing asymmetry in the backend contract, documented here rather than
  * silently absorbed.
  * `version` is absent on projects saved before this format existed (v0).
  */
-export interface LoadProjectResponseDTO {
+export interface LoadTaskResponseDTO {
     version?: number;
     annotations: MaskDTO[] | null;
 }
