@@ -1,7 +1,13 @@
 import type {Mask} from "@/app/atom.ts";
+import {TASK_FORMAT_VERSION, type MaskDTO} from "@/lib/services/api/task/dto.ts";
+import {dtoToMasks, masksToDto} from "@/lib/services/api/task/mappers.ts";
 
-interface DraftState {
-    masks: Mask[];
+// Drafts are the same document as a backend save, just stored locally, so they
+// share one format definition. A draft written before versioning has no
+// `version` field and no `masks` wrapper change — dtoToMasks handles both.
+interface DraftDTO {
+    version?: number;
+    masks: MaskDTO[];
 }
 
 function draftKey(pairsCode: string, sampleId: string): string {
@@ -14,18 +20,28 @@ export function saveDraft(pairsCode: string, sampleId: string, masks: Mask[]): v
         if (masks.length === 0) {
             localStorage.removeItem(key);
         } else {
-            localStorage.setItem(key, JSON.stringify({masks}));
+            const draft: DraftDTO = {
+                version: TASK_FORMAT_VERSION,
+                masks: masksToDto(masks),
+            };
+            localStorage.setItem(key, JSON.stringify(draft));
         }
-    } catch {}
+    } catch {
+        /* ignore */
+    }
 }
 
-export function loadDraft(pairsCode: string, sampleId: string): DraftState | null {
+export function loadDraft(
+    pairsCode: string,
+    sampleId: string,
+): {masks: Mask[]} | null {
     try {
         const raw = localStorage.getItem(draftKey(pairsCode, sampleId));
         if (!raw) return null;
-        const parsed = JSON.parse(raw) as DraftState;
-        if (!Array.isArray(parsed.masks) || parsed.masks.length === 0) return null;
-        return parsed;
+        const parsed = JSON.parse(raw) as DraftDTO;
+        const masks = dtoToMasks(parsed?.masks);
+        if (masks.length === 0) return null;
+        return {masks};
     } catch {
         return null;
     }
@@ -34,5 +50,7 @@ export function loadDraft(pairsCode: string, sampleId: string): DraftState | nul
 export function clearDraft(pairsCode: string, sampleId: string): void {
     try {
         localStorage.removeItem(draftKey(pairsCode, sampleId));
-    } catch {}
+    } catch {
+        /* ignore */
+    }
 }

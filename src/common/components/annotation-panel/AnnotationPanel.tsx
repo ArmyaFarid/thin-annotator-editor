@@ -2,7 +2,8 @@ import React from "react";
 import {useAtom} from "jotai";
 import {toast} from "sonner";
 import useAnnotationOptions from "@/common/components/annotation-panel/useAnnotationOptions.ts";
-import useSaveProject from "@/common/components/annotation-panel/useSaveProject.ts";
+import {useParams} from "react-router-dom";
+import {useSaveTask} from "@/lib/services/api/task/hooks.ts";
 import {t, getLang} from "@/i18n/index.ts";
 import {
     activeImageSizeAtom,
@@ -15,7 +16,7 @@ import {
 import {mergeToCanvas, canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {MaskEditTools} from "@/common/components/annotation-panel/MaskEditTools.tsx";
 import {MineralAnnotationForm} from "@/common/components/annotation-panel/MineralAnnotationForm.tsx";
-import useSaveAnnotation from "@/common/components/annotation-panel/useSaveAnnotation.ts";
+import {useExportAnnotation} from "@/lib/services/api/annotations/hooks.ts";
 import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
 
 export const AnnotationPanel: React.FC = () => {
@@ -29,23 +30,29 @@ export const AnnotationPanel: React.FC = () => {
     const activeMask =
         currentMask !== 0 ? masks.find((m) => m.id === currentMask) : null;
     const options = useAnnotationOptions();
-    const [saveProject, {saving: isSavingProject}] = useSaveProject();
-    const [saveAnnotation, {saving: isSavingAnnotation}] = useSaveAnnotation();
+    const {pairsCode = "", sampleId = ""} = useParams<{
+        pairsCode: string;
+        sampleId: string;
+    }>();
+    const {mutateAsync: saveTask, isPending: isSavingTask} =
+        useSaveTask({pairsCode, sampleId});
+    const {mutateAsync: saveAnnotation, isPending: isSavingAnnotation} =
+        useExportAnnotation({pairsCode, sampleId});
 
-    async function handleSaveProject() {
-        const ok = await saveProject();
-        if (ok) {
-            toast.success(t("saveProjectSuccess"));
-        } else {
-            toast.error(t("saveProjectError"));
+    async function handleSaveTask() {
+        try {
+            await saveTask();
+            toast.success(t("saveTaskSuccess"));
+        } catch {
+            toast.error(t("saveTaskError"));
         }
     }
 
     async function handleSaveAnnotation() {
-        const ok = await saveAnnotation();
-        if (ok) {
+        try {
+            await saveAnnotation();
             toast.success(t("exportAnnotationSuccess"));
-        } else {
+        } catch {
             toast.error(t("exportAnnotationError"));
         }
     }
@@ -292,12 +299,12 @@ export const AnnotationPanel: React.FC = () => {
                 Only rendered in list mode and when there's something to save. */}
             {currentMask === 0 && masks.length > 0 ? (
                 <div className="shrink-0 border-t border-white/10 p-2 flex flex-col gap-1.5 bg-secondary">
-                    <Tooltip content={t("saveProjectTooltip")}>
+                    <Tooltip content={t("saveTaskTooltip")}>
                         <button
-                            disabled={isSavingProject}
+                            disabled={isSavingTask}
                             className="border border-white/20 text-xs py-1.5 rounded hover:bg-[#2F2F2F] text-white/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                            onClick={handleSaveProject}>
-                            {isSavingProject ? t("saving") : t("saveProject")}
+                            onClick={handleSaveTask}>
+                            {isSavingTask ? t("saving") : t("saveTask")}
                         </button>
                     </Tooltip>
                     <Tooltip content={t("exportAnnotationTooltip")}>

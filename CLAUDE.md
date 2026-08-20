@@ -28,10 +28,11 @@ so a missed registration point is a compile error rather than a runtime surprise
 
 ## The domain model
 
-Three names for overlapping things — worth getting straight before touching anything.
+Names for overlapping things — worth getting straight before touching anything.
 
 | Concept | Type | Meaning |
 |---|---|---|
+| **Task** | identified by `{pairsCode, sampleId}` | One field of view being annotated: its lighting variants, its objects, its saved state. The unit the user opens, saves, and finishes. Frontend and backend both call it a task (`/api/task/*`). |
 | **Object** / region | `Mask` (`app/atom.ts`) | One annotated mineral grain. Has an id, label, colour, `layers[]`, and mineral `annotation`. This is what the user creates, names, and exports. |
 | **Layer** | `MaskLayer` | A *piece* of an object: either an RLE bitmap (`rleMask`) or a vector `canvasShape`, tagged `layerKind: "fill" \| "hole"`. |
 | **Drawable** | `AnnotationObject` (`canvas/types.ts`) | A rendering interface — `render` / `hitTest` / `getBounds`. Implemented by `BoundingBox`, `Keypoint`, `Polygon`, `FreeformPath`, and the canvas-side `Mask`. Not a domain concept. |
@@ -126,7 +127,7 @@ them one call deep (`usePreserveZoom`, `useToolbarLayout`, `useLanguage`).
 Preferences that survive reloads (`preserveZoom`, `toolbarLayout`, `lang`) read `localStorage`
 at atom creation and write it in their setter hook. Don't reach for `atomWithStorage`.
 
-`resetProjectStateAtom` wipes project state on returning home; UI preferences deliberately survive.
+`resetTaskStateAtom` wipes task state on returning home; UI preferences deliberately survive.
 
 ---
 
@@ -195,8 +196,26 @@ top-level `graphql/` folder, which is infrastructure only.
 - `computeSlicImage` — bbox → superpixel RLEs
 - `getPairs` — the lighting-modality and gamma variants of one field of view
 
-**REST** — `/api/pick-folder`, `/api/project/load`, `/api/project/save`, `/api/annotations/save`,
-`/api/annotation-options`.
+**REST** — `/api/pick-folder`, `/api/task/load`, `/api/task/save`, `/api/annotations/save`,
+`/api/annotation-options`. Reached through `lib/services/api/`, one folder per resource:
+`dto.ts` (wire shapes) → `mappers.ts` (validation + conversion) → `service.ts` → `hooks.ts`
+(TanStack Query).
+
+### The persisted format is not the in-memory model
+
+`Mask` is the editing model and is expected to keep changing. The bytes written to disk are
+`task/dto.ts` — a separate declaration, stamped `TASK_FORMAT_VERSION`. Backend saves and
+localStorage drafts go through the same mappers, so there is one definition of the stored shape.
+
+Rules when touching either side:
+
+- Changing `Mask` does **not** change the format. Absorb the difference in `mappers.ts`.
+- A payload with no `version` is a v0 document and must keep loading.
+- `dtoToMasks` validates and drops malformed entries with a warning. Do not replace it with a
+  cast: 21 files consume `Mask`, and a bad field surfaces as a blank canvas rather than an error.
+
+This is why the planned `Date.now()` → `crypto.randomUUID()` id change is safe to make now — the
+mapper is where the old numeric ids get read.
 
 Bridge pattern: read the result with `useLazyLoadQuery` / `useMutation`, then write it into an
 atom in a callback or effect. Relay is transport; Jotai is the source of truth. Never store Relay
@@ -244,7 +263,8 @@ Real, unblocking, and safe to pick up:
 - **`editorOnAtom`** is written by two components and read by none; the panel switches on
   `currentMask !== 0`.
 - **`Date.now()` ids** for masks and layers can collide within a millisecond;
-  `crypto.randomUUID()` is the fix, across roughly ten files.
+  `crypto.randomUUID()` is the fix, across roughly ten files. Saved documents are protected by
+  the DTO boundary — read the old numeric ids in `task/mappers.ts` and bump the format version.
 - **`hitTest` thresholds** in `Polygon`, `FreeformPath` and `Keypoint` use raw image-pixel
   distances instead of `pixels / zoom`. `ObjectEditor` does it correctly. No impact today because
   only `Mask.hitTest` is called from outside.
