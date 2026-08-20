@@ -10,10 +10,6 @@
  * - Colors are CSS color strings.
  * - Alphas are 0–1.
  *
- * EXCEPTION: `mask.borderThickness` is in IMAGE PIXELS because it is applied
- * inside the RLE rasterization loop (a pixel kernel on the natural-resolution
- * mask grid), not as a drawn stroke.
- *
  * NAMING
  * ──────
  * Top-level groups describe *what* is being styled:
@@ -78,17 +74,10 @@ export const theme = {
         strokeWidth: 2.5,
         /** Fill opacity for all mask types (RLE, freeform, polygon). */
         fillAlpha: 0.1,
-        /**
-         * Image-pixel border thickness applied during RLE rasterization.
-         * NOTE: this is in IMAGE PIXELS, not CSS pixels — see file header.
-         */
-        borderThickness: 2,
-        /** RLE border color multiplier (0 = black, 1 = full hue). */
+        /** Mask outline color multiplier (0 = black, 1 = full hue). */
         borderDarken: 1.0,
         /** CSS filter applied to the active mask for emphasis. */
         activeShadow: "drop-shadow(0 0 4px rgba(255,255,255,0.85))",
-        /** Additive re-blit opacity for the hovered (selectable) mask. */
-        hoverGlowAlpha: 0.35,
         /** Skeleton-mode stroke (active mask with only polygon layers). */
         skeletonStrokeWidth: 1.5,
         skeletonHoleStroke: "rgba(255,140,50,0.9)",
@@ -184,5 +173,4 @@ export const theme = {
 export const MASK_FILL_ALPHA = theme.mask.fillAlpha;
 export const SLIC_MASK_FILL_ALPHA = 0;
 export const MASK_STROKE_WIDTH = theme.mask.strokeWidth;
-export const MASK_BORDER_THICKNESS = theme.mask.borderThickness;
 export const MASK_BORDER_DARKEN = theme.mask.borderDarken;
