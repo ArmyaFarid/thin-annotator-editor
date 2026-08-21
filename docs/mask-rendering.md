@@ -7,6 +7,10 @@ rasterized bitmaps to vector contours.
 Written for anyone touching `src/canvas/`. No prior knowledge of the codebase assumed.
 See [CLAUDE.md](../CLAUDE.md) for conventions and [README.md](../README.md) for what the tool does.
 
+For the border change specifically, [border-raster-vs-vector.html](border-raster-vs-vector.html) puts
+the two approaches side by side with diagrams generated from the real code. Open it in a browser —
+GitHub shows HTML as source rather than rendering it.
+
 ---
 
 ## 1. Four things are called "Mask"
