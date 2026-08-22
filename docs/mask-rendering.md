@@ -163,7 +163,21 @@ disk.** At the default 2.5 px tolerance, single-pixel boundary detail is gone; c
 pixels are dropped entirely; rings that simplify below 3 vertices vanish, so small holes can
 disappear. Whether that matters is a domain question, but it should be a *decision*, not a surprise.
 
-It isn't simply a bug to fix by lowering the tolerance, either: anchor mode exists so a human can
+None of that is accidental. The original feature spec set the tolerance deliberately and offered a
+scale, which is worth keeping on record since it is the only rationale for the number:
+
+| Mask type | Suggested tolerance |
+|---|---|
+| SAM output (smooth) | `2.5` ← the shipped default |
+| Fine-grained boundary | `1.5` |
+| Coarse editing, fewer points | `5.0` |
+
+The same spec called for discarding any fragment that simplifies below 3 vertices, and for raising
+the tolerance further on boundaries exceeding 500 vertices. So **a finer setting was always
+anticipated and simply never exposed** — which makes offering 1.5 a cheaper first move than a
+redesign, even if it doesn't resolve the underlying tension.
+
+That tension is why it isn't simply a bug to fix by lowering the tolerance: anchor mode exists so a human can
 drag a manageable number of handles. An exact contour of a grain has hundreds of vertices, which
 would make the feature unusable. Fixing it properly means a different design — keeping the RLE as
 the source of truth and treating anchors as a deformation, or restricting anchor mode to masks that
@@ -475,7 +489,8 @@ Things to watch, roughly in order of likelihood:
 
 ## 14. Open follow-ups
 
-- **Anchor mode is lossy** (§5). The 2.5 px tolerance and 10 px minimum component size are baked
+- **Anchor mode is lossy** (§5), and exposing the spec's 1.5 px setting is the cheap first move.
+  The 2.5 px tolerance and 10 px minimum component size are baked
   into saved data whenever someone uses it. Needs a design, not a constant change.
 - **RLE delete handles** sit at the top-right of the *image*, not the grain (§5).
 - **`hitTest` thresholds** in `Polygon`, `FreeformPath` and `Keypoint` use raw image-pixel distances

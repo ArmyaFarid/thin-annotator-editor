@@ -11,7 +11,8 @@
       "Bash(echo \"EXIT=$?\")",
       "Bash(npx eslint *)",
       "Bash(yarn add *)",
-      "Bash(echo \"exit=$?\")"
+      "Bash(echo \"exit=$?\")",
+      "Artifact"
     ]
   }
 }
