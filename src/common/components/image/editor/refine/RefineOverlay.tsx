@@ -282,10 +282,18 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({
             tool === "erase" ? "destination-out" : "source-over";
         wCtx.fillStyle = "rgba(255,255,255,1)";
         wCtx.beginPath();
-        // Brush size is in image pixels, so a stroke paints the same amount
-        // whatever the current zoom.
-        wCtx.arc(p.x, p.y, brushSize, 0, Math.PI * 2);
-        wCtx.fill();
+        // Brush size is a diameter in image pixels, so a stroke paints the same
+        // amount whatever the current zoom.
+        const radius = brushSize / 2;
+        if (radius < 1) {
+            // A sub-pixel arc antialiases below the alpha > 127 cutoff that
+            // canvasToRLE applies, and can end up painting nothing at all, so
+            // the finest brush writes one whole pixel.
+            wCtx.fillRect(Math.floor(p.x), Math.floor(p.y), 1, 1);
+        } else {
+            wCtx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+            wCtx.fill();
+        }
         wCtx.restore();
         redrawDisplay();
     }
@@ -326,7 +334,17 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({
             if (!cursorPos) return;
             ctx.save();
             ctx.beginPath();
-            ctx.arc(cursorPos.x, cursorPos.y, brushSize, 0, Math.PI * 2);
+            const radius = brushSize / 2;
+            if (radius < 1) {
+                ctx.rect(
+                    Math.floor(cursorPos.x),
+                    Math.floor(cursorPos.y),
+                    1,
+                    1,
+                );
+            } else {
+                ctx.arc(cursorPos.x, cursorPos.y, radius, 0, Math.PI * 2);
+            }
             if (tool === "erase") {
                 ctx.strokeStyle = "rgba(255,80,80,0.9)";
                 ctx.fillStyle = "rgba(255,80,80,0.12)";
@@ -404,8 +422,8 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({
                 <span className="text-xs text-white/50">{t("brushLabel")}</span>
                 <input
                     type="range"
-                    min={5}
-                    max={100}
+                    min={1}
+                    max={200}
                     value={brushSize}
                     onChange={(e) => setBrushSize(+e.target.value)}
                     className="w-24"
