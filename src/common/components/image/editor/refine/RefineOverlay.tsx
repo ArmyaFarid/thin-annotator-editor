@@ -28,6 +28,9 @@ interface RLE {
 const MAX_REFINE_LOCAL_HISTORY = 20;
 // Matches the main canvas, so magnification reaches as far here as it does there.
 const REFINE_ZOOM_LIMITS: ZoomLimits = {min: 0.05, max: 20};
+// Brush diameter in image pixels.
+const BRUSH_MIN = 1;
+const BRUSH_MAX = 200;
 
 // Paint an RLE-encoded mask onto a working canvas as white pixels with
 // alpha 255 where set, transparent elsewhere. Matches the format the brush
@@ -92,6 +95,22 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({
     const [masks, setMasks] = useAtom(masksAtom);
     const [tool, setTool] = useState<"erase" | "add">("erase");
     const [brushSize, setBrushSize] = useState(20);
+    // Draft of the typed brush size, so the field can be cleared mid-edit
+    // without the value snapping back on every keystroke.
+    const [brushDraft, setBrushDraft] = useState("20");
+
+    useEffect(() => {
+        setBrushDraft(String(brushSize));
+    }, [brushSize]);
+
+    function commitBrushDraft(raw: string) {
+        const n = Math.round(Number(raw));
+        if (raw.trim() === "" || !Number.isFinite(n)) {
+            setBrushDraft(String(brushSize));
+            return;
+        }
+        setBrushSize(Math.max(BRUSH_MIN, Math.min(BRUSH_MAX, n)));
+    }
     const [view, setView] = useState<View>({zoom: 1, panX: 0, panY: 0});
     const [stageSize, setStageSize] = useState({w: 0, h: 0});
     // Brush centre in image pixels; null when the pointer is off the stage.
@@ -422,13 +441,27 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({
                 <span className="text-xs text-white/50">{t("brushLabel")}</span>
                 <input
                     type="range"
-                    min={1}
-                    max={200}
+                    min={BRUSH_MIN}
+                    max={BRUSH_MAX}
                     value={brushSize}
                     onChange={(e) => setBrushSize(+e.target.value)}
                     className="w-24"
                 />
-                <span className="text-xs text-white/60 w-8">{brushSize}px</span>
+                <input
+                    type="number"
+                    min={BRUSH_MIN}
+                    max={BRUSH_MAX}
+                    value={brushDraft}
+                    onChange={(e) => setBrushDraft(e.target.value)}
+                    onBlur={(e) => commitBrushDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.currentTarget.blur();
+                        }
+                    }}
+                    className="w-14 bg-white/5 border border-white/15 rounded px-1.5 py-0.5 text-xs text-white/80 focus:outline-none focus:ring-1 focus:ring-[#4FC3F7]/50"
+                />
+                <span className="text-xs text-white/50">px</span>
                 <div className="w-px h-5 bg-white/20" />
                 <span className="text-xs text-white/50">{t("zoomLabel")}</span>
                 <input
