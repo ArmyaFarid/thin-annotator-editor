@@ -1,0 +1,749 @@
+<title>Two Ways to Draw a Border</title>
+
+<style>
+:root {
+    --ground:      #FAF9F6;
+    --surface:     #F2F0E9;
+    --surface-alt: #EAE7DE;
+    --ink:         #191D24;
+    --ink-soft:    #3E454F;
+    --muted:       #6B7280;
+    --rule:        #DDD8CE;
+    --rule-strong: #C6C0B4;
+
+    --raster:      #A8551E;
+    --raster-tint: rgba(168, 85, 30, 0.13);
+    --raster-band: rgba(168, 85, 30, 0.85);
+
+    --vector:      #10706D;
+    --vector-tint: rgba(16, 112, 109, 0.13);
+
+    --lattice:     rgba(25, 29, 36, 0.16);
+    --code-bg:     #EFEDE5;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --ground:      #101319;
+        --surface:     #171B22;
+        --surface-alt: #1E232B;
+        --ink:         #E7EAEF;
+        --ink-soft:    #BFC5CE;
+        --muted:       #8D95A1;
+        --rule:        #262C35;
+        --rule-strong: #38404B;
+
+        --raster:      #E8944F;
+        --raster-tint: rgba(232, 148, 79, 0.15);
+        --raster-band: rgba(232, 148, 79, 0.82);
+
+        --vector:      #4FC9BD;
+        --vector-tint: rgba(79, 201, 189, 0.15);
+
+        --lattice:     rgba(231, 234, 239, 0.15);
+        --code-bg:     #12161C;
+    }
+}
+
+:root[data-theme="dark"] {
+    --ground:      #101319;
+    --surface:     #171B22;
+    --surface-alt: #1E232B;
+    --ink:         #E7EAEF;
+    --ink-soft:    #BFC5CE;
+    --muted:       #8D95A1;
+    --rule:        #262C35;
+    --rule-strong: #38404B;
+
+    --raster:      #E8944F;
+    --raster-tint: rgba(232, 148, 79, 0.15);
+    --raster-band: rgba(232, 148, 79, 0.82);
+
+    --vector:      #4FC9BD;
+    --vector-tint: rgba(79, 201, 189, 0.15);
+
+    --lattice:     rgba(231, 234, 239, 0.15);
+    --code-bg:     #12161C;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 4rem 1.5rem 6rem;
+}
+
+h1, h2, h3, .display {
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+    font-weight: 600;
+    text-wrap: balance;
+    letter-spacing: -0.012em;
+}
+
+h1 {
+    font-size: clamp(2.1rem, 5.2vw, 3.1rem);
+    line-height: 1.12;
+    margin: 0 0 1rem;
+}
+
+.standfirst {
+    font-size: 1.14rem;
+    color: var(--ink-soft);
+    max-width: 62ch;
+    margin: 0 0 2rem;
+}
+
+.eyebrow {
+    font-size: 0.72rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+}
+
+header { border-bottom: 1px solid var(--rule); padding-bottom: 2.5rem; margin-bottom: 1rem; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 0.32rem 0.7rem;
+    border-radius: 2px;
+    border: 1px solid currentColor;
+}
+.chip.r { color: var(--raster); background: var(--raster-tint); }
+.chip.v { color: var(--vector); background: var(--vector-tint); }
+.chip .swatch { width: 10px; height: 10px; background: currentColor; }
+.chip.v .swatch { background: none; border: 2px solid currentColor; }
+
+/* ---------- the parallel spine ---------- */
+
+.row {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap: 0 2.25rem;
+    padding: 2.5rem 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: start;
+}
+.row > .spine { background: var(--rule); align-self: stretch; }
+
+.row-head {
+    grid-column: 1 / -1;
+    margin-bottom: 1.5rem;
+}
+.row-head h2 { font-size: 1.42rem; margin: 0 0 0.4rem; }
+.row-head p { margin: 0; color: var(--ink-soft); max-width: 68ch; }
+
+.side { min-width: 0; }
+.side > .label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0 0 0.7rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 2px solid currentColor;
+}
+.side.r > .label { color: var(--raster); }
+.side.v > .label { color: var(--vector); }
+.side p { margin: 0 0 0.85rem; }
+.side p:last-child { margin-bottom: 0; }
+.side ul { margin: 0 0 0.85rem; padding-left: 1.1rem; }
+.side li { margin-bottom: 0.3rem; }
+
+.verdict {
+    grid-column: 1 / -1;
+    margin-top: 1.6rem;
+    padding: 0.9rem 1.1rem;
+    background: var(--surface);
+    border-left: 3px solid var(--rule-strong);
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+}
+.verdict strong { color: var(--ink); font-weight: 600; }
+
+code, pre, .mono {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.855em;
+    font-variant-ligatures: none;
+}
+code { background: var(--code-bg); padding: 0.1em 0.35em; border-radius: 2px; }
+pre {
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.9rem 1rem;
+    overflow-x: auto;
+    margin: 0 0 0.85rem;
+    line-height: 1.5;
+    font-size: 0.8rem;
+}
+pre code { background: none; padding: 0; }
+.c-dim { color: var(--muted); }
+.c-r { color: var(--raster); }
+.c-v { color: var(--vector); }
+
+figure { margin: 0 0 1rem; }
+figure svg { display: block; width: 100%; height: auto; max-width: 100%; }
+figcaption {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-top: 0.6rem;
+    line-height: 1.5;
+}
+.figwide { grid-column: 1 / -1; margin-top: 0.5rem; overflow-x: auto; }
+
+.lattice { fill: none; stroke: var(--lattice); stroke-width: 1; }
+.px-border { fill: var(--raster-band); }
+.px-fill   { fill: var(--raster-tint); }
+.v-fill    { fill: var(--vector-tint); }
+.crack     { fill: none; stroke: var(--vector); stroke-width: 2.5; stroke-linejoin: round; }
+.svg-label { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; fill: var(--muted); }
+.svg-title { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; }
+
+.stat {
+    display: flex;
+    gap: 1.6rem;
+    flex-wrap: wrap;
+    margin: 0.9rem 0 0;
+    padding: 0.85rem 1rem;
+    background: var(--surface);
+    border-radius: 3px;
+}
+.stat div { min-width: 0; }
+.stat .n {
+    display: block;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 1.35rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+}
+.side.r .stat .n { color: var(--raster); }
+.side.v .stat .n { color: var(--vector); }
+.stat .k { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.04em; }
+
+table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+th, td { text-align: left; padding: 0.5rem 0.7rem 0.5rem 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; }
+td.num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-variant-numeric: tabular-nums; }
+
+.closing { padding-top: 2.5rem; }
+.closing h2 { font-size: 1.42rem; margin: 0 0 1rem; }
+.cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2.25rem; }
+
+footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
+@media (max-width: 760px) {
+    .wrap { padding: 2.5rem 1.15rem 4rem; }
+    .row { grid-template-columns: 1fr; gap: 2rem 0; }
+    .row > .spine { display: none; }
+    .cols2 { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+}
+</style>
+
+<div class="wrap">
+
+<header>
+    <p class="eyebrow">ThinAnnotator &middot; canvas rendering</p>
+    <h1>Two Ways to Draw a Border</h1>
+    <p class="standfirst">
+        The outline around an annotated mineral grain used to be burned into a bitmap, pixel by
+        pixel, at the resolution of the image. Now it is a stroked path, re-drawn every frame at
+        the resolution of the screen. Here is what each approach does, put side by side.
+    </p>
+    <div class="legend">
+        <span class="chip r"><span class="swatch"></span>Raster &middot; before</span>
+        <span class="chip v"><span class="swatch"></span>Vector &middot; after</span>
+    </div>
+</header>
+
+<!-- ============ ROW: the picture ============ -->
+<section class="row">
+    <div class="row-head">
+        <h2>The same grain, drawn both ways</h2>
+        <p>
+            A mask is a set of pixels &mdash; here a grain with a hole in it, magnified so the
+            lattice is visible. Both renderers are given exactly this pixel set. What they put on
+            screen is not the same thing at all.
+        </p>
+    </div>
+
+    <div class="side r">
+        <p class="label">Raster</p>
+        <figure>
+            <svg viewBox="0 0 336 252" role="img" aria-label="The grain rendered as a bitmap: a thick opaque band of border pixels leaves only eight interior pixels of translucent fill.">
+                <path class="px-border" d="M140 14L224 14L224 28L266 28L266 42L294 42L294 56L308 56L308 70L322 70L322 84L336 84L336 168L322 168L322 182L308 182L308 196L294 196L294 210L266 210L266 238L126 238L126 224L98 224L98 210L70 210L70 196L56 196L56 182L42 182L42 154L28 154L28 98L42 98L42 70L56 70L56 56L70 56L70 42L98 42L98 28L140 28ZM126 84L126 98L98 98L98 112L84 112L84 140L98 140L98 154L126 154L126 168L238 168L238 154L266 154L266 140L280 140L280 112L266 112L266 98L238 98L238 84Z"/>
+                <path class="px-fill" d="M168 42h14v14h-14ZM182 42h14v14h-14ZM154 196h14v14h-14ZM168 196h14v14h-14ZM182 196h14v14h-14ZM196 196h14v14h-14ZM210 196h14v14h-14ZM224 196h14v14h-14Z"/>
+                <path class="lattice" d="M0 0V252M14 0V252M28 0V252M42 0V252M56 0V252M70 0V252M84 0V252M98 0V252M112 0V252M126 0V252M140 0V252M154 0V252M168 0V252M182 0V252M196 0V252M210 0V252M224 0V252M238 0V252M252 0V252M266 0V252M280 0V252M294 0V252M308 0V252M322 0V252M336 0V252M0 0H336M0 14H336M0 28H336M0 42H336M0 56H336M0 70H336M0 84H336M0 98H336M0 112H336M0 126H336M0 140H336M0 154H336M0 168H336M0 182H336M0 196H336M0 210H336M0 224H336M0 238H336M0 252H336"/>
+            </svg>
+            <figcaption>
+                Every pixel within two of an edge is repainted opaque. On this grain that is
+                <strong>202 of 210 pixels</strong>. The eight pale squares are all the fill that survives.
+            </figcaption>
+        </figure>
+    </div>
+
+    <div class="spine"></div>
+
+    <div class="side v">
+        <p class="label">Vector</p>
+        <figure>
+            <svg viewBox="0 0 336 252" role="img" aria-label="The same grain rendered as a traced outline: a thin line follows the exact pixel boundary and the fill is left intact.">
+                <path class="v-fill" d="M140 14L224 14L224 28L266 28L266 42L294 42L294 56L308 56L308 70L322 70L322 84L336 84L336 168L322 168L322 182L308 182L308 196L294 196L294 210L266 210L266 238L126 238L126 224L98 224L98 210L70 210L70 196L56 196L56 182L42 182L42 154L28 154L28 98L42 98L42 70L56 70L56 56L70 56L70 42L98 42L98 28L140 28ZM126 84L126 98L98 98L98 112L84 112L84 140L98 140L98 154L126 154L126 168L238 168L238 154L266 154L266 140L280 140L280 112L266 112L266 98L238 98L238 84Z"/>
+                <path class="lattice" d="M0 0V252M14 0V252M28 0V252M42 0V252M56 0V252M70 0V252M84 0V252M98 0V252M112 0V252M126 0V252M140 0V252M154 0V252M168 0V252M182 0V252M196 0V252M210 0V252M224 0V252M238 0V252M252 0V252M266 0V252M280 0V252M294 0V252M308 0V252M322 0V252M336 0V252M0 0H336M0 14H336M0 28H336M0 42H336M0 56H336M0 70H336M0 84H336M0 98H336M0 112H336M0 126H336M0 140H336M0 154H336M0 168H336M0 182H336M0 196H336M0 210H336M0 224H336M0 238H336M0 252H336"/>
+                <path class="crack" d="M140 14L224 14L224 28L266 28L266 42L294 42L294 56L308 56L308 70L322 70L322 84L336 84L336 168L322 168L322 182L308 182L308 196L294 196L294 210L266 210L266 238L126 238L126 224L98 224L98 210L70 210L70 196L56 196L56 182L42 182L42 154L28 154L28 98L42 98L42 70L56 70L56 56L70 56L70 42L98 42L98 28L140 28ZM126 84L126 98L98 98L98 112L84 112L84 140L98 140L98 154L126 154L126 168L238 168L238 154L266 154L266 140L280 140L280 112L266 112L266 98L238 98L238 84Z"/>
+            </svg>
+            <figcaption>
+                One traced outline, <strong>2 rings and 62 vertices</strong>, following the exact same
+                boundary. The fill underneath is untouched, and the outline's thickness is a screen
+                measurement, not a pixel count.
+            </figcaption>
+        </figure>
+    </div>
+
+    <p class="verdict">
+        Both figures were generated by running the real code &mdash; the old border kernel and the
+        shipped tracer &mdash; over the same pixel grid. <strong>The 202-of-210 result is not an
+        exaggeration for effect.</strong> On a smaller grain it gets worse: a 14-pixel-wide grain with
+        a hole comes out 98 border pixels and <strong>zero</strong> interior, rendering as a solid blob.
+    </p>
+</section>
+
+<!-- ============ ROW: mechanism ============ -->
+<section class="row">
+    <div class="row-head">
+        <h2>Where the border comes from</h2>
+        <p>One walks the pixel grid looking for edges. The other computes the edge once and describes it.</p>
+    </div>
+
+    <div class="side r">
+        <p class="label">A kernel over every pixel</p>
+        <p>
+            Composite all layers into a full-image canvas, read it back with <code>getImageData</code>,
+            then test every pixel against its neighbourhood:
+        </p>
+<pre><code><span class="c-dim">// only a mask pixel can ever become border</span>
+if (!occupied(x, y)) continue;
+
+let isBorder = false;
+outer: for (let dx = -bt; dx &lt;= bt; dx++) {
+  for (let dy = -bt; dy &lt;= bt; dy++) {
+    if (!occupied(x + dx, y + dy)) {
+      isBorder = true; break outer;
+    }
+  }
+}</code></pre>
+        <p>
+            The result is written into a second full-image canvas and blitted through the view
+            transform with <code>imageSmoothingEnabled = false</code>.
+        </p>
+    </div>
+
+    <div class="spine"></div>
+
+    <div class="side v">
+        <p class="label">A path, traced once</p>
+        <p>
+            Composite the layers into a bounding-box-cropped binary grid, then follow the boundary
+            between set and unset pixels, emitting a vertex only where it turns:
+        </p>
+<pre><code>const rings = traceCrackRings(occ, bw, bh);
+
+<span class="c-dim">// one Path2D for the whole mask,</span>
+<span class="c-dim">// outer rings and holes alike</span>
+for (const ring of rings) {
+  path.moveTo(ring[0].x, ring[0].y);
+  for (let i = 1; i &lt; ring.length; i++)
+    path.lineTo(ring[i].x, ring[i].y);
+  path.closePath();
+}</code></pre>
+        <p>
+            The path is cached until the mask's content changes, then filled and stroked each repaint.
+        </p>
+    </div>
+</section>
+
+<!-- ============ ROW: the unit ============ -->
+<section class="row">
+    <div class="row-head">
+        <h2>The unit &mdash; and why the old one could not work</h2>
+        <p>
+            This is the whole argument. Everything else follows from it.
+        </p>
+    </div>
+
+    <div class="side r">
+        <p class="label">Thickness in image pixels</p>
+        <p>
+            <code>theme.mask.borderThickness = 2</code> was a <em>kernel radius on the image's pixel
+            grid</em>, not a stroke width. The theme file had to carry an explicit units exception
+            because of it.
+        </p>
+        <p>
+            A thickness measured in image pixels is multiplied by the zoom before it reaches the
+            screen. There is no value that is correct at two zoom levels at once &mdash; the number
+            is not wrong, the <em>unit</em> is.
+        </p>
+    </div>
+
+    <div class="spine"></div>
+
+    <div class="side v">
+        <p class="label">Thickness in screen pixels</p>
+        <p>
+            The stroke divides by zoom at draw time, so it lands on screen at a fixed width no
+            matter the magnification:
+        </p>
+<pre><code>ctx.lineWidth = (2 * theme.mask.strokeWidth) / zoom;</code></pre>
+        <p>
+            This is not a new idea in the codebase. <code>Polygon.render</code> has always done
+            exactly this, which is why polygon outlines never had the problem. Masks now share the
+            behaviour because they share the technique.
+        </p>
+    </div>
+
+    <div class="figwide">
+        <figure>
+            <svg viewBox="0 0 566 300" role="img" aria-label="A matrix of six panels: the same grain edge at 0.3x, 1x and 8x zoom. The raster border is invisibly thin when zoomed out and a thick blocky band when zoomed in, while the vector border stays the same thickness at all three.">
+                <text class="svg-label" x="70"  y="16">0.3&times; &mdash; fit to screen</text>
+                <text class="svg-label" x="236" y="16">1&times; &mdash; native</text>
+                <text class="svg-label" x="402" y="16">8&times; &mdash; inspecting an edge</text>
+
+                <text class="svg-title" x="0" y="95" fill="var(--raster)">RASTER</text>
+                <text class="svg-title" x="0" y="225" fill="var(--vector)">VECTOR</text>
+
+                <defs>
+                    <clipPath id="grainShape">
+                        <path d="M31 5 C45 6 57 17 55 31 C53 45 43 56 29 55 C15 54 5 43 6 29 C7 16 17 4 31 5 Z"/>
+                    </clipPath>
+                </defs>
+
+                <!-- RASTER row: stroke-width is in image units, so it scales with zoom -->
+                <svg x="70" y="30" width="150" height="110" viewBox="-220 -153 500 367">
+                    <path d="M31 5 C45 6 57 17 55 31 C53 45 43 56 29 55 C15 54 5 43 6 29 C7 16 17 4 31 5 Z" fill="var(--raster-tint)"/>
+                    <g clip-path="url(#grainShape)">
+                        <path d="M31 5 C45 6 57 17 55 31 C53 45 43 56 29 55 C15 54 5 43 6 29 C7 16 17 4 31 5 Z" fill="none" stroke="var(--raster-band)" stroke-width="4"/>
+                    </g>
+                </svg>
+                <svg x="236" y="30" width="150" height="110" viewBox="-45 -25 150 110">
+                    <path d="M31 5 C45 6 57 17 55 31 C53 45 43 56 29 55 C15 54 5 43 6 29 C7 16 17 4 31 5 Z" fill="var(--raster-tint)"/>
+                    <g clip-path="url(#grainShape)">
+                        <path d="M31 5 C45 6 57 17 55 31 C53 45 43 56 29 55 C15 54 5 43 6 29 C7 16 17 4 31 5 Z" fill="none" stroke="var(--raster-band)" stroke-width="4"/>
+                    </g>
+                </svg>
+                <svg x="402" y="30" width="150" height="110" viewBox="-1.4 23.1 18.75 13.75">
+                    <path d="M31 5 C45 6 57 17 55 31 C53 45 43 56 29 55 C15 54 5 43 6 29 C7 16 17 4 31 5 Z" fill="var(--raster-tint)"/>
+                    <g clip-path="url(#grainShape)">
+                        <path d="M31 5 C45 6 57 17 55 31 C53 45 43 56 29 55 C15 54 5 43 6 29 C7 16 17 4 31 5 Z" fill="none" stroke="var(--raster-band)" stroke-width="4"/>
+                    </g>
+                </svg>
+
+                <!-- VECTOR row: stroke-width divided by the panel's zoom, exactly as the
+                     renderer does it — 5 outer units wide in all three panels. -->
+                <svg x="70" y="160" width="150" height="110" viewBox="-220 -153 500 367">
+                    <path d="M31 5 C45 6 57 17 55 31 C53 45 43 56 29 55 C15 54 5 43 6 29 C7 16 17 4 31 5 Z" fill="var(--vector-tint)"/>
+                    <g clip-path="url(#grainShape)">
+                        <path d="M31 5 C45 6 57 17 55 31 C53 45 43 56 29 55 C15 54 5 43 6 29 C7 16 17 4 31 5 Z" fill="none" stroke="var(--vector)" stroke-width="16.667"/>
+                    </g>
+                </svg>
+                <svg x="236" y="160" width="150" height="110" viewBox="-45 -25 150 110">
+                    <path d="M31 5 C45 6 57 17 55 31 C53 45 43 56 29 55 C15 54 5 43 6 29 C7 16 17 4 31 5 Z" fill="var(--vector-tint)"/>
+                    <g clip-path="url(#grainShape)">
+                        <path d="M31 5 C45 6 57 17 55 31 C53 45 43 56 29 55 C15 54 5 43 6 29 C7 16 17 4 31 5 Z" fill="none" stroke="var(--vector)" stroke-width="5"/>
+                    </g>
+                </svg>
+                <svg x="402" y="160" width="150" height="110" viewBox="-1.4 23.1 18.75 13.75">
+                    <path d="M31 5 C45 6 57 17 55 31 C53 45 43 56 29 55 C15 54 5 43 6 29 C7 16 17 4 31 5 Z" fill="var(--vector-tint)"/>
+                    <g clip-path="url(#grainShape)">
+                        <path d="M31 5 C45 6 57 17 55 31 C53 45 43 56 29 55 C15 54 5 43 6 29 C7 16 17 4 31 5 Z" fill="none" stroke="var(--vector)" stroke-width="0.625"/>
+                    </g>
+                </svg>
+
+                <rect x="70"  y="30"  width="150" height="110" fill="none" stroke="var(--rule-strong)"/>
+                <rect x="236" y="30"  width="150" height="110" fill="none" stroke="var(--rule-strong)"/>
+                <rect x="402" y="30"  width="150" height="110" fill="none" stroke="var(--rule-strong)"/>
+                <rect x="70"  y="160" width="150" height="110" fill="none" stroke="var(--rule-strong)"/>
+                <rect x="236" y="160" width="150" height="110" fill="none" stroke="var(--rule-strong)"/>
+                <rect x="402" y="160" width="150" height="110" fill="none" stroke="var(--rule-strong)"/>
+
+                <text class="svg-label" x="70"  y="288">border &asymp; 0.6px &rarr; drops out</text>
+                <text class="svg-label" x="236" y="288">border = 2px</text>
+                <text class="svg-label" x="402" y="288">border = 16px &rarr; hides the detail</text>
+            </svg>
+            <figcaption>
+                Both rows draw the identical grain path. The top row's stroke is specified in image
+                units, so the browser scales it exactly as the old renderer did. The bottom row's
+                stroke is divided by each panel's zoom &mdash; 16.7, 5 and 0.625 image units &mdash;
+                which is the same arithmetic <code>ctx.lineWidth = width / zoom</code> performs, and
+                lands at the same width on screen all three times. At fit-zoom the raster border
+                falls below one screen pixel and shimmers in and out as you pan; at 8&times; it is
+                wider than the pixel detail an annotator is trying to judge.
+            </figcaption>
+        </figure>
+    </div>
+</section>
+
+<!-- ============ ROW: where the ink lands ============ -->
+<section class="row">
+    <div class="row-head">
+        <h2>Which side of the boundary the ink lands on</h2>
+        <p>
+            An easy thing to get wrong, and the failure is silent: the mask simply reads as slightly
+            bigger than it is.
+        </p>
+    </div>
+
+    <div class="side r">
+        <p class="label">Strictly inside, by construction</p>
+        <p>
+            <code>if (!occupied(x, y)) continue;</code> means a pixel outside the mask is skipped
+            before anything is written. Nothing was <em>ever</em> painted beyond the segmented
+            pixels &mdash; the painted extent equalled the true extent, and the border ate inward
+            into the fill.
+        </p>
+    </div>
+
+    <div class="spine"></div>
+
+    <div class="side v">
+        <p class="label">Inside, but only because it is forced</p>
+        <p>
+            A canvas stroke is centred on its path by default, which would have put half the width
+            <em>outside</em> the mask for the first time &mdash; five image pixels of inflation at
+            0.25&times; zoom, enough to make neighbouring grains appear to overlap. So:
+        </p>
+<pre><code>ctx.clip(path, "nonzero");
+ctx.lineWidth = (2 * width) / zoom;  <span class="c-dim">// double</span>
+ctx.stroke(path);                    <span class="c-dim">// inner half survives</span></code></pre>
+    </div>
+
+    <p class="verdict">
+        <strong>Preserving the old behaviour here was a requirement, not a detail.</strong> In a tool
+        where someone is deciding whether a mask covers a grain, a renderer that silently draws every
+        object slightly too large is worse than one that draws an ugly border.
+    </p>
+</section>
+
+<!-- ============ ROW: fidelity ============ -->
+<section class="row">
+    <div class="row-head">
+        <h2>Does the outline sit where the mask sits?</h2>
+        <p>
+            The codebase already had a boundary tracer. It could not be reused for display, and the
+            reason is worth seeing rather than reading.
+        </p>
+    </div>
+
+    <div class="side r">
+        <p class="label">Tracing pixel centres</p>
+        <figure>
+            <svg viewBox="0 0 176 176" role="img" aria-label="A five-pixel shape with a polygon drawn through the centres of its boundary pixels; the polygon covers noticeably less area than the pixels themselves.">
+                <path class="px-fill" d="M44 44h44v44h-44ZM44 88h44v44h-44ZM88 44h44v44h-44ZM88 88h44v44h-44ZM132 88h44v44h-44Z"/>
+                <path class="lattice" d="M0 0V176M44 0V176M88 0V176M132 0V176M176 0V176M0 0H176M0 44H176M0 88H176M0 132H176M0 176H176"/>
+                <path d="M66 66L110 66L154 110L110 110L66 110Z" fill="none" stroke="var(--raster)" stroke-width="2.5" stroke-linejoin="round"/>
+                <circle cx="66" cy="66" r="4" fill="var(--raster)"/><circle cx="110" cy="66" r="4" fill="var(--raster)"/><circle cx="154" cy="110" r="4" fill="var(--raster)"/><circle cx="110" cy="110" r="4" fill="var(--raster)"/><circle cx="66" cy="110" r="4" fill="var(--raster)"/>
+            </svg>
+            <figcaption>
+                <code>traceBoundary</code> walks pixel <em>centres</em>. Fill this polygon and it
+                under-covers the mask by half a pixel on every side &mdash; systematically inward,
+                never outward.
+            </figcaption>
+        </figure>
+    </div>
+
+    <div class="spine"></div>
+
+    <div class="side v">
+        <p class="label">Tracing the cracks between pixels</p>
+        <figure>
+            <svg viewBox="0 0 176 176" role="img" aria-label="The same five-pixel shape with the outline following the pixel edges exactly, enclosing the pixels precisely.">
+                <path class="v-fill" d="M44 44h44v44h-44ZM44 88h44v44h-44ZM88 44h44v44h-44ZM88 88h44v44h-44ZM132 88h44v44h-44Z"/>
+                <path class="lattice" d="M0 0V176M44 0V176M88 0V176M132 0V176M176 0V176M0 0H176M0 44H176M0 88H176M0 132H176M0 176H176"/>
+                <path class="crack" d="M44 44L132 44L132 88L176 88L176 132L44 132Z"/>
+            </svg>
+            <figcaption>
+                <code>traceCrackRings</code> follows the boundary <em>between</em> pixels and emits
+                pixel-corner coordinates. The enclosed region is exactly the pixel set &mdash; the
+                extraction is lossless.
+            </figcaption>
+        </figure>
+    </div>
+
+    <p class="verdict">
+        Half a pixel is invisible at fit-zoom and obvious at 8&times;, which is why the display path
+        needed its own tracer. The original stays where it is, serving anchor-mode conversion.
+        <strong>No simplification tolerance, no minimum feature size and no smoothing are applied
+        anywhere in the display path</strong> &mdash; verified by rasterizing traced rings back and
+        XOR-ing against the source grid across edge cases, fuzz grids and real RLE masks. Zero
+        differing pixels.
+    </p>
+</section>
+
+<!-- ============ ROW: holes ============ -->
+<section class="row">
+    <div class="row-head">
+        <h2>How the holes get cut</h2>
+        <p>A grain with a pore, or a region subtracted by hand, needs the middle removed.</p>
+    </div>
+
+    <div class="side r">
+        <p class="label">Compositing operations</p>
+        <p>
+            Fill layers drawn with <code>source-over</code>, hole layers with
+            <code>destination-out</code>, onto a full-image scratch canvas. Each RLE layer first
+            becomes its own white-on-transparent alpha canvas.
+        </p>
+        <p>
+            Correct, but it means the hole is only ever expressed as <em>pixels that were erased</em>
+            &mdash; there is no object representing the hole.
+        </p>
+    </div>
+
+    <div class="spine"></div>
+
+    <div class="side v">
+        <p class="label">Winding direction</p>
+        <p>
+            The tracer returns outer rings and hole rings in one pass, wound in opposite directions.
+            Filling everything with the <strong>nonzero</strong> rule cuts the holes out
+            automatically &mdash; no classification step, and it nests to any depth.
+        </p>
+        <p>
+            Nonzero rather than even-odd matters for one case: two <em>overlapping</em> fill layers
+            must union, and even-odd would punch a hole where they overlap.
+        </p>
+    </div>
+
+    <p class="verdict">
+        A quiet improvement: because the grid is composited <em>before</em> tracing, awkward topology
+        now resolves correctly &mdash; a hole layer straddling the fill edge, or two fill layers
+        touching at a single corner. By trace time it is just a set of pixels.
+    </p>
+</section>
+
+<!-- ============ ROW: cost ============ -->
+<section class="row">
+    <div class="row-head">
+        <h2>What each one costs</h2>
+        <p>Measured on fifty grains across a 4000&times;3000 plate &mdash; a realistic petrology field of view.</p>
+    </div>
+
+    <div class="side r">
+        <p class="label">Raster</p>
+        <div class="stat">
+            <div><span class="n">300M</span><span class="k">neighbour checks per mask, per edit</span></div>
+            <div><span class="n">96 MB</span><span class="k">canvas retained per mask</span></div>
+        </div>
+        <p style="margin-top:0.9rem">
+            Two full-image canvases per mask &mdash; one alpha buffer per layer plus the composite.
+            Fifty masks is multiple gigabytes of backing store. The kernel re-runs whenever the
+            mask's content changes.
+        </p>
+    </div>
+
+    <div class="spine"></div>
+
+    <div class="side v">
+        <p class="label">Vector</p>
+        <div class="stat">
+            <div><span class="n">480</span><span class="k">vertices per mask</span></div>
+            <div><span class="n">7.5 KB</span><span class="k">geometry retained per mask</span></div>
+        </div>
+        <p style="margin-top:0.9rem">
+            Roughly 24,000 vertices filled and stroked per frame across the whole plate. Build is
+            ~35&nbsp;ms per mask &mdash; but 24&nbsp;ms of that is the RLE <code>decode</code> that
+            already happened before the change, since <code>hitTest</code> needs it too.
+        </p>
+    </div>
+
+    <div class="figwide">
+        <table>
+            <thead>
+                <tr><th>Per mask</th><th>Raster</th><th>Vector</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Border computation</td><td class="num">~300M ops per content change</td><td class="num">none</td></tr>
+                <tr><td>Retained memory</td><td class="num">~96 MB of canvas</td><td class="num">~7.5 KB of vertices</td></tr>
+                <tr><td>Cost of a pan frame</td><td class="num">1 bitmap blit</td><td class="num">~480 vertices</td></tr>
+                <tr><td>Toggling <code>borderOnly</code></td><td class="num">rebuilds the bitmap</td><td class="num">repaint only</td></tr>
+                <tr><td>Fill surviving on a 22px grain</td><td class="num">8 of 210 px</td><td class="num">all of it</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- ============ closing ============ -->
+<section class="closing">
+    <h2>What to carry away</h2>
+    <div class="cols2">
+        <div>
+            <p class="eyebrow">What got better</p>
+            <ul>
+                <li>Constant border thickness at every zoom, identical to polygon outlines.</li>
+                <li>The 300M-operation border pass is gone; editing got faster, not slower.</li>
+                <li>Gigabytes of canvas became kilobytes of geometry.</li>
+                <li>Small grains keep their fill instead of rendering as solid blobs.</li>
+                <li>Antialiased edges, so sub-pixel features render faint but present instead of shimmering.</li>
+                <li>The theme lost its one units exception &mdash; every constant is CSS pixels now.</li>
+            </ul>
+        </div>
+        <div>
+            <p class="eyebrow">What to watch</p>
+            <ul>
+                <li><strong>The pixel staircase is now visible at high zoom.</strong> That is what the mask
+                    genuinely is; the old band was wider than the steps and hid them. The app already
+                    draws the real pixel lattice above 12&times;, so the outline now agrees with a grid
+                    the annotator can see.</li>
+                <li>Panning repaints every mask, so per-frame cost moved from blitting to stroking.</li>
+                <li>Corner-touching pixels now count as connected &mdash; a genuinely new decision, applied
+                    consistently.</li>
+                <li>Hover became a brighter stroke rather than an additive glow.</li>
+            </ul>
+        </div>
+    </div>
+
+    <p class="verdict" style="margin-top:2rem">
+        <strong>Nothing here touches what gets saved.</strong> <code>mergeToCanvas</code> flattens
+        layers to RLE through its own code path and never calls into rendering, so there is no format
+        change and existing tasks load unchanged. Contours are a display concern only &mdash; any
+        downstream measurement still comes from the stored mask.
+    </p>
+</section>
+
+<footer>
+    ThinAnnotator &middot; <code>src/canvas/annotations/Mask.ts</code>,
+    <code>src/canvas/utils/polygonUtils.ts</code>. The full architectural guide, including anchors,
+    tools and the layer model, is in <code>docs/mask-rendering.md</code>.
+</footer>
+
+</div>
