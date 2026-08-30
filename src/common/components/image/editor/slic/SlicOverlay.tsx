@@ -13,6 +13,7 @@ import {
     activeImageSizeAtom,
 } from "@/app/atom.ts";
 import {canvasToRLE} from "@/canvas/utils/maskMerge.ts";
+import {labelMapToCrackPath} from "@/canvas/utils/labelCracks.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
 import {SLIC_MASK_FILL_ALPHA, theme} from "@/canvas/canvas-theme.ts";
 import {
@@ -29,9 +30,6 @@ import {commitHistoryAtom, historyScopeAtom} from "@/app/history.ts";
 import {t} from "@/i18n/index.ts";
 
 const MAX_SLIC_LOCAL_HISTORY = 50;
-// Above this many segments changing at once, repainting the whole mesh beats
-// walking a dirty rect per segment (reset, or an undo across many clicks).
-const MAX_SLIC_DIRTY_SEGMENTS = 12;
 // Matches the main canvas, so magnification in the modal reaches as far.
 const SLIC_ZOOM_LIMITS: ZoomLimits = {min: 0.05, max: 20};
 
@@ -43,101 +41,6 @@ interface SlicTile {
     canvas: HTMLCanvasElement;
     x: number;
     y: number;
-}
-
-// Paint the contours of the kept segments into [x0,y0]..[x1,y1] of the mesh
-// canvas. A shared boundary is drawn from one side only — the higher label id
-// owns it — so the line is one image pixel wide rather than two. Each pixel
-// takes dark or light from the luminance beneath it, which keeps one
-// continuous thin line readable over both a bright and a near-black field.
-function paintMesh(
-    mCtx: CanvasRenderingContext2D,
-    labels: Uint16Array,
-    lw: number,
-    lh: number,
-    kept: Uint8Array,
-    luma: Uint8Array | null,
-    x0: number,
-    y0: number,
-    x1: number,
-    y1: number,
-): void {
-    const w = x1 - x0 + 1;
-    const h = y1 - y0 + 1;
-    if (w <= 0 || h <= 0) {
-        return;
-    }
-    const img = mCtx.createImageData(w, h);
-    const d = img.data;
-    const {contourDark, contourLight, contourLumaThreshold} = theme.slic;
-
-    for (let y = 0; y < h; y++) {
-        const gy = y0 + y;
-        const grow = gy * lw;
-        for (let x = 0; x < w; x++) {
-            const gx = x0 + x;
-            const a = labels[grow + gx];
-            if (a === 0 || kept[a] === 0) {
-                continue;
-            }
-            let edge = gx === 0 || gy === 0 || gx === lw - 1 || gy === lh - 1;
-            if (!edge) {
-                const l = labels[grow + gx - 1];
-                const r = labels[grow + gx + 1];
-                const u = labels[grow - lw + gx];
-                const b = labels[grow + lw + gx];
-                edge =
-                    (l !== a && (l === 0 || kept[l] === 0 || a > l)) ||
-                    (r !== a && (r === 0 || kept[r] === 0 || a > r)) ||
-                    (u !== a && (u === 0 || kept[u] === 0 || a > u)) ||
-                    (b !== a && (b === 0 || kept[b] === 0 || a > b));
-            }
-            if (!edge) {
-                continue;
-            }
-            const bright = luma
-                ? luma[grow + gx] >= contourLumaThreshold
-                : false;
-            const c = bright ? contourDark : contourLight;
-            const o = (y * w + x) * 4;
-            d[o] = c[0];
-            d[o + 1] = c[1];
-            d[o + 2] = c[2];
-            d[o + 3] = c[3];
-        }
-    }
-    // Replaces the region wholesale, so a repaint also clears stale contours.
-    mCtx.putImageData(img, x0, y0);
-}
-
-// Luminance of the label-map region, used to pick each contour pixel's
-// colour. Returns null when the image cannot be read back — a cross-origin
-// image taints the canvas — in which case the contour falls back to light.
-function sampleLuma(
-    img: HTMLImageElement,
-    lx: number,
-    ly: number,
-    lw: number,
-    lh: number,
-): Uint8Array | null {
-    if (!img.complete || img.naturalWidth === 0) {
-        return null;
-    }
-    try {
-        const c = document.createElement("canvas");
-        c.width = lw;
-        c.height = lh;
-        const cCtx = c.getContext("2d", {willReadFrequently: true})!;
-        cCtx.drawImage(img, lx, ly, lw, lh, 0, 0, lw, lh);
-        const d = cCtx.getImageData(0, 0, lw, lh).data;
-        const luma = new Uint8Array(lw * lh);
-        for (let i = 0, p = 0; i < luma.length; i++, p += 4) {
-            luma[i] = (d[p] * 77 + d[p + 1] * 150 + d[p + 2] * 29) >> 8;
-        }
-        return luma;
-    } catch {
-        return null;
-    }
 }
 
 export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
@@ -227,20 +130,16 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     const [overlayReady, setOverlayReady] = useState(false);
     const [segmentIds, setSegmentIds] = useState<number[]>([]);
     const [hoveredId, setHoveredId] = useState<number | null>(null);
-    // The contour colour is sampled from the image, so the mesh can only be
-    // built once it has decoded. Usually already cached from the main editor.
-    const [imgReady, setImgReady] = useState(false);
+    // Bumped when the traced path changes, so the stage redraws.
+    const [contourRevision, setContourRevision] = useState(0);
     // Only meaningful when targetMaskId !== 0. "add" → kept superpixels
     // become a fill layer on the active mask; "remove" → a hole layer.
     const [applyMode, setApplyMode] = useState<"add" | "remove">("add");
     const [view, setView] = useState<View>({zoom: 1, panX: 0, panY: 0});
     const [stageSize, setStageSize] = useState({w: 0, h: 0});
 
-    const imgRef = useRef<HTMLImageElement | null>(null);
-    const meshRef = useRef<HTMLCanvasElement | null>(null);
-    const lumaRef = useRef<Uint8Array | null>(null);
+    const contourPathRef = useRef<Path2D | null>(null);
     const hoverTilesRef = useRef<Map<number, SlicTile>>(new Map());
-    const paintedDeletedRef = useRef<Set<number>>(new Set());
     const boundsRef = useRef<{
         minX: Int32Array;
         minY: Int32Array;
@@ -248,11 +147,6 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         maxY: Int32Array;
         maxId: number;
     } | null>(null);
-
-    const handleImageLoad = useCallback((img: HTMLImageElement) => {
-        imgRef.current = img;
-        setImgReady(true);
-    }, []);
 
     // Build the contour mesh from the label map. Nothing is tinted: only the
     // boundaries of the kept segments are painted, one image pixel wide, so the
@@ -309,38 +203,49 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
             }
 
             const {x: lx, y: ly} = slicOverlay.labelMap;
-            const luma = imgRef.current
-                ? sampleLuma(imgRef.current, lx, ly, lw, lh)
-                : null;
-
-            const mesh = document.createElement("canvas");
-            mesh.width = lw;
-            mesh.height = lh;
             const kept = new Uint8Array(maxId + 1).fill(1);
-            paintMesh(
-                mesh.getContext("2d")!,
+            contourPathRef.current = labelMapToCrackPath(
                 labels,
                 lw,
                 lh,
                 kept,
-                luma,
-                0,
-                0,
-                lw - 1,
-                lh - 1,
+                lx,
+                ly,
             );
 
-            lumaRef.current = luma;
-            meshRef.current = mesh;
             boundsRef.current = {minX, minY, maxX, maxY, maxId};
             hoverTilesRef.current = new Map();
-            paintedDeletedRef.current = new Set();
             setSegmentIds(ids);
             setOverlayReady(true);
         });
 
         return () => cancelAnimationFrame(rafId);
-    }, [slicOverlay, imageSize, imgReady]);
+    }, [slicOverlay, imageSize]);
+
+    // The outline of the kept region changes wholesale when a segment is
+    // removed, so the path is retraced rather than patched.
+    useEffect(() => {
+        const bounds = boundsRef.current;
+        if (!slicOverlay || !overlayReady || !bounds) {
+            return;
+        }
+        const {labels, w: lw, h: lh, x: lx, y: ly} = slicOverlay.labelMap;
+        const kept = new Uint8Array(bounds.maxId + 1).fill(1);
+        for (const id of deleted) {
+            if (id <= bounds.maxId) {
+                kept[id] = 0;
+            }
+        }
+        contourPathRef.current = labelMapToCrackPath(
+            labels,
+            lw,
+            lh,
+            kept,
+            lx,
+            ly,
+        );
+        setContourRevision((r) => r + 1);
+    }, [deleted, slicOverlay, overlayReady]);
 
     // Stable identity: the stage re-attaches its ResizeObserver on change.
     const handleStageResize = useCallback((w: number, h: number) => {
@@ -398,76 +303,10 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     // Redraw: repaint whatever the last delete invalidated, then composite the
     // hover fill under the contour mesh.
     const drawDocument = useCallback(
-        (ctx: CanvasRenderingContext2D) => {
-            const mesh = meshRef.current;
-            const bounds = boundsRef.current;
-            if (
-                !overlayReady ||
-                !slicOverlay ||
-                !imageSize ||
-                !mesh ||
-                !bounds
-            ) {
+        (ctx: CanvasRenderingContext2D, v: View) => {
+            const path = contourPathRef.current;
+            if (!overlayReady || !slicOverlay || !path) {
                 return;
-            }
-            const {labels, w: lw, h: lh, x: lx, y: ly} = slicOverlay.labelMap;
-
-            // Only the segments whose kept/deleted state changed since the last
-            // paint can alter the mesh, and only within their own bounds ± 1.
-            const painted = paintedDeletedRef.current;
-            const changed: number[] = [];
-            for (const id of deleted) {
-                if (!painted.has(id)) {
-                    changed.push(id);
-                }
-            }
-            for (const id of painted) {
-                if (!deleted.has(id)) {
-                    changed.push(id);
-                }
-            }
-            if (changed.length > 0) {
-                const mCtx = mesh.getContext("2d")!;
-                const kept = new Uint8Array(bounds.maxId + 1).fill(1);
-                for (const id of deleted) {
-                    if (id <= bounds.maxId) {
-                        kept[id] = 0;
-                    }
-                }
-                if (changed.length > MAX_SLIC_DIRTY_SEGMENTS) {
-                    mCtx.clearRect(0, 0, lw, lh);
-                    paintMesh(
-                        mCtx,
-                        labels,
-                        lw,
-                        lh,
-                        kept,
-                        lumaRef.current,
-                        0,
-                        0,
-                        lw - 1,
-                        lh - 1,
-                    );
-                } else {
-                    for (const id of changed) {
-                        if (id > bounds.maxId || bounds.maxX[id] < 0) {
-                            continue;
-                        }
-                        paintMesh(
-                            mCtx,
-                            labels,
-                            lw,
-                            lh,
-                            kept,
-                            lumaRef.current,
-                            Math.max(0, bounds.minX[id] - 1),
-                            Math.max(0, bounds.minY[id] - 1),
-                            Math.min(lw - 1, bounds.maxX[id] + 1),
-                            Math.min(lh - 1, bounds.maxY[id] + 1),
-                        );
-                    }
-                }
-                paintedDeletedRef.current = new Set(deleted);
             }
 
             if (hoveredId !== null && !deleted.has(hoveredId)) {
@@ -476,15 +315,29 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                     ctx.drawImage(tile.canvas, tile.x, tile.y);
                 }
             }
-            ctx.drawImage(mesh, lx, ly);
+
+            const {
+                contourWidth,
+                contourColor,
+                contourCasing,
+                contourCasingWidth,
+            } = theme.slic;
+            ctx.lineJoin = "round";
+            ctx.lineCap = "round";
+            ctx.strokeStyle = contourCasing;
+            ctx.lineWidth = (contourWidth + contourCasingWidth * 2) / v.zoom;
+            ctx.stroke(path);
+            ctx.strokeStyle = contourColor;
+            ctx.lineWidth = contourWidth / v.zoom;
+            ctx.stroke(path);
         },
         [
             slicOverlay,
-            imageSize,
             deleted,
             overlayReady,
             hoveredId,
             getHoverTile,
+            contourRevision,
         ],
     );
 
@@ -784,7 +637,6 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                         onStageMouseMove={handleStageMouseMove}
                         onStageMouseLeave={() => setHoveredId(null)}
                         onContainerResize={handleStageResize}
-                        onImageLoad={handleImageLoad}
                     />
                 </div>
 

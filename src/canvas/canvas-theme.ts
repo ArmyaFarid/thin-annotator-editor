@@ -181,15 +181,16 @@ export const theme = {
      * Colours are RGBA byte tuples — this overlay is rasterized, not stroked.
      */
     slic: {
-        // Picked per pixel from the luminance underneath, so one continuous
-        // one-pixel line stays legible over both a bright PPL field and a
-        // near-black XPL one.
-        contourDark: [17, 17, 17, 225],
-        contourLight: [255, 255, 255, 235],
-        contourLumaThreshold: 128,
-        // A light wash on the hovered segment only, under the contour. Kept
-        // faint: it marks what a click would remove without meaningfully
-        // altering the colour being judged.
+        // Stroked along the cracks between pixels at a constant screen width,
+        // like the mask borders, so the contour covers no image content and
+        // does not grow as the reviewer zooms in. The dark casing under the
+        // light core keeps it readable over both a bright PPL field and a
+        // near-black XPL one, which is what a single colour cannot do.
+        contourWidth: 1.25,
+        contourColor: "rgba(255, 255, 255, 0.95)",
+        contourCasing: "rgba(0, 0, 0, 0.55)",
+        contourCasingWidth: 1,
+        // A faint wash on the hovered segment only, under the contour.
         hoverFill: [79, 195, 247, 38],
     },
 } as const;
