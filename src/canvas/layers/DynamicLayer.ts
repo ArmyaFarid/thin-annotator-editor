@@ -1,6 +1,7 @@
 import type {InteractionState, View} from "@/canvas/types.ts";
 import type {ObjectEditor} from "@/canvas/ObjectEditor.ts";
 import {theme} from "@/canvas/canvas-theme.ts";
+import {drawPixelGrid} from "@/canvas/zoomPan.ts";
 
 export class DynamicLayer {
     private state: InteractionState = {type: "idle"};
@@ -114,7 +115,9 @@ export class DynamicLayer {
         const x = theme.cursorHud.marginX;
         const y = theme.cursorHud.marginY;
 
-        ctx.fillStyle = outside ? theme.cursorHud.bgOutside : theme.cursorHud.bg;
+        ctx.fillStyle = outside
+            ? theme.cursorHud.bgOutside
+            : theme.cursorHud.bg;
         ctx.fillRect(x, y, w, h);
         ctx.fillStyle = theme.cursorHud.text;
         ctx.textBaseline = "middle";
@@ -235,7 +238,13 @@ export class DynamicLayer {
                 const sx = v.x * zoom + panX;
                 const sy = v.y * zoom + panY;
                 ctx.beginPath();
-                ctx.arc(sx, sy, theme.polygonDrawing.vertexDotRadius, 0, Math.PI * 2);
+                ctx.arc(
+                    sx,
+                    sy,
+                    theme.polygonDrawing.vertexDotRadius,
+                    0,
+                    Math.PI * 2,
+                );
                 ctx.fillStyle = strokeColor;
                 ctx.fill();
             }
@@ -266,43 +275,13 @@ export class DynamicLayer {
         }
     }
 
-    // Dans DynamicLayer.ts
-
     private drawPixelGrid(ctx: CanvasRenderingContext2D): void {
-        // 1. Le seuil : On n'affiche la grille que si le zoom est suffisamment grand (ex: > 15x)
-        if (this.view.zoom < 12) {
-            return;
-        }
-
-        ctx.save();
-
-        // Une couleur très subtile pour la grille
-        ctx.strokeStyle = "rgba(0, 0, 0, 0.1)";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-
-        // 2. Décalage de départ (modulo)
-        // On multiplie par DPR si ton canvas est géré en pixels physiques
-        const z = this.view.zoom * this.dpr;
-        const startX = (this.view.panX * this.dpr) % z;
-        const startY = (this.view.panY * this.dpr) % z;
-
-        const w = this.canvas.width;
-        const h = this.canvas.height;
-
-        // 3. Lignes verticales
-        for (let x = startX; x < w; x += z) {
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, h);
-        }
-
-        // 4. Lignes horizontales
-        for (let y = startY; y < h; y += z) {
-            ctx.moveTo(0, y);
-            ctx.lineTo(w, y);
-        }
-
-        ctx.stroke();
-        ctx.restore();
+        drawPixelGrid(
+            ctx,
+            this.view,
+            this.dpr,
+            this.canvas.width,
+            this.canvas.height,
+        );
     }
 }

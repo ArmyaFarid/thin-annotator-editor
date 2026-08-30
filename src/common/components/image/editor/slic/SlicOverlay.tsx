@@ -8,12 +8,23 @@ import {
 import {
     masksAtom,
     slicOverlayAtom,
+    type SlicOverlayState,
     currentMaskAtom,
     activeImageSizeAtom,
 } from "@/app/atom.ts";
 import {canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
 import {SLIC_MASK_FILL_ALPHA, theme} from "@/canvas/canvas-theme.ts";
+import {
+    ZoomableImageStage,
+    type StagePointer,
+} from "@/canvas/ZoomableImageStage.tsx";
+import {
+    fitToBox,
+    zoomAt,
+    type View,
+    type ZoomLimits,
+} from "@/canvas/zoomPan.ts";
 import {commitHistoryAtom, historyScopeAtom} from "@/app/history.ts";
 import {t} from "@/i18n/index.ts";
 
@@ -21,6 +32,8 @@ const MAX_SLIC_LOCAL_HISTORY = 50;
 // Above this many segments changing at once, repainting the whole mesh beats
 // walking a dirty rect per segment (reset, or an undo across many clicks).
 const MAX_SLIC_DIRTY_SEGMENTS = 12;
+// Matches the main canvas, so magnification in the modal reaches as far.
+const SLIC_ZOOM_LIMITS: ZoomLimits = {min: 0.05, max: 20};
 
 interface SlicOverlayProps {
     imageUrl: string;
@@ -30,13 +43,6 @@ interface SlicTile {
     canvas: HTMLCanvasElement;
     x: number;
     y: number;
-}
-
-interface PanDrag {
-    startX: number;
-    startY: number;
-    startPanX: number;
-    startPanY: number;
 }
 
 // Paint the contours of the kept segments into [x0,y0]..[x1,y1] of the mesh
@@ -227,14 +233,10 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     // Only meaningful when targetMaskId !== 0. "add" → kept superpixels
     // become a fill layer on the active mask; "remove" → a hole layer.
     const [applyMode, setApplyMode] = useState<"add" | "remove">("add");
-    const [zoom, setZoom] = useState(1);
-    const [panX, setPanX] = useState(0);
-    const [panY, setPanY] = useState(0);
-    const [isPanning, setIsPanning] = useState(false);
+    const [view, setView] = useState<View>({zoom: 1, panX: 0, panY: 0});
+    const [stageSize, setStageSize] = useState({w: 0, h: 0});
 
-    const containerRef = useRef<HTMLDivElement>(null);
-    const imgRef = useRef<HTMLImageElement>(null);
-    const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
+    const imgRef = useRef<HTMLImageElement | null>(null);
     const meshRef = useRef<HTMLCanvasElement | null>(null);
     const lumaRef = useRef<Uint8Array | null>(null);
     const hoverTilesRef = useRef<Map<number, SlicTile>>(new Map());
@@ -246,26 +248,11 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         maxY: Int32Array;
         maxId: number;
     } | null>(null);
-    const viewRef = useRef({zoom: 1, panX: 0, panY: 0});
-    const panDragRef = useRef<PanDrag | null>(null);
 
-    useEffect(() => {
-        viewRef.current = {zoom, panX, panY};
-    }, [zoom, panX, panY]);
-
-    useEffect(() => {
-        const img = imgRef.current;
-        if (!img) {
-            return;
-        }
-        if (img.complete && img.naturalWidth > 0) {
-            setImgReady(true);
-            return;
-        }
-        const onLoad = () => setImgReady(true);
-        img.addEventListener("load", onLoad);
-        return () => img.removeEventListener("load", onLoad);
-    }, [imageUrl]);
+    const handleImageLoad = useCallback((img: HTMLImageElement) => {
+        imgRef.current = img;
+        setImgReady(true);
+    }, []);
 
     // Build the contour mesh from the label map. Nothing is tinted: only the
     // boundaries of the kept segments are painted, one image pixel wide, so the
@@ -355,6 +342,11 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         return () => cancelAnimationFrame(rafId);
     }, [slicOverlay, imageSize, imgReady]);
 
+    // Stable identity: the stage re-attaches its ResizeObserver on change.
+    const handleStageResize = useCallback((w: number, h: number) => {
+        setStageSize((prev) => (prev.w === w && prev.h === h ? prev : {w, h}));
+    }, []);
+
     // Lazily rasterize the faint hover wash for one segment. Only the hovered
     // segment is ever filled, so at most a handful of these get built.
     const getHoverTile = useCallback(
@@ -405,62 +397,45 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
 
     // Redraw: repaint whatever the last delete invalidated, then composite the
     // hover fill under the contour mesh.
-    const redrawOverlay = useCallback(() => {
-        const mesh = meshRef.current;
-        const bounds = boundsRef.current;
-        if (
-            !overlayReady ||
-            !slicOverlay ||
-            !imageSize ||
-            !overlayCanvasRef.current ||
-            !mesh ||
-            !bounds
-        ) {
-            return;
-        }
-        const {labels, w: lw, h: lh, x: lx, y: ly} = slicOverlay.labelMap;
+    const drawDocument = useCallback(
+        (ctx: CanvasRenderingContext2D) => {
+            const mesh = meshRef.current;
+            const bounds = boundsRef.current;
+            if (
+                !overlayReady ||
+                !slicOverlay ||
+                !imageSize ||
+                !mesh ||
+                !bounds
+            ) {
+                return;
+            }
+            const {labels, w: lw, h: lh, x: lx, y: ly} = slicOverlay.labelMap;
 
-        // Only the segments whose kept/deleted state changed since the last
-        // paint can alter the mesh, and only within their own bounds ± 1.
-        const painted = paintedDeletedRef.current;
-        const changed: number[] = [];
-        for (const id of deleted) {
-            if (!painted.has(id)) {
-                changed.push(id);
-            }
-        }
-        for (const id of painted) {
-            if (!deleted.has(id)) {
-                changed.push(id);
-            }
-        }
-        if (changed.length > 0) {
-            const mCtx = mesh.getContext("2d")!;
-            const kept = new Uint8Array(bounds.maxId + 1).fill(1);
+            // Only the segments whose kept/deleted state changed since the last
+            // paint can alter the mesh, and only within their own bounds ± 1.
+            const painted = paintedDeletedRef.current;
+            const changed: number[] = [];
             for (const id of deleted) {
-                if (id <= bounds.maxId) {
-                    kept[id] = 0;
+                if (!painted.has(id)) {
+                    changed.push(id);
                 }
             }
-            if (changed.length > MAX_SLIC_DIRTY_SEGMENTS) {
-                mCtx.clearRect(0, 0, lw, lh);
-                paintMesh(
-                    mCtx,
-                    labels,
-                    lw,
-                    lh,
-                    kept,
-                    lumaRef.current,
-                    0,
-                    0,
-                    lw - 1,
-                    lh - 1,
-                );
-            } else {
-                for (const id of changed) {
-                    if (id > bounds.maxId || bounds.maxX[id] < 0) {
-                        continue;
+            for (const id of painted) {
+                if (!deleted.has(id)) {
+                    changed.push(id);
+                }
+            }
+            if (changed.length > 0) {
+                const mCtx = mesh.getContext("2d")!;
+                const kept = new Uint8Array(bounds.maxId + 1).fill(1);
+                for (const id of deleted) {
+                    if (id <= bounds.maxId) {
+                        kept[id] = 0;
                     }
+                }
+                if (changed.length > MAX_SLIC_DIRTY_SEGMENTS) {
+                    mCtx.clearRect(0, 0, lw, lh);
                     paintMesh(
                         mCtx,
                         labels,
@@ -468,112 +443,82 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                         lh,
                         kept,
                         lumaRef.current,
-                        Math.max(0, bounds.minX[id] - 1),
-                        Math.max(0, bounds.minY[id] - 1),
-                        Math.min(lw - 1, bounds.maxX[id] + 1),
-                        Math.min(lh - 1, bounds.maxY[id] + 1),
+                        0,
+                        0,
+                        lw - 1,
+                        lh - 1,
                     );
+                } else {
+                    for (const id of changed) {
+                        if (id > bounds.maxId || bounds.maxX[id] < 0) {
+                            continue;
+                        }
+                        paintMesh(
+                            mCtx,
+                            labels,
+                            lw,
+                            lh,
+                            kept,
+                            lumaRef.current,
+                            Math.max(0, bounds.minX[id] - 1),
+                            Math.max(0, bounds.minY[id] - 1),
+                            Math.min(lw - 1, bounds.maxX[id] + 1),
+                            Math.min(lh - 1, bounds.maxY[id] + 1),
+                        );
+                    }
+                }
+                paintedDeletedRef.current = new Set(deleted);
+            }
+
+            if (hoveredId !== null && !deleted.has(hoveredId)) {
+                const tile = getHoverTile(hoveredId);
+                if (tile) {
+                    ctx.drawImage(tile.canvas, tile.x, tile.y);
                 }
             }
-            paintedDeletedRef.current = new Set(deleted);
-        }
+            ctx.drawImage(mesh, lx, ly);
+        },
+        [
+            slicOverlay,
+            imageSize,
+            deleted,
+            overlayReady,
+            hoveredId,
+            getHoverTile,
+        ],
+    );
 
-        const ctx = overlayCanvasRef.current.getContext("2d")!;
-        const {w: iw, h: ih} = imageSize;
-        ctx.clearRect(0, 0, iw, ih);
-        if (hoveredId !== null && !deleted.has(hoveredId)) {
-            const tile = getHoverTile(hoveredId);
-            if (tile) {
-                ctx.drawImage(tile.canvas, tile.x, tile.y);
-            }
-        }
-        ctx.drawImage(mesh, lx, ly);
-    }, [
-        slicOverlay,
-        imageSize,
-        deleted,
-        overlayReady,
-        hoveredId,
-        getHoverTile,
-    ]);
-
+    // Auto-fit once the mesh is built and the stage has a measured size.
+    const fittedRef = useRef<SlicOverlayState | null>(null);
     useEffect(() => {
-        redrawOverlay();
-    }, [redrawOverlay]);
-
-    // Auto-fit zoom once tiles are ready (container is visible at that point)
-    useEffect(() => {
-        if (!slicOverlay || !imageSize || !overlayReady) {
+        if (
+            !slicOverlay ||
+            !overlayReady ||
+            stageSize.w === 0 ||
+            stageSize.h === 0 ||
+            fittedRef.current === slicOverlay
+        ) {
             return;
         }
-        setZoom(1);
-        setPanX(0);
-        setPanY(0);
+        fittedRef.current = slicOverlay;
+        setView(
+            fitToBox(
+                slicOverlay.bbox,
+                stageSize.w,
+                stageSize.h,
+                0.25,
+                SLIC_ZOOM_LIMITS,
+            ),
+        );
+    }, [slicOverlay, overlayReady, stageSize]);
 
-        requestAnimationFrame(() => {
-            const container = containerRef.current;
-            if (!container) {
-                return;
-            }
-            const cw = container.clientWidth;
-            const ch = container.clientHeight;
-            if (cw === 0 || ch === 0) {
-                return;
-            }
-
-            const {bbox} = slicOverlay;
-            const scaleX = cw / imageSize.w;
-            const scaleY = ch / imageSize.h;
-            const PADDING = 0.25;
-            const paddedW = bbox.w * scaleX * (1 + PADDING * 2);
-            const paddedH = bbox.h * scaleY * (1 + PADDING * 2);
-            const fitZoom = Math.min(cw / paddedW, ch / paddedH, 20);
-
-            const cx = (bbox.x + bbox.w / 2) * scaleX;
-            const cy = (bbox.y + bbox.h / 2) * scaleY;
-            setZoom(fitZoom);
-            setPanX(cw / 2 - cx * fitZoom);
-            setPanY(ch / 2 - cy * fitZoom);
-        });
-    }, [slicOverlay, overlayReady]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    // Scroll-to-zoom (native, non-passive)
-    useEffect(() => {
-        const el = containerRef.current;
-        if (!el) {
-            return;
-        }
-        const onWheel = (e: WheelEvent) => {
-            e.preventDefault();
-            const rect = el.getBoundingClientRect();
-            const cx = e.clientX - rect.left;
-            const cy = e.clientY - rect.top;
-            const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
-            const {zoom: z, panX: px, panY: py} = viewRef.current;
-            const newZ = Math.max(0.25, Math.min(20, z * factor));
-            setZoom(newZ);
-            setPanX(cx - ((cx - px) * newZ) / z);
-            setPanY(cy - ((cy - py) * newZ) / z);
-        };
-        el.addEventListener("wheel", onWheel, {passive: false});
-        return () => el.removeEventListener("wheel", onWheel);
-    }, []);
-
-    function getSuperpixelAt(e: React.MouseEvent): number | null {
-        const overlay = overlayCanvasRef.current;
-        if (!overlay || !slicOverlay || !imageSize) {
+    function getSuperpixelAt(p: StagePointer): number | null {
+        if (!slicOverlay) {
             return null;
         }
-        const rect = overlay.getBoundingClientRect();
-        const ix = Math.floor(
-            (e.clientX - rect.left) * (imageSize.w / rect.width),
-        );
-        const iy = Math.floor(
-            (e.clientY - rect.top) * (imageSize.h / rect.height),
-        );
         const {labels, w: lw, h: lh, x: lx, y: ly} = slicOverlay.labelMap;
-        const px = ix - lx;
-        const py = iy - ly;
+        const px = Math.floor(p.x) - lx;
+        const py = Math.floor(p.y) - ly;
         if (px < 0 || py < 0 || px >= lw || py >= lh) {
             return null;
         }
@@ -581,29 +526,14 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         return id === 0 ? null : id; // 0 = outside the segmented region
     }
 
-    function handleOverlayMouseDown(e: React.MouseEvent) {
-        if (e.button === 1) {
-            e.preventDefault();
-            const {panX: px, panY: py} = viewRef.current;
-            panDragRef.current = {
-                startX: e.clientX,
-                startY: e.clientY,
-                startPanX: px,
-                startPanY: py,
-            };
-            setIsPanning(true);
+    function handleStageMouseDown(p: StagePointer) {
+        if (p.event.button !== 0) {
             return;
         }
-        if (e.button !== 0) {
-            return;
+        const id = getSuperpixelAt(p);
+        if (id === null || deletedRef.current.has(id)) {
+            return; // no-op click, no history entry
         }
-        const id = getSuperpixelAt(e);
-        if (id === null) {
-            return;
-        }
-        if (deletedRef.current.has(id)) {
-            return;
-        } // no-op click, no history entry
         pushLocalHistory();
         setDeleted((prev) => {
             const next = new Set(prev);
@@ -612,28 +542,11 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         });
     }
 
-    function handleOverlayMouseMove(e: React.MouseEvent) {
-        if (panDragRef.current) {
-            const dx = e.clientX - panDragRef.current.startX;
-            const dy = e.clientY - panDragRef.current.startY;
-            setPanX(panDragRef.current.startPanX + dx);
-            setPanY(panDragRef.current.startPanY + dy);
-            return;
-        }
+    function handleStageMouseMove(p: StagePointer) {
         // Nothing is tinted at rest, so the hovered segment is the only cue for
         // what a click would remove.
-        const id = getSuperpixelAt(e);
+        const id = getSuperpixelAt(p);
         setHoveredId((prev) => (prev === id ? prev : id));
-    }
-
-    function handleOverlayMouseUp() {
-        panDragRef.current = null;
-        setIsPanning(false);
-    }
-
-    function handleOverlayMouseLeave() {
-        handleOverlayMouseUp();
-        setHoveredId(null);
     }
 
     function handleApply() {
@@ -729,10 +642,6 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         return null;
     }
 
-    const {w: iw, h: ih} = imageSize;
-    const transform = `matrix(${zoom},0,0,${zoom},${panX},${panY})`;
-    const cursor = isPanning ? "grabbing" : "crosshair";
-
     return (
         <div className="fixed inset-0 z-50 bg-black/85 flex flex-col items-center justify-center gap-4 p-4">
             {!overlayReady ? (
@@ -810,29 +719,25 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                     </span>
                     <input
                         type="range"
-                        min={25}
+                        min={5}
                         max={2000}
-                        value={Math.round(zoom * 100)}
+                        value={Math.round(view.zoom * 100)}
                         onChange={(e) => {
-                            const newZ = +e.target.value / 100;
-                            const container = containerRef.current;
-                            if (container) {
-                                const cx = container.clientWidth / 2;
-                                const cy = container.clientHeight / 2;
-                                const {
-                                    zoom: z,
-                                    panX: px,
-                                    panY: py,
-                                } = viewRef.current;
-                                setPanX(cx - ((cx - px) * newZ) / z);
-                                setPanY(cy - ((cy - py) * newZ) / z);
-                            }
-                            setZoom(newZ);
+                            const factor = +e.target.value / 100 / view.zoom;
+                            setView((v) =>
+                                zoomAt(
+                                    v,
+                                    stageSize.w / 2,
+                                    stageSize.h / 2,
+                                    factor,
+                                    SLIC_ZOOM_LIMITS,
+                                ),
+                            );
                         }}
                         className="w-24"
                     />
                     <span className="text-xs text-white/60 w-12">
-                        {Math.round(zoom * 100)}%
+                        {Math.round(view.zoom * 100)}%
                     </span>
                 </div>
 
@@ -858,53 +763,29 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                     )}
                 </div>
 
-                {/* Image + overlay canvas */}
+                {/* Image + overlay stage */}
                 <div
-                    ref={containerRef}
                     style={{
-                        overflow: "hidden",
-                        display: "inline-block",
-                        lineHeight: 0,
                         position: "relative",
-                        maxHeight: "72vh",
-                        maxWidth: "85vw",
+                        width: "85vw",
+                        height: "72vh",
+                        overflow: "hidden",
                     }}>
-                    <div
-                        style={{
-                            display: "inline-block",
-                            lineHeight: 0,
-                            transform,
-                            transformOrigin: "0 0",
-                        }}>
-                        <img
-                            ref={imgRef}
-                            src={imageUrl}
-                            draggable={false}
-                            style={{
-                                maxHeight: "72vh",
-                                maxWidth: "85vw",
-                                display: "block",
-                                userSelect: "none",
-                            }}
-                            alt=""
-                        />
-                        <canvas
-                            ref={overlayCanvasRef}
-                            width={iw}
-                            height={ih}
-                            style={{
-                                position: "absolute",
-                                inset: 0,
-                                width: "100%",
-                                height: "100%",
-                                cursor,
-                            }}
-                            onMouseDown={handleOverlayMouseDown}
-                            onMouseMove={handleOverlayMouseMove}
-                            onMouseUp={handleOverlayMouseUp}
-                            onMouseLeave={handleOverlayMouseLeave}
-                        />
-                    </div>
+                    <ZoomableImageStage
+                        imageUrl={imageUrl}
+                        imageW={imageSize.w}
+                        imageH={imageSize.h}
+                        view={view}
+                        onViewChange={setView}
+                        zoomLimits={SLIC_ZOOM_LIMITS}
+                        cursor="crosshair"
+                        drawDocument={drawDocument}
+                        onStageMouseDown={handleStageMouseDown}
+                        onStageMouseMove={handleStageMouseMove}
+                        onStageMouseLeave={() => setHoveredId(null)}
+                        onContainerResize={handleStageResize}
+                        onImageLoad={handleImageLoad}
+                    />
                 </div>
 
                 {/* Actions */}

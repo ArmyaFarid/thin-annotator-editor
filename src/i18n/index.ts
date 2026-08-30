@@ -285,7 +285,8 @@ const T = {
         subtractModeTooltip:
             "Mode soustraction : les tracés creusent des trous dans la région",
         refineTooltip: "Ouvrir l'outil de raffinement (gomme/pinceau)",
-        hideAnchorsTooltip: "Masquer les ancres (fusionner les sommets en masque)",
+        hideAnchorsTooltip:
+            "Masquer les ancres (fusionner les sommets en masque)",
         showAnchorsTooltip: "Afficher les sommets éditables (points d'ancrage)",
         openNewTaskTooltip: "Quitter cette tâche pour en ouvrir une autre",
         finishTooltip: "Terminer la session (avec option de sauvegarde)",
@@ -319,7 +320,8 @@ const T = {
             "Les superpixels conservés seront ajoutés au masque actif",
         slicRemoveFromMaskTooltip:
             "Les superpixels conservés seront retirés du masque actif",
-        slicHintNewMask: "Les superpixels conservés formeront un nouveau masque.",
+        slicHintNewMask:
+            "Les superpixels conservés formeront un nouveau masque.",
         slicHintAddPrefix: "Ajout : les superpixels conservés seront",
         slicHintAddEmphasis: "dessinés",
         slicHintAddSuffix: "dans le masque actif.",
@@ -327,7 +329,7 @@ const T = {
         slicHintRemoveEmphasis: "effacés",
         slicHintRemoveSuffix: "du masque actif.",
         slicFooterHint:
-            "Cliquer pour supprimer un superpixel · Molette: zoom · Clic molette: déplacer",
+            "Cliquer pour supprimer un superpixel · Molette: zoom · Clic molette ou Alt+glisser: déplacer",
 
         // Refine overlay
         refineTitle: "Raffinement",
@@ -515,8 +517,7 @@ const T = {
         layoutPods: "Groups",
         layoutPodsHint: "Each group on its own panel, with its icon",
         layoutFlyout: "Flyout menus",
-        layoutFlyoutHint:
-            "One icon per group; hover or click to pick a tool",
+        layoutFlyoutHint: "One icon per group; hover or click to pick a tool",
 
         // Toolbar tools
         toolIdle: "Pointer (no tool)",
@@ -604,8 +605,7 @@ const T = {
         exportAnnotationTooltip:
             "Export the final annotation of the current image in COCO format",
         addModeTooltip: "Add mode: strokes become areas of the region",
-        subtractModeTooltip:
-            "Subtract mode: strokes cut holes in the region",
+        subtractModeTooltip: "Subtract mode: strokes cut holes in the region",
         refineTooltip: "Open the refine tool (eraser/brush)",
         hideAnchorsTooltip: "Hide the anchors (merge the vertices into a mask)",
         showAnchorsTooltip: "Show the editable vertices (anchor points)",
@@ -637,7 +637,8 @@ const T = {
         slicKept: "kept",
         slicAddToMask: "Add to mask",
         slicRemoveFromMask: "Remove from mask",
-        slicAddToMaskTooltip: "Kept superpixels will be added to the active mask",
+        slicAddToMaskTooltip:
+            "Kept superpixels will be added to the active mask",
         slicRemoveFromMaskTooltip:
             "Kept superpixels will be removed from the active mask",
         slicHintNewMask: "Kept superpixels will form a new mask.",
@@ -648,7 +649,7 @@ const T = {
         slicHintRemoveEmphasis: "erased",
         slicHintRemoveSuffix: "from the active mask.",
         slicFooterHint:
-            "Click to remove a superpixel · Wheel: zoom · Middle click: pan",
+            "Click to remove a superpixel · Wheel: zoom · Middle click or Alt-drag: pan",
 
         // Refine overlay
         refineTitle: "Refinement",
@@ -672,10 +673,10 @@ const T = {
         close: "Close",
         fetchingData: "Fetching data",
         loadingTitle: "Loading demo...",
-        loadingDescription:
-            "This may take a few moments, you're almost there!",
+        loadingDescription: "This may take a few moments, you're almost there!",
         pageNotFoundTitle: "Page not found",
-        pageNotFoundDescription: "It looks like you might be in the wrong place.",
+        pageNotFoundDescription:
+            "It looks like you might be in the wrong place.",
         pageNotFoundLink: "Click here to access the SAM 2 Demo",
         unsupportedDeviceTitle: "Well, this is embarrassing...",
         unsupportedDeviceDescription:

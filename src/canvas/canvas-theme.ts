@@ -162,6 +162,13 @@ export const theme = {
         marginY: 8,
     },
 
+    /** One line per image pixel, once the zoom makes pixels large enough. */
+    grid: {
+        minZoom: 12,
+        stroke: "rgba(0, 0, 0, 0.1)",
+        lineWidth: 1,
+    },
+
     /** Inactive (non-current) mask dimming when an active mask exists. */
     dimming: {
         inactiveAlpha: 0.3,
