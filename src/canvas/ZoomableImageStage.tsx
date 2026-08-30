@@ -7,7 +7,6 @@ import {
     type View,
     type ZoomLimits,
 } from "@/canvas/zoomPan.ts";
-import {theme} from "@/canvas/canvas-theme.ts";
 
 export interface StagePointer {
     /** Image intrinsic pixels. */
@@ -229,7 +228,6 @@ export const ZoomableImageStage: React.FC<ZoomableImageStageProps> = ({
     }
 
     const transform = `matrix(${view.zoom},0,0,${view.zoom},${view.panX},${view.panY})`;
-    const pixelated = view.zoom >= theme.grid.minZoom;
 
     return (
         <div
@@ -266,7 +264,6 @@ export const ZoomableImageStage: React.FC<ZoomableImageStageProps> = ({
                         maxWidth: "none",
                         width: imageW,
                         height: imageH,
-                        imageRendering: pixelated ? "pixelated" : "auto",
                     }}
                     alt=""
                 />
