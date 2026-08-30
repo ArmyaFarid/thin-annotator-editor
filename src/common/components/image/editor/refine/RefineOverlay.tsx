@@ -1,10 +1,23 @@
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {useAtom, useSetAtom} from "jotai";
-import {ArrowUturnLeftIcon, ArrowUturnRightIcon} from "@heroicons/react/24/outline";
+import {
+    ArrowUturnLeftIcon,
+    ArrowUturnRightIcon,
+} from "@heroicons/react/24/outline";
 import {masksAtom, refineModeAtom} from "@/app/atom.ts";
 import {canvasToRLE, mergeToCanvas} from "@/canvas/utils/maskMerge.ts";
 import {decode} from "@/jscocotools/mask.ts";
 import {commitHistoryAtom, historyScopeAtom} from "@/app/history.ts";
+import {
+    ZoomableImageStage,
+    type StagePointer,
+} from "@/canvas/ZoomableImageStage.tsx";
+import {
+    fitToBox,
+    zoomAt,
+    type View,
+    type ZoomLimits,
+} from "@/canvas/zoomPan.ts";
 import {t} from "@/i18n/index.ts";
 
 interface RLE {
@@ -13,6 +26,8 @@ interface RLE {
 }
 
 const MAX_REFINE_LOCAL_HISTORY = 20;
+// Matches the main canvas, so magnification reaches as far here as it does there.
+const REFINE_ZOOM_LIMITS: ZoomLimits = {min: 0.05, max: 20};
 
 // Paint an RLE-encoded mask onto a working canvas as white pixels with
 // alpha 255 where set, transparent elsewhere. Matches the format the brush
@@ -44,12 +59,15 @@ interface RefineOverlayProps {
     imageH: number;
 }
 
-interface PanDrag { startX: number; startY: number; startPanX: number; startPanY: number }
-
-function getWorkingBounds(canvas: HTMLCanvasElement): {x: number; y: number; w: number; h: number} | null {
+function getWorkingBounds(
+    canvas: HTMLCanvasElement,
+): {x: number; y: number; w: number; h: number} | null {
     const {width: w, height: h} = canvas;
     const pixels = canvas.getContext("2d")!.getImageData(0, 0, w, h).data;
-    let minX = w, minY = h, maxX = -1, maxY = -1;
+    let minX = w,
+        minY = h,
+        maxX = -1,
+        maxY = -1;
     for (let y = 0; y < h; y++) {
         for (let x = 0; x < w; x++) {
             if (pixels[(y * w + x) * 4 + 3] > 127) {
@@ -60,41 +78,44 @@ function getWorkingBounds(canvas: HTMLCanvasElement): {x: number; y: number; w: 
             }
         }
     }
-    return maxX === -1 ? null : {x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1};
+    return maxX === -1
+        ? null
+        : {x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1};
 }
 
-export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, imageH}) => {
+export const RefineOverlay: React.FC<RefineOverlayProps> = ({
+    imageUrl,
+    imageW,
+    imageH,
+}) => {
     const [refineMode, setRefineMode] = useAtom(refineModeAtom);
     const [masks, setMasks] = useAtom(masksAtom);
     const [tool, setTool] = useState<"erase" | "add">("erase");
     const [brushSize, setBrushSize] = useState(20);
-    const [zoom, setZoom] = useState(1);
-    const [panX, setPanX] = useState(0);
-    const [panY, setPanY] = useState(0);
-    const [isPanning, setIsPanning] = useState(false);
+    const [view, setView] = useState<View>({zoom: 1, panX: 0, panY: 0});
+    const [stageSize, setStageSize] = useState({w: 0, h: 0});
+    // Brush centre in image pixels; null when the pointer is off the stage.
+    const [cursorPos, setCursorPos] = useState<{x: number; y: number} | null>(
+        null,
+    );
+    // Bumped whenever the composited mask changes, so the stage repaints.
+    const [displayRevision, setDisplayRevision] = useState(0);
 
     const [borderOnly, setBorderOnly] = useState(false);
     const borderOnlyRef = useRef(false);
 
-    const containerRef = useRef<HTMLDivElement>(null);
-    const imgRef = useRef<HTMLImageElement>(null);
-    const displayCanvasRef = useRef<HTMLCanvasElement>(null);
-    const cursorCanvasRef = useRef<HTMLCanvasElement>(null);
+    const displayRef = useRef<HTMLCanvasElement | null>(null);
     const workingRef = useRef<HTMLCanvasElement | null>(null);
     const colorBufferRef = useRef<HTMLCanvasElement | null>(null);
     const isDrawing = useRef(false);
-    const panDragRef = useRef<PanDrag | null>(null);
-    const viewRef = useRef({zoom: 1, panX: 0, panY: 0});
 
-    const targetMask = masks.find(m => m.id === refineMode);
-
-    useEffect(() => { viewRef.current = {zoom, panX, panY}; }, [zoom, panX, panY]);
+    const targetMask = masks.find((m) => m.id === refineMode);
 
     const setHistoryScope = useSetAtom(historyScopeAtom);
     const commitHistory = useSetAtom(commitHistoryAtom);
 
     const redrawDisplay = useCallback(() => {
-        const display = displayCanvasRef.current;
+        const display = displayRef.current;
         const working = workingRef.current;
         const colorBuf = colorBufferRef.current;
         if (!display || !working || !colorBuf || !targetMask) return;
@@ -142,6 +163,7 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
             cCtx.globalCompositeOperation = "source-over";
             ctx.drawImage(colorBuf, 0, 0);
         }
+        setDisplayRevision((r) => r + 1);
     }, [targetMask, imageW, imageH]);
 
     // ── Local refine undo: per-stroke RLE snapshots of `workingRef`. ──
@@ -152,7 +174,7 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
     const pushLocalHistory = useCallback(() => {
         if (!workingRef.current) return;
         const snapshot = canvasToRLE(workingRef.current);
-        setLocalPast(past => {
+        setLocalPast((past) => {
             const next = [...past, snapshot];
             return next.length > MAX_REFINE_LOCAL_HISTORY
                 ? next.slice(-MAX_REFINE_LOCAL_HISTORY)
@@ -162,28 +184,24 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
     }, []);
 
     const localUndo = useCallback(() => {
-        setLocalPast(past => {
-            if (past.length === 0 || !workingRef.current) return past;
-            const previous = past[past.length - 1];
-            const current = canvasToRLE(workingRef.current);
-            setLocalFuture(f => [...f, current]);
-            applyRleToCanvas(previous, workingRef.current);
-            redrawDisplay();
-            return past.slice(0, -1);
-        });
-    }, [redrawDisplay]);
+        const working = workingRef.current;
+        if (localPast.length === 0 || !working) return;
+        const previous = localPast[localPast.length - 1];
+        setLocalFuture((f) => [...f, canvasToRLE(working)]);
+        setLocalPast((p) => p.slice(0, -1));
+        applyRleToCanvas(previous, working);
+        redrawDisplay();
+    }, [localPast, redrawDisplay]);
 
     const localRedo = useCallback(() => {
-        setLocalFuture(future => {
-            if (future.length === 0 || !workingRef.current) return future;
-            const next = future[future.length - 1];
-            const current = canvasToRLE(workingRef.current);
-            setLocalPast(p => [...p, current]);
-            applyRleToCanvas(next, workingRef.current);
-            redrawDisplay();
-            return future.slice(0, -1);
-        });
-    }, [redrawDisplay]);
+        const working = workingRef.current;
+        if (localFuture.length === 0 || !working) return;
+        const next = localFuture[localFuture.length - 1];
+        setLocalPast((p) => [...p, canvasToRLE(working)]);
+        setLocalFuture((f) => f.slice(0, -1));
+        applyRleToCanvas(next, working);
+        redrawDisplay();
+    }, [localFuture, redrawDisplay]);
 
     // Claim refine scope on mount, release on unmount.
     useEffect(() => {
@@ -197,7 +215,8 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
             if (tag === "INPUT" || tag === "TEXTAREA") return;
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
                 e.preventDefault();
-                if (e.shiftKey) localRedo(); else localUndo();
+                if (e.shiftKey) localRedo();
+                else localUndo();
             } else if (e.ctrlKey && e.key.toLowerCase() === "y") {
                 e.preventDefault();
                 localRedo();
@@ -207,7 +226,8 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
         return () => window.removeEventListener("keydown", onKey);
     }, [localUndo, localRedo]);
 
-    // Init working canvas + auto-zoom when entering refine mode
+    // Init working canvas when entering refine mode.
+    const fittedRef = useRef(0);
     useEffect(() => {
         if (!targetMask || imageW === 0 || imageH === 0) return;
 
@@ -219,149 +239,113 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
         colorBuf.height = imageH;
         colorBufferRef.current = colorBuf;
 
+        const display = document.createElement("canvas");
+        display.width = imageW;
+        display.height = imageH;
+        displayRef.current = display;
+
+        fittedRef.current = 0;
+        setView({zoom: 1, panX: 0, panY: 0});
         redrawDisplay();
-
-        // Reset then auto-fit after layout is painted
-        setZoom(1);
-        setPanX(0);
-        setPanY(0);
-
-        requestAnimationFrame(() => {
-            const img = imgRef.current;
-            if (!img) return;
-            const displayW = img.clientWidth;
-            const displayH = img.clientHeight;
-            if (displayW === 0 || displayH === 0) return;
-
-            const bounds = getWorkingBounds(working);
-            if (!bounds) return;
-
-            const scaleX = displayW / imageW;
-            const scaleY = displayH / imageH;
-            const PADDING = 0.3;
-            const paddedW = bounds.w * scaleX * (1 + PADDING * 2);
-            const paddedH = bounds.h * scaleY * (1 + PADDING * 2);
-            const fitZoom = Math.min(displayW / paddedW, displayH / paddedH, 20);
-
-            const cx = (bounds.x + bounds.w / 2) * scaleX;
-            const cy = (bounds.y + bounds.h / 2) * scaleY;
-            const newPanX = displayW / 2 - cx * fitZoom;
-            const newPanY = displayH / 2 - cy * fitZoom;
-
-            setZoom(fitZoom);
-            setPanX(newPanX);
-            setPanY(newPanY);
-        });
     }, [refineMode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Fit to the mask's own bounds once the stage has been measured.
+    useEffect(() => {
+        const working = workingRef.current;
+        if (
+            !working ||
+            stageSize.w === 0 ||
+            stageSize.h === 0 ||
+            fittedRef.current === refineMode
+        ) {
+            return;
+        }
+        const bounds = getWorkingBounds(working);
+        if (!bounds) return;
+        fittedRef.current = refineMode;
+        setView(
+            fitToBox(bounds, stageSize.w, stageSize.h, 0.3, REFINE_ZOOM_LIMITS),
+        );
+    }, [refineMode, stageSize]);
 
     useEffect(() => {
         borderOnlyRef.current = borderOnly;
         redrawDisplay();
     }, [borderOnly, redrawDisplay]);
 
-    // Scroll-to-zoom (native, non-passive to allow preventDefault)
-    useEffect(() => {
-        const el = containerRef.current;
-        if (!el) return;
-        const onWheel = (e: WheelEvent) => {
-            e.preventDefault();
-            const rect = el.getBoundingClientRect();
-            const cx = e.clientX - rect.left;
-            const cy = e.clientY - rect.top;
-            const factor = e.deltaY < 0 ? 1.15 : 1 / 1.15;
-            const {zoom: z, panX: px, panY: py} = viewRef.current;
-            const newZ = Math.max(0.25, Math.min(20, z * factor));
-            setZoom(newZ);
-            setPanX(cx - (cx - px) * newZ / z);
-            setPanY(cy - (cy - py) * newZ / z);
-        };
-        el.addEventListener("wheel", onWheel, {passive: false});
-        return () => el.removeEventListener("wheel", onWheel);
-    }, []);
-
-    function drawCursor(e: React.MouseEvent) {
-        const cursor = cursorCanvasRef.current;
-        const display = displayCanvasRef.current;
-        if (!cursor || !display) return;
-        const rect = display.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const ctx = cursor.getContext("2d")!;
-        ctx.clearRect(0, 0, cursor.width, cursor.height);
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(x * (imageW / rect.width), y * (imageH / rect.height), brushSize * (imageW / rect.width), 0, Math.PI * 2);
-        if (tool === "erase") {
-            ctx.strokeStyle = "rgba(255,80,80,0.9)";
-            ctx.fillStyle = "rgba(255,80,80,0.12)";
-        } else {
-            ctx.strokeStyle = "rgba(80,195,247,0.9)";
-            ctx.fillStyle = "rgba(80,195,247,0.12)";
-        }
-        ctx.lineWidth = 1.5 * (imageW / rect.width);
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-    }
-
-    function clearCursor() {
-        const cursor = cursorCanvasRef.current;
-        if (!cursor) return;
-        cursor.getContext("2d")!.clearRect(0, 0, cursor.width, cursor.height);
-    }
-
-    function drawBrush(e: React.MouseEvent) {
-        const display = displayCanvasRef.current;
+    function drawBrush(p: StagePointer) {
         const working = workingRef.current;
-        if (!display || !working) return;
-        const rect = display.getBoundingClientRect();
-        const ix = (e.clientX - rect.left) * (imageW / rect.width);
-        const iy = (e.clientY - rect.top) * (imageH / rect.height);
-        const radius = brushSize * (imageW / rect.width);
+        if (!working) return;
         const wCtx = working.getContext("2d")!;
         wCtx.save();
-        wCtx.globalCompositeOperation = tool === "erase" ? "destination-out" : "source-over";
+        wCtx.globalCompositeOperation =
+            tool === "erase" ? "destination-out" : "source-over";
         wCtx.fillStyle = "rgba(255,255,255,1)";
         wCtx.beginPath();
-        wCtx.arc(ix, iy, radius, 0, Math.PI * 2);
+        // Brush size is a screen size; divide by zoom to reach image pixels.
+        wCtx.arc(p.x, p.y, brushSize / view.zoom, 0, Math.PI * 2);
         wCtx.fill();
         wCtx.restore();
         redrawDisplay();
     }
 
-    function handleMouseDown(e: React.MouseEvent) {
-        if (e.button === 1) {
-            e.preventDefault();
-            const {panX: px, panY: py} = viewRef.current;
-            panDragRef.current = {startX: e.clientX, startY: e.clientY, startPanX: px, startPanY: py};
-            setIsPanning(true);
-            return;
-        }
-        if (e.button !== 0) return;
-        pushLocalHistory();   // snapshot pre-stroke state for local undo
+    function handleStageMouseDown(p: StagePointer) {
+        if (p.event.button !== 0) return;
+        pushLocalHistory(); // snapshot pre-stroke state for local undo
         isDrawing.current = true;
-        drawBrush(e);
+        setCursorPos({x: p.x, y: p.y});
+        drawBrush(p);
     }
 
-    function handleMouseMove(e: React.MouseEvent) {
-        if (panDragRef.current) {
-            const dx = e.clientX - panDragRef.current.startX;
-            const dy = e.clientY - panDragRef.current.startY;
-            setPanX(panDragRef.current.startPanX + dx);
-            setPanY(panDragRef.current.startPanY + dy);
-            clearCursor();
-            return;
-        }
-        drawCursor(e);
+    function handleStageMouseMove(p: StagePointer) {
+        setCursorPos({x: p.x, y: p.y});
         if (!isDrawing.current) return;
-        drawBrush(e);
+        drawBrush(p);
     }
 
-    function handleMouseUp() {
-        panDragRef.current = null;
-        setIsPanning(false);
+    function handleStageMouseUp() {
         isDrawing.current = false;
     }
+
+    function handleStageMouseLeave() {
+        isDrawing.current = false;
+        setCursorPos(null);
+    }
+
+    const handleStageResize = useCallback((w: number, h: number) => {
+        setStageSize((prev) => (prev.w === w && prev.h === h ? prev : {w, h}));
+    }, []);
+
+    // Composited mask, then the brush outline — both under the view transform,
+    // with screen sizes divided by zoom so they stay constant on screen.
+    const drawDocument = useCallback(
+        (ctx: CanvasRenderingContext2D, v: View) => {
+            const display = displayRef.current;
+            if (display) ctx.drawImage(display, 0, 0);
+            if (!cursorPos) return;
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(
+                cursorPos.x,
+                cursorPos.y,
+                brushSize / v.zoom,
+                0,
+                Math.PI * 2,
+            );
+            if (tool === "erase") {
+                ctx.strokeStyle = "rgba(255,80,80,0.9)";
+                ctx.fillStyle = "rgba(255,80,80,0.12)";
+            } else {
+                ctx.strokeStyle = "rgba(80,195,247,0.9)";
+                ctx.fillStyle = "rgba(80,195,247,0.12)";
+            }
+            ctx.lineWidth = 1.5 / v.zoom;
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+        },
+        [cursorPos, brushSize, tool, displayRevision],
+    );
 
     function handleApply() {
         if (!workingRef.current) return;
@@ -369,19 +353,21 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
         const layerId = Date.now();
         // Whole refine session becomes a single GLOBAL undo step.
         commitHistory({action: "other", payload: {note: "refine apply"}});
-        setMasks(prev =>
-            prev.map(m => {
+        setMasks((prev) =>
+            prev.map((m) => {
                 if (m.id !== refineMode) return m;
-                return {...m, layers: [{id: layerId, rleMask: newRle, source: "sam" as const}]};
+                return {
+                    ...m,
+                    layers: [
+                        {id: layerId, rleMask: newRle, source: "sam" as const},
+                    ],
+                };
             }),
         );
         setRefineMode(0);
     }
 
     if (!targetMask) return null;
-
-    const transform = `matrix(${zoom},0,0,${zoom},${panX},${panY})`;
-    const canvasCursor = isPanning ? "grabbing" : (tool === "erase" ? "cell" : "crosshair");
 
     return (
         <div className="fixed inset-0 z-50 bg-black/60 flex flex-col items-center justify-center gap-4 p-4">
@@ -414,35 +400,45 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
                     disabled={localFuture.length === 0}
                     title={t("redoTitle")}
                     className="p-1.5 rounded text-white/70 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
-                    <ArrowUturnRightIcon className="w-4 h-4" strokeWidth={2.5} />
+                    <ArrowUturnRightIcon
+                        className="w-4 h-4"
+                        strokeWidth={2.5}
+                    />
                 </button>
                 <div className="w-px h-5 bg-white/20" />
                 <span className="text-xs text-white/50">{t("brushLabel")}</span>
                 <input
-                    type="range" min={5} max={100} value={brushSize}
-                    onChange={e => setBrushSize(+e.target.value)}
+                    type="range"
+                    min={5}
+                    max={100}
+                    value={brushSize}
+                    onChange={(e) => setBrushSize(+e.target.value)}
                     className="w-24"
                 />
                 <span className="text-xs text-white/60 w-8">{brushSize}px</span>
                 <div className="w-px h-5 bg-white/20" />
                 <span className="text-xs text-white/50">{t("zoomLabel")}</span>
                 <input
-                    type="range" min={25} max={2000} value={Math.round(zoom * 100)}
-                    onChange={e => {
-                        const newZ = +e.target.value / 100;
-                        const img = imgRef.current;
-                        if (img) {
-                            const cx = img.clientWidth / 2;
-                            const cy = img.clientHeight / 2;
-                            const {zoom: z, panX: px, panY: py} = viewRef.current;
-                            setPanX(cx - (cx - px) * newZ / z);
-                            setPanY(cy - (cy - py) * newZ / z);
-                        }
-                        setZoom(newZ);
-                    }}
+                    type="range"
+                    min={5}
+                    max={2000}
+                    value={Math.round(view.zoom * 100)}
+                    onChange={(e) =>
+                        setView((v) =>
+                            zoomAt(
+                                v,
+                                stageSize.w / 2,
+                                stageSize.h / 2,
+                                +e.target.value / 100 / v.zoom,
+                                REFINE_ZOOM_LIMITS,
+                            ),
+                        )
+                    }
                     className="w-24"
                 />
-                <span className="text-xs text-white/60 w-12">{Math.round(zoom * 100)}%</span>
+                <span className="text-xs text-white/60 w-12">
+                    {Math.round(view.zoom * 100)}%
+                </span>
                 <div className="w-px h-5 bg-white/20" />
                 <button
                     onClick={() => setBorderOnly(!borderOnly)}
@@ -451,52 +447,36 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({imageUrl, imageW, i
                 </button>
             </div>
 
-            {/* Image + overlay canvas */}
+            {/* Image + overlay stage */}
             <div
-                ref={containerRef}
-                style={{overflow: "hidden", display: "inline-block", lineHeight: 0, position: "relative"}}>
-                <div style={{display: "inline-block", lineHeight: 0, transform, transformOrigin: "0 0"}}>
-                    <img
-                        ref={imgRef}
-                        src={imageUrl}
-                        draggable={false}
-                        style={{maxHeight: "72vh", maxWidth: "85vw", display: "block", userSelect: "none"}}
-                        alt=""
-                    />
-                    <canvas
-                        ref={displayCanvasRef}
-                        width={imageW}
-                        height={imageH}
-                        style={{
-                            position: "absolute",
-                            inset: 0,
-                            width: "100%",
-                            height: "100%",
-                            pointerEvents: "none",
-                        }}
-                    />
-                    <canvas
-                        ref={cursorCanvasRef}
-                        width={imageW}
-                        height={imageH}
-                        style={{
-                            position: "absolute",
-                            inset: 0,
-                            width: "100%",
-                            height: "100%",
-                            cursor: canvasCursor,
-                        }}
-                        onMouseDown={handleMouseDown}
-                        onMouseMove={handleMouseMove}
-                        onMouseUp={handleMouseUp}
-                        onMouseLeave={() => { clearCursor(); handleMouseUp(); }}
-                    />
-                </div>
+                style={{
+                    position: "relative",
+                    width: "85vw",
+                    height: "72vh",
+                    overflow: "hidden",
+                }}>
+                <ZoomableImageStage
+                    imageUrl={imageUrl}
+                    imageW={imageW}
+                    imageH={imageH}
+                    view={view}
+                    onViewChange={setView}
+                    zoomLimits={REFINE_ZOOM_LIMITS}
+                    cursor={tool === "erase" ? "cell" : "crosshair"}
+                    drawDocument={drawDocument}
+                    onStageMouseDown={handleStageMouseDown}
+                    onStageMouseMove={handleStageMouseMove}
+                    onStageMouseUp={handleStageMouseUp}
+                    onStageMouseLeave={handleStageMouseLeave}
+                    onContainerResize={handleStageResize}
+                />
             </div>
 
             {/* Actions */}
             <div className="flex items-center gap-3">
-                <span className="text-xs text-white/30">{t("refineFooterHint")}</span>
+                <span className="text-xs text-white/30">
+                    {t("refineFooterHint")}
+                </span>
                 <button
                     onClick={() => setRefineMode(0)}
                     className="px-5 py-2 rounded-lg border border-white/20 text-sm hover:bg-white/10 transition-colors">

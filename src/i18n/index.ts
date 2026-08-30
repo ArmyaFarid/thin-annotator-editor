@@ -337,7 +337,8 @@ const T = {
         refineAdd: "Ajouter",
         brushLabel: "Pinceau:",
         zoomLabel: "Zoom:",
-        refineFooterHint: "Molette: zoom · Clic molette: déplacer",
+        refineFooterHint:
+            "Molette: zoom · Clic molette ou Alt+glisser: déplacer",
 
         // Shared actions
         reset: "Réinitialiser",
@@ -657,7 +658,7 @@ const T = {
         refineAdd: "Add",
         brushLabel: "Brush:",
         zoomLabel: "Zoom:",
-        refineFooterHint: "Wheel: zoom · Middle click: pan",
+        refineFooterHint: "Wheel: zoom · Middle click or Alt-drag: pan",
 
         // Shared actions
         reset: "Reset",
