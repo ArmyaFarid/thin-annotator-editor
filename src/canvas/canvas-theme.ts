@@ -180,10 +180,10 @@ export const theme = {
         contourDark: [17, 17, 17, 225],
         contourLight: [255, 255, 255, 235],
         contourLumaThreshold: 128,
-        // The hovered segment's own outline, drawn over the mesh. Widened
-        // inward so it reads without covering anything outside the segment.
-        hoverContour: [79, 195, 247, 255],
-        hoverContourWidth: 2,
+        // A light wash on the hovered segment only, under the contour. Kept
+        // faint: it marks what a click would remove without meaningfully
+        // altering the colour being judged.
+        hoverFill: [79, 195, 247, 38],
     },
 } as const;
 

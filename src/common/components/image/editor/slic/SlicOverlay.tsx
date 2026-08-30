@@ -355,9 +355,8 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         return () => cancelAnimationFrame(rafId);
     }, [slicOverlay, imageSize, imgReady]);
 
-    // Lazily rasterize the hovered segment's own outline. Only the contour
-    // changes on hover — filling the segment would hide the pixels the reviewer
-    // is looking at, at the moment they are looking at them.
+    // Lazily rasterize the faint hover wash for one segment. Only the hovered
+    // segment is ever filled, so at most a handful of these get built.
     const getHoverTile = useCallback(
         (id: number): SlicTile | null => {
             const bounds = boundsRef.current;
@@ -376,59 +375,20 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
             if (bw <= 0 || bh <= 0) {
                 return null;
             }
-            const {hoverContour, hoverContourWidth} = theme.slic;
-
-            // Ring of this segment's own boundary pixels, then grown inward so
-            // the highlight never spills into a neighbour.
-            const ring = new Uint8Array(bw * bh);
+            const fill = theme.slic.hoverFill;
+            const rgba = new Uint8ClampedArray(bw * bh * 4);
             for (let y = 0; y < bh; y++) {
                 const grow = (by + y) * lw;
                 for (let x = 0; x < bw; x++) {
-                    const gx = bx + x;
-                    if (labels[grow + gx] !== id) {
+                    if (labels[grow + bx + x] !== id) {
                         continue;
                     }
-                    if (
-                        labels[grow + gx - 1] !== id ||
-                        labels[grow + gx + 1] !== id ||
-                        labels[grow - lw + gx] !== id ||
-                        labels[grow + lw + gx] !== id
-                    ) {
-                        ring[y * bw + x] = 1;
-                    }
+                    const o = (y * bw + x) * 4;
+                    rgba[o] = fill[0];
+                    rgba[o + 1] = fill[1];
+                    rgba[o + 2] = fill[2];
+                    rgba[o + 3] = fill[3];
                 }
-            }
-            for (let pass = 1; pass < hoverContourWidth; pass++) {
-                const prev = Uint8Array.from(ring);
-                for (let y = 0; y < bh; y++) {
-                    const grow = (by + y) * lw;
-                    for (let x = 0; x < bw; x++) {
-                        const o = y * bw + x;
-                        if (prev[o] || labels[grow + bx + x] !== id) {
-                            continue;
-                        }
-                        if (
-                            (x > 0 && prev[o - 1]) ||
-                            (x < bw - 1 && prev[o + 1]) ||
-                            (y > 0 && prev[o - bw]) ||
-                            (y < bh - 1 && prev[o + bw])
-                        ) {
-                            ring[o] = 1;
-                        }
-                    }
-                }
-            }
-
-            const rgba = new Uint8ClampedArray(bw * bh * 4);
-            for (let i = 0; i < ring.length; i++) {
-                if (!ring[i]) {
-                    continue;
-                }
-                const o = i * 4;
-                rgba[o] = hoverContour[0];
-                rgba[o + 1] = hoverContour[1];
-                rgba[o + 2] = hoverContour[2];
-                rgba[o + 3] = hoverContour[3];
             }
             const canvas = document.createElement("canvas");
             canvas.width = bw;
@@ -521,13 +481,13 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         const ctx = overlayCanvasRef.current.getContext("2d")!;
         const {w: iw, h: ih} = imageSize;
         ctx.clearRect(0, 0, iw, ih);
-        ctx.drawImage(mesh, lx, ly);
         if (hoveredId !== null && !deleted.has(hoveredId)) {
             const tile = getHoverTile(hoveredId);
             if (tile) {
                 ctx.drawImage(tile.canvas, tile.x, tile.y);
             }
         }
+        ctx.drawImage(mesh, lx, ly);
     }, [
         slicOverlay,
         imageSize,
