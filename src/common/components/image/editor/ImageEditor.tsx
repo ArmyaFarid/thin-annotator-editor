@@ -14,7 +14,6 @@ import {
     refineModeAtom,
     activeImageSizeAtom,
     slicOverlayAtom,
-    type SlicSuperpixel,
     ActiveImage,
 } from "@/app/atom.ts";
 import {RefineOverlay} from "@/common/components/image/editor/refine/RefineOverlay.tsx";
@@ -27,6 +26,34 @@ import {t} from "@/i18n/index.ts";
 interface RLEMask {
     counts: string;
     size: [number, number];
+}
+
+// The backend sends `arr.tobytes()` base64-encoded — raw, C-order, native
+// (little-endian) byte order, so a typed-array view over the bytes is enough.
+function decodeLabelMap(
+    data: string,
+    dtype: string,
+    w: number,
+    h: number,
+): Uint16Array {
+    const bin = atob(data);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) {
+        bytes[i] = bin.charCodeAt(i);
+    }
+    switch (dtype) {
+        case "uint16":
+            return new Uint16Array(bytes.buffer, bytes.byteOffset, w * h);
+        case "uint8":
+            return Uint16Array.from(bytes.subarray(0, w * h));
+        case "int32":
+        case "uint32":
+            return Uint16Array.from(
+                new Uint32Array(bytes.buffer, bytes.byteOffset, w * h),
+            );
+        default:
+            throw new Error(`unsupported SLIC label map dtype: ${dtype}`);
+    }
 }
 
 interface ImageEditorProps {
@@ -117,27 +144,30 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
         }
     `;
 
-    const ComputeSlicMutation = graphql`
-        mutation ImageEditorComputeSlicMutation($input: SlicImageInput!) {
-            computeSlicImage(input: $input) {
-                frameIndex
-                rleMaskList {
-                    objectId
-                    rleMask {
-                        counts
-                        size
-                    }
+    const ComputeSlicLabelMapMutation = graphql`
+        mutation ImageEditorComputeSlicLabelMapMutation(
+            $input: SlicImageInput!
+        ) {
+            computeSlicImageGetLabelMap(input: $input) {
+                data
+                height
+                width
+                dtype
+                bbox {
+                    x
+                    y
+                    w
+                    h
                 }
             }
         }
     `;
 
     const [commitPoints, pointsInFlight] = useMutation(AddPointsMutation);
-    const [commitComputeSlicMutation, slicInFlight] =
-        useMutation(ComputeSlicMutation);
+    const [commitComputeSlicMutationLabelMap, slicLabelMapInFlight] =
+        useMutation(ComputeSlicLabelMapMutation);
 
     function sendPrompt() {
-        console.log(prompts);
         const bboxes: [number, number, number, number][] = prompts
             .filter((p) => p.bbox != null)
             .map((p) => {
@@ -146,9 +176,6 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
             });
 
         const pointPrompts = prompts.filter((p) => !p.bbox);
-
-        console.log(pointPrompts);
-
         commitPoints({
             variables: {
                 input: {
@@ -251,7 +278,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
               ]
             : null;
 
-        commitComputeSlicMutation({
+        commitComputeSlicMutationLabelMap({
             variables: {
                 input: {
                     imagePath: activeImage?.path,
@@ -260,22 +287,26 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
                 },
             },
             onCompleted: (res: any) => {
-                const list: any[] = res?.computeSlicImage?.rleMaskList ?? [];
-                const superpixels: SlicSuperpixel[] = list.map((item) => ({
-                    id: item.objectId,
-                    rle: item.rleMask,
-                }));
-                if (superpixels.length === 0) {
+                const m = res?.computeSlicImageGetLabelMap;
+                if (!m) {
                     return;
                 }
+                // width/height come from the array, not the request: the
+                // backend's slice clips at the image edge.
                 setSlicOverlay({
-                    bbox: {
-                        x: Math.round(slicPrompt.bbox.left),
-                        y: Math.round(slicPrompt.bbox.top),
-                        w: Math.round(slicPrompt.bbox.width),
-                        h: Math.round(slicPrompt.bbox.height),
+                    bbox: {x: m.bbox.x, y: m.bbox.y, w: m.width, h: m.height},
+                    labelMap: {
+                        labels: decodeLabelMap(
+                            m.data,
+                            m.dtype,
+                            m.width,
+                            m.height,
+                        ),
+                        w: m.width,
+                        h: m.height,
+                        x: m.bbox.x,
+                        y: m.bbox.y,
                     },
-                    superpixels,
                     targetMaskId: currentMask,
                 });
             },
@@ -294,7 +325,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
         }
     }, [slicPrompt]);
 
-    const isLoading = pointsInFlight || slicInFlight;
+    const isLoading = pointsInFlight || slicLabelMapInFlight;
 
     return (
         <div style={{width: "100%", height: "100%", position: "relative"}}>
@@ -303,7 +334,9 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/25 pointer-events-none z-10">
                     <div className="w-7 h-7 rounded-full border-2 border-white/20 border-t-white animate-spin" />
                     <span className="text-white text-xs font-medium">
-                        {slicInFlight ? t("slicComputing") : t("processing")}
+                        {slicLabelMapInFlight
+                            ? t("slicComputing")
+                            : t("processing")}
                     </span>
                 </div>
             ) : null}

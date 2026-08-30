@@ -148,9 +148,21 @@ export interface SlicSuperpixel {
     rle: RLEMask;
 }
 
+// The SLIC segmentation of one bbox, as returned by computeSlicImageGetLabelMap:
+// one label per pixel, 0 = outside the segmented region, 1..n = segment id.
+// `w`/`h` are the map's own dimensions and may be smaller than the requested
+// bbox when it was clipped at the image edge; `x`/`y` place it in image coords.
+export interface SlicLabelMap {
+    labels: Uint16Array;
+    w: number;
+    h: number;
+    x: number;
+    y: number;
+}
+
 export interface SlicOverlayState {
     bbox: {x: number; y: number; w: number; h: number};
-    superpixels: SlicSuperpixel[];
+    labelMap: SlicLabelMap;
     targetMaskId: number;
 }
 

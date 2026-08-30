@@ -146,6 +146,7 @@ type Mutation {
   startSessionImage(input: StartSessionInput!): StartSession!
   addPointsImage(input: AddPointsImageInput!): RLEMaskListOnFrame!
   computeSlicImage(input: SlicImageInput!): RLEMaskListOnFrame!
+  computeSlicImageGetLabelMap(input: SlicImageInput!): SlicLabelMap!
   saveAnnotations(input: AddPointsImageInput!): SaveAnnotationsResult!
 }
 
@@ -188,6 +189,21 @@ input SlicImageInput {
   imagePath: String!
   imageId: ID!
   bbox: [Float!]!
+}
+
+type SlicLabelMap {
+  data: String!
+  height: Int!
+  width: Int!
+  dtype: String!
+  bbox: BBox!
+}
+
+type BBox {
+  x: Int!
+  y: Int!
+  w: Int!
+  h: Int!
 }
 
 type SaveAnnotationsResult {

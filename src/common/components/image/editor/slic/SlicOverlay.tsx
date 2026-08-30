@@ -11,7 +11,6 @@ import {
     currentMaskAtom,
     activeImageSizeAtom,
 } from "@/app/atom.ts";
-import {decode} from "@/jscocotools/mask.ts";
 import {canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {getDistinctColor} from "@/canvas/color.ts";
 import {SLIC_MASK_FILL_ALPHA} from "@/canvas/canvas-theme.ts";
@@ -22,6 +21,12 @@ const MAX_SLIC_LOCAL_HISTORY = 50;
 
 interface SlicOverlayProps {
     imageUrl: string;
+}
+
+interface SlicTile {
+    canvas: HTMLCanvasElement;
+    x: number;
+    y: number;
 }
 
 interface PanDrag {
@@ -132,6 +137,7 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         return () => window.removeEventListener("keydown", onKey);
     }, [localUndo, localRedo]);
     const [tilesReady, setTilesReady] = useState(false);
+    const [segmentIds, setSegmentIds] = useState<number[]>([]);
     // Only meaningful when targetMaskId !== 0. "add" → kept superpixels
     // become a fill layer on the active mask; "remove" → a hole layer.
     const [applyMode, setApplyMode] = useState<"add" | "remove">("add");
@@ -143,8 +149,7 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const imgRef = useRef<HTMLImageElement>(null);
     const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
-    const labelCanvasRef = useRef<HTMLCanvasElement | null>(null);
-    const tilesRef = useRef<Map<number, HTMLCanvasElement>>(new Map());
+    const tilesRef = useRef<Map<number, SlicTile>>(new Map());
     const viewRef = useRef({zoom: 1, panX: 0, panY: 0});
     const panDragRef = useRef<PanDrag | null>(null);
 
@@ -152,8 +157,10 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         viewRef.current = {zoom, panX, panY};
     }, [zoom, panX, panY]);
 
-    // Decode all RLEs once → build label canvas (hit-test) + pre-render tile per superpixel.
-    // rAF defers heavy work by one frame so the loading overlay paints first.
+    // Build one small tile per segment, straight from the label map.
+    // Two passes over the bbox only — pass 1 finds each segment's bounding box,
+    // pass 2 rasterizes each segment inside its own box.
+    // rAF defers the work by one frame so the loading overlay paints first.
     useEffect(() => {
         if (!slicOverlay || !imageSize) {
             setTilesReady(false);
@@ -162,82 +169,101 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         setTilesReady(false);
 
         const rafId = requestAnimationFrame(() => {
-            const {superpixels} = slicOverlay;
-            const {w: iw, h: ih} = imageSize;
+            const {labels, w: lw, h: lh, x: lx, y: ly} = slicOverlay.labelMap;
 
-            const label = document.createElement("canvas");
-            label.width = iw;
-            label.height = ih;
-            const lCtx = label.getContext("2d")!;
-            const lData = lCtx.createImageData(iw, ih);
-            const tiles = new Map<number, HTMLCanvasElement>();
-
-            for (let si = 0; si < superpixels.length; si++) {
-                const sp = superpixels[si];
-                let decoded: Uint8Array;
-                try {
-                    const result = decode([sp.rle]);
-                    decoded = result.data as Uint8Array;
-                } catch {
-                    continue;
+            let maxId = 0;
+            for (let i = 0; i < labels.length; i++) {
+                if (labels[i] > maxId) {
+                    maxId = labels[i];
                 }
+            }
 
-                const [h, w] = sp.rle.size;
-                const storedId = sp.id + 1;
-                const rHi = (storedId >> 8) & 0xff;
-                const rLo = storedId & 0xff;
-                const [cr, cg, cb] = hslToRgb(si, superpixels.length);
-                const rgba = new Uint8ClampedArray(w * h * 4);
+            const minX = new Int32Array(maxId + 1).fill(lw);
+            const minY = new Int32Array(maxId + 1).fill(lh);
+            const maxX = new Int32Array(maxId + 1).fill(-1);
+            const maxY = new Int32Array(maxId + 1).fill(-1);
+            for (let y = 0; y < lh; y++) {
+                const row = y * lw;
+                for (let x = 0; x < lw; x++) {
+                    const id = labels[row + x];
+                    if (id === 0) {
+                        continue;
+                    }
+                    if (x < minX[id]) {
+                        minX[id] = x;
+                    }
+                    if (x > maxX[id]) {
+                        maxX[id] = x;
+                    }
+                    if (y < minY[id]) {
+                        minY[id] = y;
+                    }
+                    if (y > maxY[id]) {
+                        maxY[id] = y;
+                    }
+                }
+            }
 
-                for (let x = 0; x < w; x++) {
-                    for (let y = 0; y < h; y++) {
-                        if (decoded[x * h + y] !== 1) {
+            const ids: number[] = [];
+            for (let id = 1; id <= maxId; id++) {
+                if (maxX[id] >= 0) {
+                    ids.push(id);
+                }
+            }
+
+            const tiles = new Map<number, SlicTile>();
+            for (let k = 0; k < ids.length; k++) {
+                const id = ids[k];
+                const bx = minX[id];
+                const by = minY[id];
+                const bw = maxX[id] - bx + 1;
+                const bh = maxY[id] - by + 1;
+                const rgba = new Uint8ClampedArray(bw * bh * 4);
+                const [cr, cg, cb] = hslToRgb(k, ids.length);
+
+                for (let y = 0; y < bh; y++) {
+                    const gy = by + y;
+                    const grow = gy * lw;
+                    for (let x = 0; x < bw; x++) {
+                        const gx = bx + x;
+                        if (labels[grow + gx] !== id) {
                             continue;
                         }
-
-                        const li = (y * iw + x) * 4;
-                        lData.data[li] = rHi;
-                        lData.data[li + 1] = rLo;
-                        lData.data[li + 3] = 255;
-
+                        // Bounds tests first — they guard the neighbour reads.
                         const isEdge =
-                            x === 0 ||
-                            y === 0 ||
-                            x === w - 1 ||
-                            y === h - 1 ||
-                            decoded[(x - 1) * h + y] !== 1 ||
-                            decoded[(x + 1) * h + y] !== 1 ||
-                            decoded[x * h + (y - 1)] !== 1 ||
-                            decoded[x * h + (y + 1)] !== 1;
-                        const ti = (y * w + x) * 4;
+                            gx === 0 ||
+                            gy === 0 ||
+                            gx === lw - 1 ||
+                            gy === lh - 1 ||
+                            labels[grow + gx - 1] !== id ||
+                            labels[grow + gx + 1] !== id ||
+                            labels[grow - lw + gx] !== id ||
+                            labels[grow + lw + gx] !== id;
+                        const ti = (y * bw + x) * 4;
                         rgba[ti] = cr;
                         rgba[ti + 1] = cg;
                         rgba[ti + 2] = cb;
                         rgba[ti + 3] = isEdge ? 210 : 28;
                     }
                 }
-
-                const tile = document.createElement("canvas");
-                tile.width = w;
-                tile.height = h;
-                tile.getContext("2d")!.putImageData(
-                    new ImageData(rgba, w, h),
-                    0,
-                    0,
-                );
-                tiles.set(sp.id, tile);
+                const canvas = document.createElement("canvas");
+                canvas.width = bw;
+                canvas.height = bh;
+                canvas
+                    .getContext("2d")!
+                    .putImageData(new ImageData(rgba, bw, bh), 0, 0);
+                tiles.set(id, {canvas, x: lx + bx, y: ly + by});
             }
 
-            lCtx.putImageData(lData, 0, 0);
-            labelCanvasRef.current = label;
             tilesRef.current = tiles;
+            setSegmentIds(ids);
             setTilesReady(true);
         });
 
         return () => cancelAnimationFrame(rafId);
     }, [slicOverlay, imageSize]);
 
-    // Redraw: just composite pre-rendered tiles — no decoding, no allocation.
+    // Redraw: composite the pre-rendered tiles at their own offsets.
     // tilesReady in deps ensures this re-fires once the rAF build completes.
     const redrawOverlay = useCallback(() => {
         if (
@@ -251,17 +277,17 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         const ctx = overlayCanvasRef.current.getContext("2d")!;
         const {w: iw, h: ih} = imageSize;
         ctx.clearRect(0, 0, iw, ih);
-        for (const sp of slicOverlay.superpixels) {
-            if (deleted.has(sp.id)) {
+        for (const id of segmentIds) {
+            if (deleted.has(id)) {
                 continue;
             }
-            const tile = tilesRef.current.get(sp.id);
+            const tile = tilesRef.current.get(id);
             if (!tile) {
                 continue;
             }
-            ctx.drawImage(tile, 0, 0, tile.width, tile.height, 0, 0, iw, ih);
+            ctx.drawImage(tile.canvas, tile.x, tile.y);
         }
-    }, [slicOverlay, imageSize, deleted, tilesReady]);
+    }, [slicOverlay, imageSize, deleted, tilesReady, segmentIds]);
 
     useEffect(() => {
         redrawOverlay();
@@ -326,9 +352,8 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     }, []);
 
     function getSuperpixelAt(e: React.MouseEvent): number | null {
-        const label = labelCanvasRef.current;
         const overlay = overlayCanvasRef.current;
-        if (!label || !overlay || !imageSize) {
+        if (!overlay || !slicOverlay || !imageSize) {
             return null;
         }
         const rect = overlay.getBoundingClientRect();
@@ -338,15 +363,14 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         const iy = Math.floor(
             (e.clientY - rect.top) * (imageSize.h / rect.height),
         );
-        if (ix < 0 || iy < 0 || ix >= imageSize.w || iy >= imageSize.h) {
+        const {labels, w: lw, h: lh, x: lx, y: ly} = slicOverlay.labelMap;
+        const px = ix - lx;
+        const py = iy - ly;
+        if (px < 0 || py < 0 || px >= lw || py >= lh) {
             return null;
         }
-        const px = label.getContext("2d")!.getImageData(ix, iy, 1, 1).data;
-        if (px[3] === 0) {
-            return null;
-        } // background — no superpixel written here
-        const id = ((px[0] << 8) | px[1]) - 1; // undo the +1 offset applied at build time
-        return id;
+        const id = labels[py * lw + px];
+        return id === 0 ? null : id; // 0 = outside the segmented region
     }
 
     function handleOverlayMouseDown(e: React.MouseEvent) {
@@ -398,14 +422,12 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         if (!slicOverlay || !imageSize) {
             return;
         }
-        const remaining = slicOverlay.superpixels.filter(
-            (sp) => !deleted.has(sp.id),
-        );
-        if (remaining.length === 0) {
+        const kept = segmentIds.filter((id) => !deleted.has(id));
+        if (kept.length === 0) {
             return;
         }
-        const {superpixels: _, targetMaskId} = slicOverlay;
-        const superpixels = remaining;
+        const {targetMaskId} = slicOverlay;
+        const {labels, w: lw, h: lh, x: lx, y: ly} = slicOverlay.labelMap;
         const {w: iw, h: ih} = imageSize;
 
         const mergeCanvas = document.createElement("canvas");
@@ -413,45 +435,27 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         mergeCanvas.height = ih;
         const mCtx = mergeCanvas.getContext("2d")!;
 
-        for (const sp of superpixels) {
-            let decoded: Uint8Array;
-            try {
-                const result = decode([sp.rle]);
-                decoded = result.data as Uint8Array;
-            } catch {
+        // One pass over the label map: every kept segment paints white.
+        const merged = mCtx.createImageData(lw, lh);
+        for (let i = 0; i < labels.length; i++) {
+            const id = labels[i];
+            if (id === 0 || deleted.has(id)) {
                 continue;
             }
-
-            const [h, w] = sp.rle.size;
-            const rgba = new Uint8ClampedArray(w * h * 4);
-            for (let x = 0; x < w; x++) {
-                for (let y = 0; y < h; y++) {
-                    if (decoded[x * h + y] === 1) {
-                        const i = (y * w + x) * 4;
-                        rgba[i] = 255;
-                        rgba[i + 1] = 255;
-                        rgba[i + 2] = 255;
-                        rgba[i + 3] = 255;
-                    }
-                }
-            }
-            const tile = document.createElement("canvas");
-            tile.width = w;
-            tile.height = h;
-            tile.getContext("2d")!.putImageData(
-                new ImageData(rgba, w, h),
-                0,
-                0,
-            );
-            mCtx.drawImage(tile, 0, 0, w, h, 0, 0, iw, ih);
+            const o = i * 4;
+            merged.data[o] = 255;
+            merged.data[o + 1] = 255;
+            merged.data[o + 2] = 255;
+            merged.data[o + 3] = 255;
         }
+        mCtx.putImageData(merged, lx, ly);
 
         const newRle = canvasToRLE(mergeCanvas);
         const layerId = Date.now();
 
         commitHistory({
             action: "slic.result",
-            payload: {regions: superpixels.length},
+            payload: {regions: kept.length},
         });
 
         if (targetMaskId !== 0) {
@@ -525,9 +529,8 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
             <div className={tilesReady ? "contents" : "hidden"}>
                 <div className="flex items-center gap-3 bg-[#1a1a1a] border border-white/20 rounded-lg px-4 py-2 flex-wrap">
                     <span className="text-sm font-medium text-white/80">
-                        {t("slicTitle")} —{" "}
-                        {slicOverlay.superpixels.length - deleted.size} /{" "}
-                        {slicOverlay.superpixels.length} {t("slicKept")}
+                        {t("slicTitle")} — {segmentIds.length - deleted.size} /{" "}
+                        {segmentIds.length} {t("slicKept")}
                     </span>
                     {slicOverlay.targetMaskId !== 0 ? (
                         <>
@@ -584,7 +587,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                         />
                     </button>
                     <div className="w-px h-5 bg-white/20" />
-                    <span className="text-xs text-white/50">{t("zoomLabel")}</span>
+                    <span className="text-xs text-white/50">
+                        {t("zoomLabel")}
+                    </span>
                     <input
                         type="range"
                         min={25}
@@ -696,12 +701,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                     </button>
                     <button
                         onClick={handleApply}
-                        disabled={
-                            slicOverlay.superpixels.length - deleted.size === 0
-                        }
+                        disabled={segmentIds.length - deleted.size === 0}
                         className="px-5 py-2 rounded-lg bg-[#4FC3F7] text-black font-medium text-sm hover:bg-[#4FC3F7]/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
-                        {t("apply")} (
-                        {slicOverlay.superpixels.length - deleted.size})
+                        {t("apply")} ({segmentIds.length - deleted.size})
                     </button>
                 </div>
             </div>
