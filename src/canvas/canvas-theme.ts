@@ -166,6 +166,25 @@ export const theme = {
     dimming: {
         inactiveAlpha: 0.3,
     },
+
+    /**
+     * SLIC review overlay. The expert judges mineralogy from the pixels
+     * underneath, so nothing is tinted at rest: only the segment contours are
+     * drawn, one image pixel wide, and only the hovered segment is filled.
+     * Colours are RGBA byte tuples — this overlay is rasterized, not stroked.
+     */
+    slic: {
+        // Picked per pixel from the luminance underneath, so one continuous
+        // one-pixel line stays legible over both a bright PPL field and a
+        // near-black XPL one.
+        contourDark: [17, 17, 17, 225],
+        contourLight: [255, 255, 255, 235],
+        contourLumaThreshold: 128,
+        // A light wash on the hovered segment only, under the contour. Kept
+        // faint: it marks what a click would remove without meaningfully
+        // altering the colour being judged.
+        hoverFill: [79, 195, 247, 38],
+    },
 } as const;
 
 // ── Backwards-compat re-exports for the old `mask-style.ts` symbols.
