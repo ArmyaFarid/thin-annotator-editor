@@ -282,8 +282,9 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({
             tool === "erase" ? "destination-out" : "source-over";
         wCtx.fillStyle = "rgba(255,255,255,1)";
         wCtx.beginPath();
-        // Brush size is a screen size; divide by zoom to reach image pixels.
-        wCtx.arc(p.x, p.y, brushSize / view.zoom, 0, Math.PI * 2);
+        // Brush size is in image pixels, so a stroke paints the same amount
+        // whatever the current zoom.
+        wCtx.arc(p.x, p.y, brushSize, 0, Math.PI * 2);
         wCtx.fill();
         wCtx.restore();
         redrawDisplay();
@@ -325,13 +326,7 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({
             if (!cursorPos) return;
             ctx.save();
             ctx.beginPath();
-            ctx.arc(
-                cursorPos.x,
-                cursorPos.y,
-                brushSize / v.zoom,
-                0,
-                Math.PI * 2,
-            );
+            ctx.arc(cursorPos.x, cursorPos.y, brushSize, 0, Math.PI * 2);
             if (tool === "erase") {
                 ctx.strokeStyle = "rgba(255,80,80,0.9)";
                 ctx.fillStyle = "rgba(255,80,80,0.12)";
