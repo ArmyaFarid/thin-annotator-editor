@@ -174,12 +174,16 @@ export const theme = {
      * Colours are RGBA byte tuples — this overlay is rasterized, not stroked.
      */
     slic: {
-        // Alternating along the contour's length so it reads over both bright
-        // and dark fields without adding a second pixel of thickness.
-        contourDark: [0, 0, 0, 205],
-        contourLight: [255, 255, 255, 205],
-        contourDashPeriod: 4,
-        hoverFill: [79, 195, 247, 70],
+        // Picked per pixel from the luminance underneath, so one continuous
+        // one-pixel line stays legible over both a bright PPL field and a
+        // near-black XPL one.
+        contourDark: [17, 17, 17, 225],
+        contourLight: [255, 255, 255, 235],
+        contourLumaThreshold: 128,
+        // The hovered segment's own outline, drawn over the mesh. Widened
+        // inward so it reads without covering anything outside the segment.
+        hoverContour: [79, 195, 247, 255],
+        hoverContourWidth: 2,
     },
 } as const;
 

@@ -41,14 +41,16 @@ interface PanDrag {
 
 // Paint the contours of the kept segments into [x0,y0]..[x1,y1] of the mesh
 // canvas. A shared boundary is drawn from one side only — the higher label id
-// owns it — so the line is one image pixel wide rather than two, and it
-// alternates dark/light along its length to stay legible over any field.
+// owns it — so the line is one image pixel wide rather than two. Each pixel
+// takes dark or light from the luminance beneath it, which keeps one
+// continuous thin line readable over both a bright and a near-black field.
 function paintMesh(
     mCtx: CanvasRenderingContext2D,
     labels: Uint16Array,
     lw: number,
     lh: number,
     kept: Uint8Array,
+    luma: Uint8Array | null,
     x0: number,
     y0: number,
     x1: number,
@@ -61,7 +63,7 @@ function paintMesh(
     }
     const img = mCtx.createImageData(w, h);
     const d = img.data;
-    const {contourDark, contourLight, contourDashPeriod} = theme.slic;
+    const {contourDark, contourLight, contourLumaThreshold} = theme.slic;
 
     for (let y = 0; y < h; y++) {
         const gy = y0 + y;
@@ -87,10 +89,10 @@ function paintMesh(
             if (!edge) {
                 continue;
             }
-            const c =
-                ((gx + gy) / contourDashPeriod) & 1
-                    ? contourLight
-                    : contourDark;
+            const bright = luma
+                ? luma[grow + gx] >= contourLumaThreshold
+                : false;
+            const c = bright ? contourDark : contourLight;
             const o = (y * w + x) * 4;
             d[o] = c[0];
             d[o + 1] = c[1];
@@ -100,6 +102,36 @@ function paintMesh(
     }
     // Replaces the region wholesale, so a repaint also clears stale contours.
     mCtx.putImageData(img, x0, y0);
+}
+
+// Luminance of the label-map region, used to pick each contour pixel's
+// colour. Returns null when the image cannot be read back — a cross-origin
+// image taints the canvas — in which case the contour falls back to light.
+function sampleLuma(
+    img: HTMLImageElement,
+    lx: number,
+    ly: number,
+    lw: number,
+    lh: number,
+): Uint8Array | null {
+    if (!img.complete || img.naturalWidth === 0) {
+        return null;
+    }
+    try {
+        const c = document.createElement("canvas");
+        c.width = lw;
+        c.height = lh;
+        const cCtx = c.getContext("2d", {willReadFrequently: true})!;
+        cCtx.drawImage(img, lx, ly, lw, lh, 0, 0, lw, lh);
+        const d = cCtx.getImageData(0, 0, lw, lh).data;
+        const luma = new Uint8Array(lw * lh);
+        for (let i = 0, p = 0; i < luma.length; i++, p += 4) {
+            luma[i] = (d[p] * 77 + d[p + 1] * 150 + d[p + 2] * 29) >> 8;
+        }
+        return luma;
+    } catch {
+        return null;
+    }
 }
 
 export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
@@ -189,6 +221,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     const [overlayReady, setOverlayReady] = useState(false);
     const [segmentIds, setSegmentIds] = useState<number[]>([]);
     const [hoveredId, setHoveredId] = useState<number | null>(null);
+    // The contour colour is sampled from the image, so the mesh can only be
+    // built once it has decoded. Usually already cached from the main editor.
+    const [imgReady, setImgReady] = useState(false);
     // Only meaningful when targetMaskId !== 0. "add" → kept superpixels
     // become a fill layer on the active mask; "remove" → a hole layer.
     const [applyMode, setApplyMode] = useState<"add" | "remove">("add");
@@ -201,6 +236,7 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     const imgRef = useRef<HTMLImageElement>(null);
     const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
     const meshRef = useRef<HTMLCanvasElement | null>(null);
+    const lumaRef = useRef<Uint8Array | null>(null);
     const hoverTilesRef = useRef<Map<number, SlicTile>>(new Map());
     const paintedDeletedRef = useRef<Set<number>>(new Set());
     const boundsRef = useRef<{
@@ -216,6 +252,20 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
     useEffect(() => {
         viewRef.current = {zoom, panX, panY};
     }, [zoom, panX, panY]);
+
+    useEffect(() => {
+        const img = imgRef.current;
+        if (!img) {
+            return;
+        }
+        if (img.complete && img.naturalWidth > 0) {
+            setImgReady(true);
+            return;
+        }
+        const onLoad = () => setImgReady(true);
+        img.addEventListener("load", onLoad);
+        return () => img.removeEventListener("load", onLoad);
+    }, [imageUrl]);
 
     // Build the contour mesh from the label map. Nothing is tinted: only the
     // boundaries of the kept segments are painted, one image pixel wide, so the
@@ -271,6 +321,11 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                 }
             }
 
+            const {x: lx, y: ly} = slicOverlay.labelMap;
+            const luma = imgRef.current
+                ? sampleLuma(imgRef.current, lx, ly, lw, lh)
+                : null;
+
             const mesh = document.createElement("canvas");
             mesh.width = lw;
             mesh.height = lh;
@@ -281,12 +336,14 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                 lw,
                 lh,
                 kept,
+                luma,
                 0,
                 0,
                 lw - 1,
                 lh - 1,
             );
 
+            lumaRef.current = luma;
             meshRef.current = mesh;
             boundsRef.current = {minX, minY, maxX, maxY, maxId};
             hoverTilesRef.current = new Map();
@@ -296,10 +353,11 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         });
 
         return () => cancelAnimationFrame(rafId);
-    }, [slicOverlay, imageSize]);
+    }, [slicOverlay, imageSize, imgReady]);
 
-    // Lazily rasterize the translucent fill for one segment. Only the hovered
-    // segment is ever filled, so at most a handful of these get built.
+    // Lazily rasterize the hovered segment's own outline. Only the contour
+    // changes on hover — filling the segment would hide the pixels the reviewer
+    // is looking at, at the moment they are looking at them.
     const getHoverTile = useCallback(
         (id: number): SlicTile | null => {
             const bounds = boundsRef.current;
@@ -318,20 +376,59 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
             if (bw <= 0 || bh <= 0) {
                 return null;
             }
-            const fill = theme.slic.hoverFill;
-            const rgba = new Uint8ClampedArray(bw * bh * 4);
+            const {hoverContour, hoverContourWidth} = theme.slic;
+
+            // Ring of this segment's own boundary pixels, then grown inward so
+            // the highlight never spills into a neighbour.
+            const ring = new Uint8Array(bw * bh);
             for (let y = 0; y < bh; y++) {
                 const grow = (by + y) * lw;
                 for (let x = 0; x < bw; x++) {
-                    if (labels[grow + bx + x] !== id) {
+                    const gx = bx + x;
+                    if (labels[grow + gx] !== id) {
                         continue;
                     }
-                    const o = (y * bw + x) * 4;
-                    rgba[o] = fill[0];
-                    rgba[o + 1] = fill[1];
-                    rgba[o + 2] = fill[2];
-                    rgba[o + 3] = fill[3];
+                    if (
+                        labels[grow + gx - 1] !== id ||
+                        labels[grow + gx + 1] !== id ||
+                        labels[grow - lw + gx] !== id ||
+                        labels[grow + lw + gx] !== id
+                    ) {
+                        ring[y * bw + x] = 1;
+                    }
                 }
+            }
+            for (let pass = 1; pass < hoverContourWidth; pass++) {
+                const prev = Uint8Array.from(ring);
+                for (let y = 0; y < bh; y++) {
+                    const grow = (by + y) * lw;
+                    for (let x = 0; x < bw; x++) {
+                        const o = y * bw + x;
+                        if (prev[o] || labels[grow + bx + x] !== id) {
+                            continue;
+                        }
+                        if (
+                            (x > 0 && prev[o - 1]) ||
+                            (x < bw - 1 && prev[o + 1]) ||
+                            (y > 0 && prev[o - bw]) ||
+                            (y < bh - 1 && prev[o + bw])
+                        ) {
+                            ring[o] = 1;
+                        }
+                    }
+                }
+            }
+
+            const rgba = new Uint8ClampedArray(bw * bh * 4);
+            for (let i = 0; i < ring.length; i++) {
+                if (!ring[i]) {
+                    continue;
+                }
+                const o = i * 4;
+                rgba[o] = hoverContour[0];
+                rgba[o + 1] = hoverContour[1];
+                rgba[o + 2] = hoverContour[2];
+                rgba[o + 3] = hoverContour[3];
             }
             const canvas = document.createElement("canvas");
             canvas.width = bw;
@@ -387,7 +484,18 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
             }
             if (changed.length > MAX_SLIC_DIRTY_SEGMENTS) {
                 mCtx.clearRect(0, 0, lw, lh);
-                paintMesh(mCtx, labels, lw, lh, kept, 0, 0, lw - 1, lh - 1);
+                paintMesh(
+                    mCtx,
+                    labels,
+                    lw,
+                    lh,
+                    kept,
+                    lumaRef.current,
+                    0,
+                    0,
+                    lw - 1,
+                    lh - 1,
+                );
             } else {
                 for (const id of changed) {
                     if (id > bounds.maxId || bounds.maxX[id] < 0) {
@@ -399,6 +507,7 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                         lw,
                         lh,
                         kept,
+                        lumaRef.current,
                         Math.max(0, bounds.minX[id] - 1),
                         Math.max(0, bounds.minY[id] - 1),
                         Math.min(lw - 1, bounds.maxX[id] + 1),
@@ -412,13 +521,13 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         const ctx = overlayCanvasRef.current.getContext("2d")!;
         const {w: iw, h: ih} = imageSize;
         ctx.clearRect(0, 0, iw, ih);
+        ctx.drawImage(mesh, lx, ly);
         if (hoveredId !== null && !deleted.has(hoveredId)) {
             const tile = getHoverTile(hoveredId);
             if (tile) {
                 ctx.drawImage(tile.canvas, tile.x, tile.y);
             }
         }
-        ctx.drawImage(mesh, lx, ly);
     }, [
         slicOverlay,
         imageSize,
