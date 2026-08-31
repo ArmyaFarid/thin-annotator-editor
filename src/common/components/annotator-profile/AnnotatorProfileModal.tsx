@@ -29,6 +29,16 @@ const Field: React.FC<FieldProps> = ({label, value, placeholder, onChange}) => (
     </label>
 );
 
+// Decompose first so accents fold to their base letter — otherwise "béatrice"
+// would come out "batrice" rather than "beatrice".
+function sanitizeUsername(raw: string): string {
+    return raw
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+}
+
 interface LevelChoiceProps {
     label: string;
     hint: string;
@@ -92,7 +102,7 @@ export const AnnotatorProfileModal: React.FC = () => {
 
     function submit() {
         const name = fullName.trim();
-        const user = username.trim();
+        const user = sanitizeUsername(username);
         if (name === "" || user === "") {
             setError(true);
             return;
@@ -138,7 +148,7 @@ export const AnnotatorProfileModal: React.FC = () => {
                     label={t("profileUsername")}
                     value={username}
                     placeholder={t("profileUsernamePlaceholder")}
-                    onChange={setUsername}
+                    onChange={(v) => setUsername(sanitizeUsername(v))}
                 />
 
                 <div className="flex flex-col gap-1.5">
