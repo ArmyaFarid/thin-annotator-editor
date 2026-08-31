@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import LoadingStateScreen from '@/common/loading/LoadingStateScreen';
-import {AnnotatorBadge} from '@/common/components/annotator-profile/AnnotatorBadge.tsx';
 import {t} from '@/i18n/index.ts';
 import useSettingsContext from '@/settings/useSettingsContext';
 import {Cog6ToothIcon} from '@heroicons/react/24/outline';
@@ -30,14 +29,6 @@ const styles = stylex.create({
     height: '100%',
     maxHeight: '100vh',
     backgroundColor: '#2B2B2B',
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    flex: '0 0 auto',
-    paddingTop: 6,
-    paddingRight: 8,
-    paddingBottom: 2,
   },
   content: {
     position: 'relative',
@@ -62,9 +53,6 @@ export default function RootLayout() {
 
   return (
     <div {...stylex.props(styles.container)}>
-      <div {...stylex.props(styles.header)}>
-        <AnnotatorBadge />
-      </div>
       <div {...stylex.props(styles.content)}>
         <Suspense
           fallback={

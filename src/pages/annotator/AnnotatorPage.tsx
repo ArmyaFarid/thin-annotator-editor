@@ -17,6 +17,7 @@ import {useSaveTask} from "@/lib/services/api/task/hooks.ts";
 import {activePairAtom} from "@/app/atom.ts";
 import {t} from "@/i18n/index.ts";
 import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
+import {AnnotatorBadge} from "@/common/components/annotator-profile/AnnotatorBadge.tsx";
 
 export default function AnnotatorPage() {
     useAutosaveDraft();
@@ -114,13 +115,16 @@ export default function AnnotatorPage() {
                 <span className="text-xs text-white/40 font-mono">
                     {pairsCode} / {sampleId}
                 </span>
-                <Tooltip content={t("finishTooltip")} side="bottom">
-                    <button
-                        onClick={() => setShowFinishModal(true)}
-                        className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">
-                        {t("finish")}
-                    </button>
-                </Tooltip>
+                <div className="flex items-center gap-2">
+                    <Tooltip content={t("finishTooltip")} side="bottom">
+                        <button
+                            onClick={() => setShowFinishModal(true)}
+                            className="bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">
+                            {t("finish")}
+                        </button>
+                    </Tooltip>
+                    <AnnotatorBadge />
+                </div>
             </div>
             <div className="w-full flex flex-row gap-2 items-stretch flex-1 min-h-0">
                 <div className="flex-none">
