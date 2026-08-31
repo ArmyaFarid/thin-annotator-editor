@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import LoadingStateScreen from '@/common/loading/LoadingStateScreen';
+import {AnnotatorBadge} from '@/common/components/annotator-profile/AnnotatorBadge.tsx';
 import {t} from '@/i18n/index.ts';
 import useSettingsContext from '@/settings/useSettingsContext';
 import {Cog6ToothIcon} from '@heroicons/react/24/outline';
@@ -53,6 +54,7 @@ export default function RootLayout() {
 
   return (
     <div {...stylex.props(styles.container)}>
+      <AnnotatorBadge />
       <div {...stylex.props(styles.content)}>
         <Suspense
           fallback={
