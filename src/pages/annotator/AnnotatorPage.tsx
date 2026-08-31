@@ -102,7 +102,7 @@ export default function AnnotatorPage() {
                     </div>
                 </div>
             ) : null}
-            <div className="w-full flex flex-row justify-between items-center pr-24">
+            <div className="w-full flex flex-row justify-between items-center pr-40">
                 <Tooltip content={t("openNewTaskTooltip")} side="bottom">
                     <button
                         onClick={() => setShowFinishModal(true)}
