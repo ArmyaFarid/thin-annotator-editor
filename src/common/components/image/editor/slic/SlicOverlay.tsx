@@ -417,7 +417,9 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
         const mergeCanvas = document.createElement("canvas");
         mergeCanvas.width = iw;
         mergeCanvas.height = ih;
-        const mCtx = mergeCanvas.getContext("2d")!;
+        const mCtx = mergeCanvas.getContext("2d", {
+            willReadFrequently: true,
+        })!;
 
         // One pass over the label map: every kept segment paints white.
         const merged = mCtx.createImageData(lw, lh);

@@ -7,11 +7,17 @@ import type {RLEMask} from "@/app/atom.ts";
  * Returns a canvas where white pixels = foreground, transparent = background.
  * Hole layers are composited with destination-out to cut out regions.
  */
-export function mergeToCanvas(mask: Mask, imageW: number, imageH: number): HTMLCanvasElement {
+export function mergeToCanvas(
+    mask: Mask,
+    imageW: number,
+    imageH: number,
+): HTMLCanvasElement {
     const canvas = document.createElement("canvas");
     canvas.width = imageW;
     canvas.height = imageH;
-    const ctx = canvas.getContext("2d")!;
+    // Every caller reads this canvas straight back through canvasToRLE,
+    // so keep it CPU-side rather than paying a GPU readback each time.
+    const ctx = canvas.getContext("2d", {willReadFrequently: true})!;
 
     for (const layer of mask.layers) {
         const isHole = layer.layerKind === "hole";
@@ -44,19 +50,24 @@ export function mergeToCanvas(mask: Mask, imageW: number, imageH: number): HTMLC
             const tileCanvas = document.createElement("canvas");
             tileCanvas.width = w;
             tileCanvas.height = h;
-            tileCanvas.getContext("2d")!.putImageData(new ImageData(rgba, w, h), 0, 0);
+            tileCanvas
+                .getContext("2d")!
+                .putImageData(new ImageData(rgba, w, h), 0, 0);
 
             ctx.save();
-            ctx.globalCompositeOperation = isHole ? "destination-out" : "source-over";
+            ctx.globalCompositeOperation = isHole
+                ? "destination-out"
+                : "source-over";
             ctx.drawImage(tileCanvas, 0, 0, w, h, 0, 0, imageW, imageH);
             ctx.restore();
-
         } else if (layer.canvasShape) {
             const s = layer.canvasShape;
             if (s.vertices.length < 3) continue;
 
             ctx.save();
-            ctx.globalCompositeOperation = isHole ? "destination-out" : "source-over";
+            ctx.globalCompositeOperation = isHole
+                ? "destination-out"
+                : "source-over";
             ctx.fillStyle = "rgba(255,255,255,1)";
             ctx.beginPath();
             ctx.moveTo(s.vertices[0].x, s.vertices[0].y);
