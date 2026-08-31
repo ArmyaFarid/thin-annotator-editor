@@ -33,6 +33,9 @@ export interface ZoomableImageStageProps {
     onStageMouseUp?: (p: StagePointer) => void;
     onStageMouseLeave?: () => void;
     onContainerResize?: (w: number, h: number) => void;
+    /** Fires when a pan drag starts and ends. Consumers drawing a pointer
+     *  cue clear it while panning, since the stage stops reporting moves. */
+    onPanChange?: (panning: boolean) => void;
     /** Fires once the image has decoded — consumers that sample its pixels. */
     onImageLoad?: (img: HTMLImageElement) => void;
     style?: React.CSSProperties;
@@ -70,6 +73,7 @@ export const ZoomableImageStage: React.FC<ZoomableImageStageProps> = ({
     onStageMouseLeave,
     onContainerResize,
     onImageLoad,
+    onPanChange,
     style,
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -194,6 +198,7 @@ export const ZoomableImageStage: React.FC<ZoomableImageStageProps> = ({
                 startPanY: viewRef.current.panY,
             };
             setIsPanning(true);
+            onPanChange?.(true);
             return;
         }
         onStageMouseDown?.(pointerAt(e));
@@ -216,13 +221,17 @@ export const ZoomableImageStage: React.FC<ZoomableImageStageProps> = ({
         if (panDragRef.current) {
             panDragRef.current = null;
             setIsPanning(false);
+            onPanChange?.(false);
             return;
         }
         onStageMouseUp?.(pointerAt(e));
     }
 
     function handleMouseLeave() {
-        panDragRef.current = null;
+        if (panDragRef.current) {
+            panDragRef.current = null;
+            onPanChange?.(false);
+        }
         setIsPanning(false);
         onStageMouseLeave?.();
     }

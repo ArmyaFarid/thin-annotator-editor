@@ -637,6 +637,11 @@ export const SlicOverlay: React.FC<SlicOverlayProps> = ({imageUrl}) => {
                         onStageMouseMove={handleStageMouseMove}
                         onStageMouseLeave={() => setHoveredId(null)}
                         onContainerResize={handleStageResize}
+                        onPanChange={(panning) => {
+                            if (panning) {
+                                setHoveredId(null);
+                            }
+                        }}
                     />
                 </div>
 

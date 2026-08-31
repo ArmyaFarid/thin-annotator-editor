@@ -515,6 +515,12 @@ export const RefineOverlay: React.FC<RefineOverlayProps> = ({
                     onStageMouseUp={handleStageMouseUp}
                     onStageMouseLeave={handleStageMouseLeave}
                     onContainerResize={handleStageResize}
+                    onPanChange={(panning) => {
+                        if (panning) {
+                            isDrawing.current = false;
+                            setCursorPos(null);
+                        }
+                    }}
                 />
             </div>
 
