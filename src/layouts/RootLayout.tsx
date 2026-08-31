@@ -31,6 +31,14 @@ const styles = stylex.create({
     maxHeight: '100vh',
     backgroundColor: '#2B2B2B',
   },
+  header: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    flex: '0 0 auto',
+    paddingTop: 6,
+    paddingRight: 8,
+    paddingBottom: 2,
+  },
   content: {
     position: 'relative',
     flex: '1 1 0%',
@@ -54,7 +62,9 @@ export default function RootLayout() {
 
   return (
     <div {...stylex.props(styles.container)}>
-      <AnnotatorBadge />
+      <div {...stylex.props(styles.header)}>
+        <AnnotatorBadge />
+      </div>
       <div {...stylex.props(styles.content)}>
         <Suspense
           fallback={
