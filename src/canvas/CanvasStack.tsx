@@ -42,6 +42,8 @@ const MAX_SLIC_BBOX_AREA = 40_000000;
 
 interface CanvasStackProps {
     imageUrl: string | undefined;
+    // Also fired on error, so a broken URL doesn't leave the caller waiting.
+    onImageSettled?: () => void;
 }
 
 interface View {
@@ -62,7 +64,10 @@ function zoomAt(v: View, cx: number, cy: number, factor: number): View {
 let nextId = Date.now();
 const genId = () => nextId++;
 
-export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
+export const CanvasStack: React.FC<CanvasStackProps> = ({
+    imageUrl,
+    onImageSettled,
+}) => {
     const dataRef = useRef<HTMLCanvasElement>(null);
     const dynRef = useRef<HTMLCanvasElement>(null);
     const imgRef = useRef<HTMLImageElement>(null);
@@ -616,6 +621,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
     const handleImageLoad = useCallback(() => {
         const img = imgRef.current;
         const container = containerRef.current;
+        onImageSettled?.();
         if (!img || !engineRef.current) {
             return;
         }
@@ -634,7 +640,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
             const panY = (ch - img.naturalHeight * fitZoom) / 2;
             setView({zoom: fitZoom, panX, panY});
         }
-    }, []);
+    }, [onImageSettled]);
 
     // Resize all layers when container changes size
     const [containerSize, setContainerSize] = useState({w: 0, h: 0});
@@ -794,6 +800,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({imageUrl}) => {
                     ref={imgRef}
                     src={imageUrl}
                     onLoad={handleImageLoad}
+                    onError={() => onImageSettled?.()}
                     draggable={false}
                     style={{
                         display: "block",

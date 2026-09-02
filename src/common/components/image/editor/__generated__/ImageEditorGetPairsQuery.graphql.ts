@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<564cc0c87af905e15d2cdef8aa1b8025>>
+ * @generated SignedSource<<88c5b78cc25be142ade7f7fb244b03ba>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -26,10 +26,12 @@ export type ImageEditorGetPairsQuery$data = {
         readonly width: number;
       };
       readonly polarizedFilterType: PolarizedFilterType;
+      readonly rotation: number | null | undefined;
     }>;
     readonly gammas: ReadonlyArray<number | null | undefined>;
     readonly id: string;
     readonly polarizedFilterTypes: ReadonlyArray<PolarizedFilterType>;
+    readonly rotations: ReadonlyArray<number | null | undefined>;
     readonly sampleId: string;
   };
 };
@@ -97,6 +99,13 @@ v2 = [
         "alias": null,
         "args": null,
         "kind": "ScalarField",
+        "name": "rotations",
+        "storageKey": null
+      },
+      {
+        "alias": null,
+        "args": null,
+        "kind": "ScalarField",
         "name": "gammas",
         "storageKey": null
       },
@@ -120,6 +129,13 @@ v2 = [
             "args": null,
             "kind": "ScalarField",
             "name": "gamma",
+            "storageKey": null
+          },
+          {
+            "alias": null,
+            "args": null,
+            "kind": "ScalarField",
+            "name": "rotation",
             "storageKey": null
           },
           {
@@ -187,16 +203,16 @@ return {
     "selections": (v2/*: any*/)
   },
   "params": {
-    "cacheID": "be98d10266fe62b65c7b5b2275fe0922",
+    "cacheID": "90c6bbfc9795e5bedb15b925a7cda99a",
     "id": null,
     "metadata": {},
     "name": "ImageEditorGetPairsQuery",
     "operationKind": "query",
-    "text": "query ImageEditorGetPairsQuery(\n  $pairsCode: String!\n  $sampleId: String!\n) {\n  getPairs(pairsCode: $pairsCode, sampleId: $sampleId) {\n    id\n    sampleId\n    polarizedFilterTypes\n    gammas\n    acquiredImages {\n      polarizedFilterType\n      gamma\n      image {\n        id\n        path\n        url\n        width\n        height\n      }\n    }\n  }\n}\n"
+    "text": "query ImageEditorGetPairsQuery(\n  $pairsCode: String!\n  $sampleId: String!\n) {\n  getPairs(pairsCode: $pairsCode, sampleId: $sampleId) {\n    id\n    sampleId\n    polarizedFilterTypes\n    rotations\n    gammas\n    acquiredImages {\n      polarizedFilterType\n      gamma\n      rotation\n      image {\n        id\n        path\n        url\n        width\n        height\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "06a720a8f1fbdca4f43fe7a7b165b838";
+(node as any).hash = "7a29bcb14a76cd588a5dc7777a04877f";
 
 export default node;

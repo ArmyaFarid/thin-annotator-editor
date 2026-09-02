@@ -119,15 +119,18 @@ type ThinSectionImagePairs implements Node {
   AcquiredCache: [AcquiredImage!]
   PolarizedFilterTypes: [PolarizedFilterType!]
   Gammas: [Int!]
+  Rotations: [Int!]
   acquiredImages: [AcquiredImage!]!
   imageByAcquisition(acquisitionType: PolarizedFilterType!): Image
   polarizedFilterTypes: [PolarizedFilterType!]!
   gammas: [Int]!
+  rotations: [Int]!
 }
 
 type AcquiredImage {
   polarizedFilterType: PolarizedFilterType!
   gamma: Int
+  rotation: Int
   acquisitionLabel: String
   image: Image!
 }
