@@ -178,6 +178,29 @@ const T = {
         zoomResetTitle:
             "Zoom réinitialisé lors du changement d'image (cliquer pour activer la préservation)",
 
+        // Annotator profile
+        profileTitle: "Qui annote ?",
+        profileSubtitle:
+            "Ces informations accompagnent chaque annotation. Aucun mot de passe.",
+        profileEditTitle: "Modifier le profil",
+        profileFullName: "Nom complet",
+        profileFullNamePlaceholder: "ex : Béatrice Lefèvre",
+        profileUsername: "Nom d'utilisateur",
+        profileUsernamePlaceholder: "ex : blefevre",
+        profileLevel: "Niveau d'expertise",
+        profileRequired: "Le nom complet et le nom d'utilisateur sont requis.",
+        profileStart: "Commencer",
+        profileSave: "Enregistrer",
+        profileBadgeTooltip: "Modifier le profil d'annotateur",
+        levelExpert: "Expert",
+        levelExpertHint: "Maîtrise confirmée de la pétrographie",
+        levelMidExpert: "Expert intermédiaire",
+        levelMidExpertHint: "Bonne expérience, encore en progression",
+        levelTrainee: "En formation",
+        levelTraineeHint: "Apprend le domaine",
+        levelOutsideDomain: "Hors domaine",
+        levelOutsideDomainHint: "Sans formation en pétrographie",
+
         // Tool groups + customization
         groupSam: "Outils SAM",
         groupSlic: "Superpixels SLIC",
@@ -502,6 +525,29 @@ const T = {
             "Zoom preserved when switching images (click to disable)",
         zoomResetTitle:
             "Zoom reset when switching images (click to enable preservation)",
+
+        // Annotator profile
+        profileTitle: "Who is annotating?",
+        profileSubtitle:
+            "This travels with every annotation. No password required.",
+        profileEditTitle: "Edit profile",
+        profileFullName: "Full name",
+        profileFullNamePlaceholder: "e.g. Béatrice Lefèvre",
+        profileUsername: "Username",
+        profileUsernamePlaceholder: "e.g. blefevre",
+        profileLevel: "Level of expertise",
+        profileRequired: "Full name and username are both required.",
+        profileStart: "Start",
+        profileSave: "Save",
+        profileBadgeTooltip: "Edit annotator profile",
+        levelExpert: "Expert",
+        levelExpertHint: "Established command of petrography",
+        levelMidExpert: "Mid-expert",
+        levelMidExpertHint: "Solid experience, still developing",
+        levelTrainee: "Trainee",
+        levelTraineeHint: "Learning the domain",
+        levelOutsideDomain: "Outside the domain",
+        levelOutsideDomainHint: "No petrography background",
 
         // Tool groups + customization
         groupSam: "SAM tools",

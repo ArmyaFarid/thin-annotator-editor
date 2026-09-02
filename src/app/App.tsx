@@ -28,6 +28,7 @@ import RootLayout from "@/layouts/RootLayout";
 import AnnotatorPage from "@/pages/annotator/AnnotatorPageWrapper.tsx";
 import HomePage from "@/pages/home/home-page.tsx";
 import PageNotFoundPage from "@/routes/PageNotFoundPage";
+import {AnnotatorProfileModal} from "@/common/components/annotator-profile/AnnotatorProfileModal.tsx";
 import useSettingsContext from "@/settings/useSettingsContext";
 import useLoadAnnotationOptions from "@/lib/services/api/options/hooks.ts";
 import {QueryClientProvider} from "@tanstack/react-query";
@@ -61,6 +62,8 @@ function App() {
                 skipDelayDuration={600}>
                 <Toaster richColors position="top-right" />
                 <AppRoutes />
+                {/* Above the routes, so it also covers the home page. */}
+                <AnnotatorProfileModal />
             </TooltipPrimitive.Provider>
         </RelayEnvironmentProvider>
     );

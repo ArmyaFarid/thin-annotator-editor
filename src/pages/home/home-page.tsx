@@ -10,6 +10,7 @@ import {
 import {clearHistoryAtom} from "@/app/history.ts";
 import {clearDraft} from "@/app/persistence.ts";
 import {t} from "@/i18n/index.ts";
+import {AnnotatorBadge} from "@/common/components/annotator-profile/AnnotatorBadge.tsx";
 import {usePickFolder} from "@/lib/services/api/folder/hooks.ts";
 import {EmptyFolderError} from "@/lib/services/api/folder/service.ts";
 
@@ -43,7 +44,10 @@ export default function HomePage() {
     }
 
     return (
-        <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 py-8">
+        <div className="relative flex-1 flex flex-col items-center justify-center gap-6 px-4 py-8">
+            <div className="absolute top-2 right-2">
+                <AnnotatorBadge />
+            </div>
             <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-xl font-semibold text-white">{t("appTitle")}</h1>
                 <p className="text-sm text-white/50">{t("appSubtitle")}</p>

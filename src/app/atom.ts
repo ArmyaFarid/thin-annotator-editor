@@ -1,5 +1,5 @@
 import {atom} from "jotai";
-import {getLang, type Lang} from "@/i18n/index.ts";
+import {getLang, type Lang, type TranslationKey} from "@/i18n/index.ts";
 import {Tool} from "@/app/types.ts";
 import type {ImageSpacePoint} from "@/canvas/types.ts";
 import defaultAnnotationOptions from "@/data/annotation-options.json";
@@ -211,6 +211,72 @@ export const toolbarLayoutAtom = atom<ToolbarLayout>(
     readLocalEnum("toolbarLayout", TOOLBAR_LAYOUTS, "separators"),
 );
 export const customizeOpenAtom = atom<boolean>(false);
+
+// Rank ascends with expertise so the number doubles as a confidence weight:
+// `rank > other.rank` reads as "more expert". The reverse convention inverts
+// every comparison.
+export const ANNOTATOR_LEVELS = [
+    {id: "outside-domain", rank: 0, labelKey: "levelOutsideDomain"},
+    {id: "trainee", rank: 1, labelKey: "levelTrainee"},
+    {id: "mid-expert", rank: 2, labelKey: "levelMidExpert"},
+    {id: "expert", rank: 3, labelKey: "levelExpert"},
+] as const satisfies readonly {
+    id: string;
+    rank: number;
+    labelKey: TranslationKey;
+}[];
+
+export type AnnotatorLevel = (typeof ANNOTATOR_LEVELS)[number]["id"];
+
+// The id is what gets persisted and sent, so adding a level later renumbers
+// ranks only — stored profiles keep their meaning.
+export function levelRank(id: AnnotatorLevel): number {
+    return ANNOTATOR_LEVELS.find((l) => l.id === id)?.rank ?? 0;
+}
+
+export interface AnnotatorProfile {
+    version: 1;
+    fullName: string;
+    username: string;
+    level: AnnotatorLevel;
+}
+
+export const ANNOTATOR_PROFILE_KEY = "annotatorProfile";
+
+// Null rather than a half-built profile: a malformed record should send the
+// user back through the form, not ride on every request as junk.
+function readStoredProfile(): AnnotatorProfile | null {
+    try {
+        const raw = localStorage.getItem(ANNOTATOR_PROFILE_KEY);
+        if (!raw) {
+            return null;
+        }
+        const p = JSON.parse(raw) as Partial<AnnotatorProfile>;
+        const known = ANNOTATOR_LEVELS.some((l) => l.id === p.level);
+        if (
+            typeof p.fullName !== "string" ||
+            typeof p.username !== "string" ||
+            p.fullName.trim() === "" ||
+            p.username.trim() === "" ||
+            !known
+        ) {
+            return null;
+        }
+        return {
+            version: 1,
+            fullName: p.fullName,
+            username: p.username,
+            level: p.level as AnnotatorLevel,
+        };
+    } catch {
+        return null;
+    }
+}
+
+export const annotatorProfileAtom = atom<AnnotatorProfile | null>(
+    readStoredProfile(),
+);
+export const profileModalOpenAtom = atom<boolean>(false);
 
 // Mirrors the active language held in i18n. The root subscribes to it, so
 // changing it re-renders the tree and every `t()` returns the new language.
