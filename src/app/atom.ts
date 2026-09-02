@@ -121,21 +121,30 @@ export const editorOnAtom = atom<boolean>(false);
 export type FilterGammaCombination = {
     filter: string | null;
     gamma: number | null;
+    rotation: number | null;
 };
 
 export const filterGammaCombinationAtom = atom<FilterGammaCombination>({
     filter: null,
     gamma: null,
+    rotation: null,
 });
 
+// One acquired image, reduced to the parameters that identify it. The panel
+// builds its options from these, so only combinations the backend actually
+// sent are selectable.
+export type AcquisitionVariant = {
+    filter: string;
+    gamma: number | null;
+    rotation: number | null;
+};
+
 export type LoadedFilterGammaConfig = {
-    filters: string[];
-    gammas: number[];
+    variants: AcquisitionVariant[];
 };
 
 export const loadedFilterGammaConfigAtom = atom<LoadedFilterGammaConfig>({
-    filters: [],
-    gammas: [],
+    variants: [],
 });
 
 // 0 = off, >0 = objectId being refined
@@ -298,8 +307,12 @@ export const resetTaskStateAtom = atom(null, (_get, set) => {
     set(masksAtom, []);
     set(currentMaskAtom, 0);
     set(editorOnAtom, false);
-    set(filterGammaCombinationAtom, {filter: null, gamma: null});
-    set(loadedFilterGammaConfigAtom, {filters: [], gammas: []});
+    set(filterGammaCombinationAtom, {
+        filter: null,
+        gamma: null,
+        rotation: null,
+    });
+    set(loadedFilterGammaConfigAtom, {variants: []});
     set(refineModeAtom, 0);
     set(subtractModeAtom, false);
     set(activeImageSizeAtom, null);

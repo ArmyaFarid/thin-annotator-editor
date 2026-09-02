@@ -331,6 +331,7 @@ const T = {
         // Image editor loading
         slicComputing: "Calcul SLIC...",
         processing: "Traitement...",
+        loadingImage: "Chargement de l'image...",
 
         // SLIC overlay
         slicPreparing: "Préparation des superpixels...",
@@ -676,6 +677,7 @@ const T = {
         // Image editor loading
         slicComputing: "Computing SLIC...",
         processing: "Processing...",
+        loadingImage: "Loading image...",
 
         // SLIC overlay
         slicPreparing: "Preparing superpixels...",
