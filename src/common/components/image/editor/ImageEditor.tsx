@@ -1,4 +1,4 @@
-import React, {useEffect, useRef} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {graphql, useLazyLoadQuery, useMutation} from "react-relay";
 import {useAtom, useAtomValue, useSetAtom} from "jotai";
 import {CanvasStack} from "@/canvas/CanvasStack.tsx";
@@ -77,6 +77,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
     const setImageSize = useSetAtom(activeImageSizeAtom);
     const [slicOverlay, setSlicOverlay] = useAtom(slicOverlayAtom);
     const commitHistory = useSetAtom(commitHistoryAtom);
+    const [imageLoading, setImageLoading] = useState(false);
+    const onImageSettled = useCallback(() => setImageLoading(false), []);
 
     const pairsData = useLazyLoadQuery<ImageEditorGetPairsQuery>(
         graphql`
@@ -88,10 +90,12 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
                     id
                     sampleId
                     polarizedFilterTypes
+                    rotations
                     gammas
                     acquiredImages {
                         polarizedFilterType
                         gamma
+                        rotation
                         image {
                             id
                             path
@@ -109,10 +113,11 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
 
     useEffect(() => {
         setConfig({
-            filters: [...pairsData.getPairs.polarizedFilterTypes],
-            gammas: pairsData.getPairs.gammas.filter(
-                (g): g is number => g != null,
-            ),
+            variants: pairsData.getPairs.acquiredImages.map((a) => ({
+                filter: a.polarizedFilterType,
+                gamma: a.gamma ?? null,
+                rotation: a.rotation ?? null,
+            })),
         });
     }, [pairsData]);
 
@@ -120,7 +125,8 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
         const match = pairsData.getPairs.acquiredImages.find(
             (a) =>
                 a.polarizedFilterType === activeFilterGammaCombination.filter &&
-                a.gamma === (activeFilterGammaCombination.gamma ?? 0),
+                (a.gamma ?? null) === activeFilterGammaCombination.gamma &&
+                (a.rotation ?? null) === activeFilterGammaCombination.rotation,
         );
         const img = (match?.image as ActiveImage) ?? null;
         setActiveImage(img);
@@ -128,6 +134,11 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
             setImageSize({w: img.width, h: img.height});
         }
     }, [activeFilterGammaCombination, pairsData]);
+
+    // Cleared by the <img>'s load/error event, forwarded by CanvasStack.
+    useEffect(() => {
+        setImageLoading(activeImage != null);
+    }, [activeImage?.url]);
 
     const AddPointsMutation = graphql`
         mutation ImageEditorAddPointsMutation($input: AddPointsImageInput!) {
@@ -325,18 +336,26 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
         }
     }, [slicPrompt]);
 
-    const isLoading = pointsInFlight || slicLabelMapInFlight;
+    const isLoading = pointsInFlight || slicLabelMapInFlight || imageLoading;
+
+    function loadingLabel() {
+        if (slicLabelMapInFlight) {
+            return t("slicComputing");
+        }
+        return pointsInFlight ? t("processing") : t("loadingImage");
+    }
 
     return (
         <div style={{width: "100%", height: "100%", position: "relative"}}>
-            <CanvasStack imageUrl={activeImage?.url} />
+            <CanvasStack
+                imageUrl={activeImage?.url}
+                onImageSettled={onImageSettled}
+            />
             {isLoading ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/25 pointer-events-none z-10">
                     <div className="w-7 h-7 rounded-full border-2 border-white/20 border-t-white animate-spin" />
                     <span className="text-white text-xs font-medium">
-                        {slicLabelMapInFlight
-                            ? t("slicComputing")
-                            : t("processing")}
+                        {loadingLabel()}
                     </span>
                 </div>
             ) : null}

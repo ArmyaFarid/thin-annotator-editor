@@ -3,7 +3,12 @@ import useFilterGamma from "@/common/components/filter-gamma-selector/useFilterG
 export default function FilterGammaSelector() {
     const [combination] = useFilterGamma();
 
-    if (!combination.filter && combination.gamma == null) return null;
+    if (
+        !combination.filter &&
+        combination.gamma == null &&
+        combination.rotation == null
+    )
+        return null;
 
     return (
         <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 pointer-events-none">
@@ -15,6 +20,11 @@ export default function FilterGammaSelector() {
             {combination.gamma != null ? (
                 <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 whitespace-nowrap backdrop-blur-sm">
                     γ {combination.gamma}
+                </span>
+            ) : null}
+            {combination.rotation != null ? (
+                <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 whitespace-nowrap backdrop-blur-sm">
+                    {combination.rotation}°
                 </span>
             ) : null}
         </div>
