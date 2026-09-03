@@ -13,6 +13,7 @@ import {saveDraft} from "@/app/persistence.ts";
 import {useBatchStep} from "@/lib/services/api/batch/hooks.ts";
 import type {BatchTask} from "@/lib/services/api/batch/service.ts";
 import {useExportAllImages} from "@/lib/services/api/annotations/hooks.ts";
+import {useSaveTask} from "@/lib/services/api/task/hooks.ts";
 import {t} from "@/i18n/index.ts";
 
 export interface BatchNavigation {
@@ -39,6 +40,10 @@ export default function useBatchNavigation(
 
     const {mutateAsync: step, isPending: stepping} = useBatchStep();
     const {mutateAsync: exportAll, isPending: exporting} = useExportAllImages({
+        pairsCode,
+        sampleId,
+    });
+    const {mutateAsync: saveTask, isPending: saving} = useSaveTask({
         pairsCode,
         sampleId,
     });
@@ -112,10 +117,11 @@ export default function useBatchNavigation(
 
             if (direction === "next") {
                 try {
+                    await saveTask();
                     await exportAll();
                 } catch {
                     // Stay put: advancing would leave the backend believing a
-                    // task was handled whose annotations never arrived.
+                    // task was handled whose work never arrived.
                     toast.error(t("batchStepError"));
                     return;
                 }
@@ -136,13 +142,23 @@ export default function useBatchNavigation(
             }
             goTo(result.task, false);
         },
-        [batchId, pairsCode, sampleId, masks, exportAll, step, navigate, goTo],
+        [
+            batchId,
+            pairsCode,
+            sampleId,
+            masks,
+            saveTask,
+            exportAll,
+            step,
+            navigate,
+            goTo,
+        ],
     );
 
     return {
         active: batchId !== null,
         position,
-        moving: stepping || exporting,
+        moving: stepping || saving || exporting,
         goPrev: () => void move("prev"),
         goNext: () => void move("next"),
     };
