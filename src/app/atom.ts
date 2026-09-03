@@ -130,6 +130,16 @@ export const filterGammaCombinationAtom = atom<FilterGammaCombination>({
     rotation: null,
 });
 
+// Every lighting variant of the current field of view, bridged out of the
+// getPairs query so the export can loop over all of them without switching the
+// active image.
+export interface AcquiredImage {
+    image: ActiveImage;
+    combination: FilterGammaCombination;
+}
+
+export const acquiredImagesAtom = atom<AcquiredImage[]>([]);
+
 // One acquired image, reduced to the parameters that identify it. The panel
 // builds its options from these, so only combinations the backend actually
 // sent are selectable.

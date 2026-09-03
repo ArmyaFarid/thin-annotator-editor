@@ -44,6 +44,55 @@ const T = {
         noImagesInFolder:
             "Aucune image dans ce dossier. Sélectionnez un dossier de tâche valide.",
 
+        // Home page — the three ways to start
+        homeChoose: "Comment souhaitez-vous commencer ?",
+        optionProjectTitle: "Créer un projet",
+        optionProjectDesc:
+            "Regrouper plusieurs lots et suivre l'avancement de l'équipe.",
+        comingSoon: "Bientôt disponible",
+        optionBatchTitle: "Créer un lot de tâches",
+        optionBatchDesc:
+            "Choisissez un dossier racine. Toutes les tâches qu'il contient sont réunies en un lot, que vous annotez l'une après l'autre.",
+        optionBatchAction: "Choisir un dossier racine",
+        optionBatchHint:
+            "À utiliser pour une campagne entière : plusieurs lames, plusieurs champs de vision.",
+        optionSingleTitle: "Ouvrir une tâche",
+        optionSingleDesc:
+            "Choisissez un seul dossier de champ de vision et annotez-le maintenant.",
+        optionSingleAction: "Choisir un dossier",
+        optionSingleHint: "À utiliser pour un champ de vision isolé.",
+
+        // Batch list + creation
+        batchesHeading: "Vos lots",
+        batchesEmpty:
+            "Aucun lot pour l'instant. Créez-en un pour annoter plusieurs tâches à la suite.",
+        batchTaskCount: "tâches",
+        batchStart: "Commencer",
+        batchResume: "Reprendre",
+        batchCreating: "Analyse du dossier...",
+        batchCreateError: "Échec de la création du lot",
+        batchNoMatchingTask:
+            "Aucun dossier de ce dossier racine ne correspond à la structure attendue. Vérifiez l'organisation ci-dessous.",
+
+        // Batch navigation inside the editor
+        batchPrev: "Précédente",
+        batchNext: "Suivante",
+        batchPrevTooltip: "Revenir à la tâche précédente du lot",
+        batchNextTooltip:
+            "Enregistrer et exporter cette tâche, puis passer à la suivante",
+        batchMoving: "Enregistrement...",
+        batchStepError:
+            "Échec de l'export : vous restez sur cette tâche pour ne rien perdre.",
+
+        // Root folder structure (batch)
+        batchStructureTitle: "Organisation attendue du dossier racine",
+        batchStructureBody:
+            "Sélectionnez le dossier qui contient toutes vos lames. Chaque champ de vision qui respecte la structure ci-dessous devient une tâche du lot ; les autres dossiers sont ignorés.",
+        batchStructureExample:
+            "<racine> / <lame-mince> / <FOV> / images",
+        batchStructureNote:
+            "Les images doivent se trouver dans le dossier du champ de vision et suivre la règle de nommage détaillée ci-dessous.",
+
         // Import instructions (shown on the home page above the picker button)
         importInstructionsTitle: "Préparer le dossier de la tâche",
         importStructureHeading: "Structure du dossier",
@@ -394,6 +443,54 @@ const T = {
         importFailed: "Failed to import task",
         noImagesInFolder:
             "No image in this folder. Please select a valid task folder.",
+
+        // Home page — the three ways to start
+        homeChoose: "How would you like to start?",
+        optionProjectTitle: "Create a project",
+        optionProjectDesc:
+            "Group several batches together and follow the team's progress.",
+        comingSoon: "Coming soon",
+        optionBatchTitle: "Create a batch of tasks",
+        optionBatchDesc:
+            "Pick a root folder. Every task inside it is gathered into one batch, which you annotate one after another.",
+        optionBatchAction: "Choose a root folder",
+        optionBatchHint:
+            "Use this for a whole campaign: several thin sections, several fields of view.",
+        optionSingleTitle: "Open one task",
+        optionSingleDesc:
+            "Pick a single field-of-view folder and annotate it now.",
+        optionSingleAction: "Choose a folder",
+        optionSingleHint: "Use this for a one-off field of view.",
+
+        // Batch list + creation
+        batchesHeading: "Your batches",
+        batchesEmpty:
+            "No batches yet. Create one to annotate several tasks in a row.",
+        batchTaskCount: "tasks",
+        batchStart: "Start",
+        batchResume: "Resume",
+        batchCreating: "Scanning the folder...",
+        batchCreateError: "Could not create the batch",
+        batchNoMatchingTask:
+            "No folder inside that root matches the expected structure. Check the layout below.",
+
+        // Batch navigation inside the editor
+        batchPrev: "Previous",
+        batchNext: "Next",
+        batchPrevTooltip: "Go back to the previous task in the batch",
+        batchNextTooltip:
+            "Save and export this task, then move on to the next one",
+        batchMoving: "Saving...",
+        batchStepError:
+            "Export failed — you stay on this task so nothing is lost.",
+
+        // Root folder structure (batch)
+        batchStructureTitle: "Expected layout of the root folder",
+        batchStructureBody:
+            "Select the folder that holds all your thin sections. Every field of view following the layout below becomes one task in the batch; any other folder is ignored.",
+        batchStructureExample: "<root> / <thin-section> / <FOV> / images",
+        batchStructureNote:
+            "Images must sit inside the field-of-view folder and follow the naming rule detailed below.",
 
         // Import instructions (shown on the home page above the picker button)
         importInstructionsTitle: "Prepare your task folder",

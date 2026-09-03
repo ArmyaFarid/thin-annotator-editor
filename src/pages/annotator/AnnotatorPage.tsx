@@ -2,7 +2,10 @@ import {useEffect, useState} from "react";
 import {useLocation, useNavigate, useParams} from "react-router-dom";
 import {useAtom} from "jotai";
 import {toast} from "sonner";
-import {ChevronLeftIcon} from "@heroicons/react/24/outline";
+import {
+    ChevronLeftIcon,
+    ChevronRightIcon,
+} from "@heroicons/react/24/outline";
 import PageLayout from "@/layouts/PageLayout.tsx";
 import {Toolbar} from "@/common/components/annotator-toolbar/Toolbar.tsx";
 import {ImageEditor} from "@/common/components/image/editor/ImageEditor.tsx";
@@ -18,6 +21,7 @@ import {activePairAtom} from "@/app/atom.ts";
 import {t} from "@/i18n/index.ts";
 import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
 import {AnnotatorBadge} from "@/common/components/annotator-profile/AnnotatorBadge.tsx";
+import useBatchNavigation from "@/pages/annotator/useBatchNavigation.ts";
 
 export default function AnnotatorPage() {
     useAutosaveDraft();
@@ -49,6 +53,7 @@ export default function AnnotatorPage() {
         isPickFolder,
     );
 
+    const batch = useBatchNavigation(pairsCode, sampleId);
     const [showFinishModal, setShowFinishModal] = useState(false);
     const {mutateAsync: saveAnnotations, isPending: savingTask} =
         useSaveTask({pairsCode, sampleId});
@@ -112,9 +117,51 @@ export default function AnnotatorPage() {
                         {t("openNewTask")}
                     </button>
                 </Tooltip>
-                <span className="text-xs text-white/40 font-mono">
-                    {pairsCode} / {sampleId}
-                </span>
+                <div className="flex items-center gap-3">
+                    {batch.active ? (
+                        <Tooltip content={t("batchPrevTooltip")} side="bottom">
+                            <button
+                                onClick={batch.goPrev}
+                                disabled={
+                                    batch.moving ||
+                                    batch.position?.hasPrev === false
+                                }
+                                className="flex items-center gap-1 bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                                <ChevronLeftIcon className="w-3 h-3" />
+                                {t("batchPrev")}
+                            </button>
+                        </Tooltip>
+                    ) : null}
+                    <span className="text-xs text-white/40 font-mono">
+                        {pairsCode} / {sampleId}
+                    </span>
+                    {batch.active ? (
+                        <>
+                            {batch.position ? (
+                                <span className="text-xs text-white/60 font-mono tabular-nums">
+                                    {batch.position.index + 1} /{" "}
+                                    {batch.position.total}
+                                </span>
+                            ) : null}
+                            <Tooltip
+                                content={t("batchNextTooltip")}
+                                side="bottom">
+                                <button
+                                    onClick={batch.goNext}
+                                    disabled={
+                                        batch.moving ||
+                                        batch.position?.hasNext === false
+                                    }
+                                    className="flex items-center gap-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2.5 py-1 rounded text-xs hover:bg-blue-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+                                    {batch.moving
+                                        ? t("batchMoving")
+                                        : t("batchNext")}
+                                    <ChevronRightIcon className="w-3 h-3" />
+                                </button>
+                            </Tooltip>
+                        </>
+                    ) : null}
+                </div>
                 <div className="flex items-center gap-2">
                     <Tooltip content={t("finishTooltip")} side="bottom">
                         <button
