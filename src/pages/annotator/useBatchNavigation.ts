@@ -115,16 +115,16 @@ export default function useBatchNavigation(
             }
             saveDraft(pairsCode, sampleId, masks);
 
-            if (direction === "next") {
-                try {
-                    await saveTask();
+            // Stay put on failure: moving would leave the backend believing a
+            // task was handled whose work never arrived.
+            try {
+                await saveTask();
+                if (direction === "next") {
                     await exportAll();
-                } catch {
-                    // Stay put: advancing would leave the backend believing a
-                    // task was handled whose work never arrived.
-                    toast.error(t("batchStepError"));
-                    return;
                 }
+            } catch {
+                toast.error(t("batchStepError"));
+                return;
             }
 
             let result;
