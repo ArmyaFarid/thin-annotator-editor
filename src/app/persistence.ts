@@ -1,5 +1,8 @@
 import type {Mask} from "@/app/atom.ts";
-import {TASK_FORMAT_VERSION, type MaskDTO} from "@/lib/services/api/task/dto.ts";
+import {
+    TASK_FORMAT_VERSION,
+    type MaskDTO,
+} from "@/lib/services/api/task/dto.ts";
 import {dtoToMasks, masksToDto} from "@/lib/services/api/task/mappers.ts";
 
 // Drafts are the same document as a backend save, just stored locally, so they
@@ -14,7 +17,11 @@ function draftKey(pairsCode: string, sampleId: string): string {
     return `sam2_annotation_draft:${pairsCode}/${sampleId}`;
 }
 
-export function saveDraft(pairsCode: string, sampleId: string, masks: Mask[]): void {
+export function saveLocalDraft(
+    pairsCode: string,
+    sampleId: string,
+    masks: Mask[],
+): void {
     try {
         const key = draftKey(pairsCode, sampleId);
         if (masks.length === 0) {
@@ -31,16 +38,20 @@ export function saveDraft(pairsCode: string, sampleId: string, masks: Mask[]): v
     }
 }
 
-export function loadDraft(
+export function loadLocalDraft(
     pairsCode: string,
     sampleId: string,
 ): {masks: Mask[]} | null {
     try {
         const raw = localStorage.getItem(draftKey(pairsCode, sampleId));
-        if (!raw) return null;
+        if (!raw) {
+            return null;
+        }
         const parsed = JSON.parse(raw) as DraftDTO;
         const masks = dtoToMasks(parsed?.masks);
-        if (masks.length === 0) return null;
+        if (masks.length === 0) {
+            return null;
+        }
         return {masks};
     } catch {
         return null;

@@ -9,7 +9,7 @@ import {
     resetTaskStateAtom,
 } from "@/app/atom.ts";
 import {clearHistoryAtom} from "@/app/history.ts";
-import {saveDraft} from "@/app/persistence.ts";
+import {saveLocalDraft} from "@/app/persistence.ts";
 import {useBatchStep} from "@/lib/services/api/batch/hooks.ts";
 import type {BatchTask} from "@/lib/services/api/batch/service.ts";
 import {useExportAllImages} from "@/lib/services/api/annotations/hooks.ts";
@@ -113,7 +113,7 @@ export default function useBatchNavigation(
             if (!batchId) {
                 return;
             }
-            saveDraft(pairsCode, sampleId, masks);
+            saveLocalDraft(pairsCode, sampleId, masks);
 
             // Nothing drawn means nothing to persist, and the backend rejects
             // a save with no mask. Stay put on any other failure: moving would
