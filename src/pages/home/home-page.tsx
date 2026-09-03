@@ -24,6 +24,7 @@ import {
     useCreateBatch,
 } from "@/lib/services/api/batch/hooks.ts";
 import {
+    BatchEndpointError,
     NoMatchingTaskError,
     type Batch,
 } from "@/lib/services/api/batch/service.ts";
@@ -122,7 +123,7 @@ export default function HomePage() {
         isPending: creatingBatch,
         error: createError,
     } = useCreateBatch();
-    const {data: batches} = useBatches();
+    const {data: batches, error: batchesError} = useBatches();
     const {mutateAsync: stepBatch, isPending: startingBatch} = useBatchStep();
 
     // Always land on a clean slate — wipe any state leaked from a previous
@@ -217,7 +218,9 @@ export default function HomePage() {
                     <p className="text-xs text-red-400 max-w-2xl text-center">
                         {createError instanceof NoMatchingTaskError
                             ? t("batchNoMatchingTask")
-                            : t("batchCreateError")}
+                            : createError instanceof BatchEndpointError
+                              ? t("batchBackendUnavailable")
+                              : t("batchCreateError")}
                     </p>
                 ) : null}
                 {openError ? (
@@ -257,8 +260,15 @@ export default function HomePage() {
                             </div>
                         ))
                     ) : (
-                        <p className="text-xs text-white/35 bg-secondary/40 border border-white/10 rounded-lg px-4 py-3">
-                            {t("batchesEmpty")}
+                        <p
+                            className={`text-xs bg-secondary/40 border rounded-lg px-4 py-3 ${
+                                batchesError
+                                    ? "text-red-400 border-red-500/20"
+                                    : "text-white/35 border-white/10"
+                            }`}>
+                            {batchesError
+                                ? t("batchBackendUnavailable")
+                                : t("batchesEmpty")}
                         </p>
                     )}
                 </div>

@@ -73,6 +73,8 @@ const T = {
         batchCreateError: "Échec de la création du lot",
         batchNoMatchingTask:
             "Aucun dossier de ce dossier racine ne correspond à la structure attendue. Vérifiez l'organisation ci-dessous.",
+        batchBackendUnavailable:
+            "Le service ne répond pas pour les lots. Vérifiez qu'il est démarré.",
 
         // Batch navigation inside the editor
         batchPrev: "Précédente",
@@ -473,6 +475,8 @@ const T = {
         batchCreateError: "Could not create the batch",
         batchNoMatchingTask:
             "No folder inside that root matches the expected structure. Check the layout below.",
+        batchBackendUnavailable:
+            "The service is not answering for batches. Check that it is running.",
 
         // Batch navigation inside the editor
         batchPrev: "Previous",

@@ -17,6 +17,22 @@ export class NoMatchingTaskError extends Error {
     }
 }
 
+/**
+ * The backend answers an unknown route with the SPA's index.html at status 200,
+ * so a missing endpoint arrives as an HTML string rather than a rejection. Left
+ * unchecked it reaches the component as data and crashes the render.
+ */
+export class BatchEndpointError extends Error {
+    constructor(route: string) {
+        super(`${route} did not return JSON`);
+        this.name = "BatchEndpointError";
+    }
+}
+
+function isObject(data: unknown): data is Record<string, unknown> {
+    return typeof data === "object" && data !== null && !Array.isArray(data);
+}
+
 export interface Batch {
     batchId: string;
     name: string;
@@ -32,6 +48,13 @@ export interface BatchTask {
     total: number;
     hasPrev: boolean;
     hasNext: boolean;
+}
+
+function step(data: unknown, route: string): BatchTaskResponseDTO {
+    if (!isObject(data) || typeof data.pairsCode !== "string") {
+        throw new BatchEndpointError(route);
+    }
+    return data as unknown as BatchTaskResponseDTO;
 }
 
 function toBatchTask(dto: BatchTaskResponseDTO): BatchTask {
@@ -50,6 +73,9 @@ export const batchService = {
     /** Opens the OS folder picker on the backend and scans the chosen root. */
     create: async (): Promise<Batch> => {
         const res = await api.post<CreateBatchResponseDTO>(`${BASE}/create`);
+        if (!isObject(res.data) || typeof res.data.batchId !== "string") {
+            throw new BatchEndpointError(`${BASE}/create`);
+        }
         if (res.data.taskCount === 0) {
             throw new NoMatchingTaskError();
         }
@@ -58,20 +84,23 @@ export const batchService = {
 
     list: async (): Promise<Batch[]> => {
         const res = await api.get<ListBatchesResponseDTO>(BASE);
-        return res.data ?? [];
+        if (!Array.isArray(res.data)) {
+            throw new BatchEndpointError(BASE);
+        }
+        return res.data;
     },
 
     next: async (batchId: string): Promise<BatchTask> => {
         const res = await api.post<BatchTaskResponseDTO>(`${BASE}/next`, {
             batchId,
         });
-        return toBatchTask(res.data);
+        return toBatchTask(step(res.data, `${BASE}/next`));
     },
 
     prev: async (batchId: string): Promise<BatchTask> => {
         const res = await api.post<BatchTaskResponseDTO>(`${BASE}/prev`, {
             batchId,
         });
-        return toBatchTask(res.data);
+        return toBatchTask(step(res.data, `${BASE}/prev`));
     },
 };
