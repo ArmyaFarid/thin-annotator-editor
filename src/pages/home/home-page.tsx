@@ -11,8 +11,8 @@ import {clearHistoryAtom} from "@/app/history.ts";
 import {clearDraft} from "@/app/persistence.ts";
 import {t} from "@/i18n/index.ts";
 import {AnnotatorBadge} from "@/common/components/annotator-profile/AnnotatorBadge.tsx";
-import {usePickFolder} from "@/lib/services/api/folder/hooks.ts";
 import {EmptyFolderError} from "@/lib/services/api/folder/service.ts";
+import {useOpenTaskFromFolder} from "@/lib/services/api/task/hooks.ts";
 
 export default function HomePage() {
     const navigate = useNavigate();
@@ -20,7 +20,11 @@ export default function HomePage() {
     const setPendingAnnotations = useSetAtom(pendingAnnotationsAtom);
     const resetTaskState = useSetAtom(resetTaskStateAtom);
     const clearHistory = useSetAtom(clearHistoryAtom);
-    const {mutateAsync: pickFolder, isPending: loading, error} = usePickFolder();
+    const {
+        mutateAsync: openTaskFromFolder,
+        isPending: loading,
+        error,
+    } = useOpenTaskFromFolder();
 
     // Always land on a clean slate — wipe any state leaked from a previous
     // task (masks, SLIC overlay, refine mode, filter selection, history).
@@ -32,7 +36,7 @@ export default function HomePage() {
     async function handleOpen() {
         let result;
         try {
-            result = await pickFolder();
+            result = await openTaskFromFolder();
         } catch {
             return; // surfaced through `error` below
         }
@@ -40,7 +44,9 @@ export default function HomePage() {
         clearDraft(result.pairsCode, result.sampleId);
         setActivePair({pairsCode: result.pairsCode, sampleId: result.sampleId});
         setPendingAnnotations(result.annotations ?? null);
-        navigate(`/annotate/${result.pairsCode}/${result.sampleId}`, {state: {source: "pick-folder"}});
+        navigate(`/annotate/${result.pairsCode}/${result.sampleId}`, {
+            state: {source: "pick-folder"},
+        });
     }
 
     return (
@@ -49,7 +55,9 @@ export default function HomePage() {
                 <AnnotatorBadge />
             </div>
             <div className="flex flex-col items-center gap-2 text-center">
-                <h1 className="text-xl font-semibold text-white">{t("appTitle")}</h1>
+                <h1 className="text-xl font-semibold text-white">
+                    {t("appTitle")}
+                </h1>
                 <p className="text-sm text-white/50">{t("appSubtitle")}</p>
             </div>
 
@@ -105,8 +113,12 @@ function ImportInstructions() {
                     {t("importNamingPattern")}
                 </code>
                 <p className="text-xs">
-                    <span className="text-white/50">{t("importNamingExampleLabel")} </span>
-                    <code className="text-white/80">{t("importNamingExample")}</code>
+                    <span className="text-white/50">
+                        {t("importNamingExampleLabel")}{" "}
+                    </span>
+                    <code className="text-white/80">
+                        {t("importNamingExample")}
+                    </code>
                 </p>
                 <ul className="list-disc list-inside text-xs space-y-0.5 marker:text-white/30">
                     <li>{t("importNamingMod")}</li>
