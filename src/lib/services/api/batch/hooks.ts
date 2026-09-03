@@ -20,17 +20,28 @@ export function useCreateBatch() {
     });
 }
 
+/**
+ * `current` is read-only, so opening a batch asks where it stands rather than
+ * consuming a task. It only falls through to `next` if that call fails —
+ * otherwise resuming would skip whatever was left half-finished.
+ */
 export function useBatchStep() {
     return useMutation({
-        mutationFn: ({
+        mutationFn: async ({
             batchId,
             direction,
         }: {
             batchId: string;
-            direction: "next" | "prev";
-        }) =>
-            direction === "next"
-                ? batchService.next(batchId)
-                : batchService.prev(batchId),
+            direction: "current" | "next" | "prev";
+        }) => {
+            if (direction !== "current") {
+                return batchService[direction](batchId);
+            }
+            try {
+                return await batchService.current(batchId);
+            } catch {
+                return batchService.next(batchId);
+            }
+        },
     });
 }

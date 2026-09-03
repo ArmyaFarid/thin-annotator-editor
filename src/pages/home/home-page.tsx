@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {useNavigate} from "react-router-dom";
+import {toast} from "sonner";
 import {useSetAtom} from "jotai";
 import {
     ChevronDownIcon,
@@ -157,16 +158,24 @@ export default function HomePage() {
     }
 
     async function handleStartBatch(batch: Batch) {
-        let task;
+        let position;
         try {
-            task = await stepBatch({batchId: batch.batchId, direction: "next"});
+            position = await stepBatch({
+                batchId: batch.id,
+                direction: "current",
+            });
         } catch {
             return;
         }
+        if (position.kind === "done") {
+            toast.success(t("batchComplete"));
+            return;
+        }
+        const task = position.task;
         setActivePair({pairsCode: task.pairsCode, sampleId: task.sampleId});
         setPendingAnnotations(task.annotations ?? null);
         navigate(
-            `/annotate/${task.pairsCode}/${task.sampleId}?batch=${batch.batchId}`,
+            `/annotate/${task.pairsCode}/${task.sampleId}?batch=${batch.id}`,
             {state: {source: "batch", task}},
         );
     }
@@ -238,7 +247,7 @@ export default function HomePage() {
                     {batches && batches.length > 0 ? (
                         batches.map((b: Batch) => (
                             <div
-                                key={b.batchId}
+                                key={b.id}
                                 className="flex items-center gap-3 bg-secondary/40 border border-white/10 rounded-lg px-4 py-3">
                                 <div className="flex flex-col min-w-0 flex-1">
                                     <span className="text-sm text-white/90 truncate">

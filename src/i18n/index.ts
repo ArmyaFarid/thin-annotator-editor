@@ -75,6 +75,8 @@ const T = {
             "Aucun dossier de ce dossier racine ne correspond à la structure attendue. Vérifiez l'organisation ci-dessous.",
         batchBackendUnavailable:
             "Le service ne répond pas pour les lots. Vérifiez qu'il est démarré.",
+        batchComplete: "Ce lot est terminé : toutes les tâches sont annotées.",
+        batchAnnotated: "déjà annotée",
 
         // Batch navigation inside the editor
         batchPrev: "Précédente",
@@ -477,6 +479,8 @@ const T = {
             "No folder inside that root matches the expected structure. Check the layout below.",
         batchBackendUnavailable:
             "The service is not answering for batches. Check that it is running.",
+        batchComplete: "This batch is finished — every task is annotated.",
+        batchAnnotated: "already annotated",
 
         // Batch navigation inside the editor
         batchPrev: "Previous",

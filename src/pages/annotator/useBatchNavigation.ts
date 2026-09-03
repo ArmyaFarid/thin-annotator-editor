@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import {useLocation, useNavigate} from "react-router-dom";
 import {useAtomValue, useSetAtom} from "jotai";
 import {toast} from "sonner";
@@ -43,18 +43,65 @@ export default function useBatchNavigation(
         sampleId,
     });
 
-    // Seeded by whoever navigated here, so the counter is right before the
-    // first move; refreshed from every response afterwards.
     const [position, setPosition] = useState<BatchTask | null>(
         (location.state as {task?: BatchTask} | null)?.task ?? null,
     );
 
+    const goTo = useCallback(
+        (task: BatchTask, replace: boolean) => {
+            resetTaskState();
+            clearHistory();
+            setActivePair({
+                pairsCode: task.pairsCode,
+                sampleId: task.sampleId,
+            });
+            setPendingAnnotations(task.annotations ?? null);
+            setPosition(task);
+            navigate(
+                `/annotate/${task.pairsCode}/${task.sampleId}?batch=${batchId}`,
+                {state: {source: "batch", task}, replace},
+            );
+        },
+        [
+            batchId,
+            navigate,
+            resetTaskState,
+            clearHistory,
+            setActivePair,
+            setPendingAnnotations,
+        ],
+    );
+
+    // A reload loses the router state that carried the position, so ask the
+    // backend where the batch stands. `current` does not consume a task, and
+    // it is authoritative if the URL disagrees — someone may have edited it.
+    const restoredRef = useRef(false);
     useEffect(() => {
-        const seeded = (location.state as {task?: BatchTask} | null)?.task;
-        if (seeded) {
-            setPosition(seeded);
+        if (!batchId || position !== null || restoredRef.current) {
+            return;
         }
-    }, [location.state]);
+        restoredRef.current = true;
+        step({batchId, direction: "current"})
+            .then((result) => {
+                if (result.kind === "done") {
+                    toast.success(t("batchComplete"));
+                    navigate("/");
+                    return;
+                }
+                const task = result.task;
+                if (
+                    task.pairsCode === pairsCode &&
+                    task.sampleId === sampleId
+                ) {
+                    setPosition(task);
+                    return;
+                }
+                goTo(task, true);
+            })
+            .catch(() => {
+                toast.error(t("batchBackendUnavailable"));
+            });
+    }, [batchId, position, pairsCode, sampleId, step, navigate, goTo]);
 
     const move = useCallback(
         async (direction: "next" | "prev") => {
@@ -74,40 +121,22 @@ export default function useBatchNavigation(
                 }
             }
 
-            let task;
+            let result;
             try {
-                task = await step({batchId, direction});
+                result = await step({batchId, direction});
             } catch {
                 toast.error(t("batchStepError"));
                 return;
             }
 
-            resetTaskState();
-            clearHistory();
-            setActivePair({
-                pairsCode: task.pairsCode,
-                sampleId: task.sampleId,
-            });
-            setPendingAnnotations(task.annotations ?? null);
-            setPosition(task);
-            navigate(
-                `/annotate/${task.pairsCode}/${task.sampleId}?batch=${batchId}`,
-                {state: {source: "batch", task}},
-            );
+            if (result.kind === "done") {
+                toast.success(t("batchComplete"));
+                navigate("/");
+                return;
+            }
+            goTo(result.task, false);
         },
-        [
-            batchId,
-            pairsCode,
-            sampleId,
-            masks,
-            exportAll,
-            step,
-            resetTaskState,
-            clearHistory,
-            setActivePair,
-            setPendingAnnotations,
-            navigate,
-        ],
+        [batchId, pairsCode, sampleId, masks, exportAll, step, navigate, goTo],
     );
 
     return {

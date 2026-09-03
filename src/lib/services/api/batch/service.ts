@@ -34,46 +34,72 @@ function isObject(data: unknown): data is Record<string, unknown> {
 }
 
 export interface Batch {
-    batchId: string;
+    id: string;
     name: string;
     rootPath: string;
     taskCount: number;
 }
 
 export interface BatchTask {
+    taskId: string;
     pairsCode: string;
     sampleId: string;
     annotations: Mask[] | null;
     index: number;
     total: number;
+    isAnnotated: boolean;
     hasPrev: boolean;
     hasNext: boolean;
 }
 
-function step(data: unknown, route: string): BatchTaskResponseDTO {
-    if (!isObject(data) || typeof data.pairsCode !== "string") {
-        throw new BatchEndpointError(route);
-    }
-    return data as unknown as BatchTaskResponseDTO;
-}
+/** `done` is returned in place of a task once every task is annotated. */
+export type BatchPosition =
+    | {kind: "task"; task: BatchTask}
+    | {kind: "done"; total: number};
 
 function toBatchTask(dto: BatchTaskResponseDTO): BatchTask {
     return {
+        taskId: dto.taskId,
         pairsCode: dto.pairsCode,
         sampleId: dto.sampleId,
         annotations: dto.annotations ? dtoToMasks(dto.annotations) : null,
         index: dto.index,
         total: dto.total,
+        isAnnotated: dto.isAnnotated,
         hasPrev: dto.hasPrev,
         hasNext: dto.hasNext,
     };
+}
+
+function toPosition(data: unknown, route: string): BatchPosition {
+    if (!isObject(data)) {
+        throw new BatchEndpointError(route);
+    }
+    if (data.done === true) {
+        return {kind: "done", total: Number(data.total) || 0};
+    }
+    if (typeof data.pairsCode !== "string") {
+        throw new BatchEndpointError(route);
+    }
+    return {
+        kind: "task",
+        task: toBatchTask(data as unknown as BatchTaskResponseDTO),
+    };
+}
+
+async function move(
+    batchId: string,
+    route: "current" | "next" | "prev",
+): Promise<BatchPosition> {
+    const res = await api.post(`${BASE}/${route}`, {batchId});
+    return toPosition(res.data, `${BASE}/${route}`);
 }
 
 export const batchService = {
     /** Opens the OS folder picker on the backend and scans the chosen root. */
     create: async (): Promise<Batch> => {
         const res = await api.post<CreateBatchResponseDTO>(`${BASE}/create`);
-        if (!isObject(res.data) || typeof res.data.batchId !== "string") {
+        if (!isObject(res.data) || typeof res.data.id !== "string") {
             throw new BatchEndpointError(`${BASE}/create`);
         }
         if (res.data.taskCount === 0) {
@@ -90,17 +116,8 @@ export const batchService = {
         return res.data;
     },
 
-    next: async (batchId: string): Promise<BatchTask> => {
-        const res = await api.post<BatchTaskResponseDTO>(`${BASE}/next`, {
-            batchId,
-        });
-        return toBatchTask(step(res.data, `${BASE}/next`));
-    },
-
-    prev: async (batchId: string): Promise<BatchTask> => {
-        const res = await api.post<BatchTaskResponseDTO>(`${BASE}/prev`, {
-            batchId,
-        });
-        return toBatchTask(step(res.data, `${BASE}/prev`));
-    },
+    /** Read-only: where the batch stands, without moving past anything. */
+    current: (batchId: string) => move(batchId, "current"),
+    next: (batchId: string) => move(batchId, "next"),
+    prev: (batchId: string) => move(batchId, "prev"),
 };

@@ -2,7 +2,7 @@ import type {MaskDTO} from "@/lib/services/api/task/dto.ts";
 
 /** POST /api/batch/create — the backend picks the root folder and scans it. */
 export interface CreateBatchResponseDTO {
-    batchId: string;
+    id: string;
     name: string;
     rootPath: string;
     taskCount: number;
@@ -12,20 +12,27 @@ export interface CreateBatchResponseDTO {
 export type ListBatchesResponseDTO = CreateBatchResponseDTO[];
 
 /**
- * POST /api/batch/next | /api/batch/prev
+ * POST /api/batch/current | /next | /prev
  *
- * The openTaskFromFolder payload plus where the backend's cursor landed.
  * `index`/`total` are a readout only — the cursor lives on the backend and the
  * frontend never addresses a task by position. `hasPrev`/`hasNext` drive the
  * buttons so a change of ordering strategy needs no frontend change.
  */
 export interface BatchTaskResponseDTO {
+    taskId: string;
     pairsCode: string;
     sampleId: string;
     annotations: MaskDTO[] | null;
-    image_count: number;
+    imageCount: number;
     index: number;
     total: number;
+    isAnnotated: boolean;
     hasPrev: boolean;
     hasNext: boolean;
+}
+
+/** Returned in place of a task once every task in the batch is annotated. */
+export interface BatchDoneResponseDTO {
+    done: true;
+    total: number;
 }

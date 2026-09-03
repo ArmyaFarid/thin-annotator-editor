@@ -138,9 +138,16 @@ export default function AnnotatorPage() {
                     {batch.active ? (
                         <>
                             {batch.position ? (
-                                <span className="text-xs text-white/60 font-mono tabular-nums">
-                                    {batch.position.index + 1} /{" "}
-                                    {batch.position.total}
+                                <span className="flex items-center gap-1.5">
+                                    <span className="text-xs text-white/60 font-mono tabular-nums">
+                                        {batch.position.index + 1} /{" "}
+                                        {batch.position.total}
+                                    </span>
+                                    {batch.position.isAnnotated ? (
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400">
+                                            {t("batchAnnotated")}
+                                        </span>
+                                    ) : null}
                                 </span>
                             ) : null}
                             <Tooltip
