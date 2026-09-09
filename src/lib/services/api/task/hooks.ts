@@ -16,10 +16,7 @@ export const taskKey = (pairsCode: string, sampleId: string) =>
  * `enabled` carries the conditions the old hook applied by hand — don't fetch
  * when the caller already has state that supersedes the backend copy.
  */
-export function useTask(
-    {pairsCode, sampleId}: TaskRef,
-    enabled: boolean,
-) {
+export function useTask({pairsCode, sampleId}: TaskRef, enabled: boolean) {
     return useQuery({
         queryKey: taskKey(pairsCode, sampleId),
         queryFn: () => taskService.load({pairsCode, sampleId}),
@@ -32,5 +29,11 @@ export function useSaveTask({pairsCode, sampleId}: TaskRef) {
     const masks = useAtomValue(masksAtom);
     return useMutation({
         mutationFn: () => taskService.save({pairsCode, sampleId, masks}),
+    });
+}
+
+export function useOpenTaskFromFolder() {
+    return useMutation({
+        mutationFn: () => taskService.openTaskFromFolder(),
     });
 }

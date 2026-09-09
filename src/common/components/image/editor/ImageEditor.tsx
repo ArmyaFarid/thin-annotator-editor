@@ -13,6 +13,7 @@ import {commitHistoryAtom} from "@/app/history.ts";
 import {
     refineModeAtom,
     activeImageSizeAtom,
+    acquiredImagesAtom,
     slicOverlayAtom,
     ActiveImage,
 } from "@/app/atom.ts";
@@ -75,6 +76,7 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
     const maskCounter = useRef(1);
     const refineMode = useAtomValue(refineModeAtom);
     const setImageSize = useSetAtom(activeImageSizeAtom);
+    const setAcquiredImages = useSetAtom(acquiredImagesAtom);
     const [slicOverlay, setSlicOverlay] = useAtom(slicOverlayAtom);
     const commitHistory = useSetAtom(commitHistoryAtom);
     const [imageLoading, setImageLoading] = useState(false);
@@ -119,6 +121,16 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
                 rotation: a.rotation ?? null,
             })),
         });
+        setAcquiredImages(
+            pairsData.getPairs.acquiredImages.map((a) => ({
+                image: a.image as ActiveImage,
+                combination: {
+                    filter: a.polarizedFilterType,
+                    gamma: a.gamma ?? null,
+                    rotation: a.rotation ?? null,
+                },
+            })),
+        );
     }, [pairsData]);
 
     useEffect(() => {

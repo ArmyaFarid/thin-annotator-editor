@@ -58,3 +58,10 @@ export interface LoadTaskResponseDTO {
     version?: number;
     annotations: MaskDTO[] | null;
 }
+
+export interface OpenTaskFromFolderResponseDTO {
+    pairsCode: string;
+    sampleId: string;
+    annotations: MaskDTO[] | null;
+    image_count: number;
+}

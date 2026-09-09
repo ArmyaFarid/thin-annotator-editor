@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import {useSetAtom} from "jotai";
 import {masksAtom} from "@/app/atom.ts";
-import {loadDraft, clearDraft} from "@/app/persistence.ts";
+import {loadLocalDraft, clearDraft} from "@/app/persistence.ts";
 import {t} from "@/i18n/index.ts";
 
 interface RestoreDraftBannerProps {
@@ -10,12 +10,18 @@ interface RestoreDraftBannerProps {
     onDiscard?: () => void;
 }
 
-export const RestoreDraftBanner: React.FC<RestoreDraftBannerProps> = ({pairsCode, sampleId, onDiscard}) => {
-    const [draft] = useState(() => loadDraft(pairsCode, sampleId));
+export const RestoreDraftBanner: React.FC<RestoreDraftBannerProps> = ({
+    pairsCode,
+    sampleId,
+    onDiscard,
+}) => {
+    const [draft] = useState(() => loadLocalDraft(pairsCode, sampleId));
     const [resolved, setResolved] = useState(false);
     const setMasks = useSetAtom(masksAtom);
 
-    if (!draft || resolved) return null;
+    if (!draft || resolved) {
+        return null;
+    }
 
     function handleContinue() {
         setMasks(draft!.masks);
@@ -34,8 +40,12 @@ export const RestoreDraftBanner: React.FC<RestoreDraftBannerProps> = ({pairsCode
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
             <div className="bg-[#1C1C1C] border border-white/15 rounded-xl shadow-2xl p-7 w-full max-w-sm flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
-                    <span className="text-sm font-semibold text-white">{t("draftTitle")}</span>
-                    <span className="text-xs text-white/55 leading-relaxed">{t("draftFound")}</span>
+                    <span className="text-sm font-semibold text-white">
+                        {t("draftTitle")}
+                    </span>
+                    <span className="text-xs text-white/55 leading-relaxed">
+                        {t("draftFound")}
+                    </span>
                     {count > 0 ? (
                         <span className="text-xs text-white/35">
                             {count} annotation{count > 1 ? "s" : ""}

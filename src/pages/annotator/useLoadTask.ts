@@ -1,7 +1,7 @@
 import {useEffect, useMemo} from "react";
 import {useAtom, useAtomValue} from "jotai";
 import {masksAtom, pendingAnnotationsAtom} from "@/app/atom.ts";
-import {loadDraft} from "@/app/persistence.ts";
+import {loadLocalDraft} from "@/app/persistence.ts";
 import {useTask} from "@/lib/services/api/task/hooks.ts";
 
 /**
@@ -24,14 +24,15 @@ export default function useLoadTask(
     // Memoized: loadDraft parses and validates the stored document, which can
     // be hundreds of KB of RLE, and this runs on every render of the page.
     const hasDraft = useMemo(
-        () => loadDraft(pairsCode, sampleId) !== null,
+        () => loadLocalDraft(pairsCode, sampleId) !== null,
         [pairsCode, sampleId],
     );
 
     // Don't ask the backend when something already supersedes its copy:
     // pick-folder just imported, a restore prompt is open, work is in progress,
     // or a local draft is newer than the last save.
-    const enabled = !skip && pending === null && masks.length === 0 && !hasDraft;
+    const enabled =
+        !skip && pending === null && masks.length === 0 && !hasDraft;
 
     const {data, refetch} = useTask({pairsCode, sampleId}, enabled);
 

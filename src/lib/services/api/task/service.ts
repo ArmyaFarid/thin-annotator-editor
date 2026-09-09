@@ -4,8 +4,11 @@ import {
     TASK_FORMAT_VERSION,
     type LoadTaskResponseDTO,
     type SaveTaskRequestDTO,
+    OpenTaskFromFolderResponseDTO,
 } from "@/lib/services/api/task/dto.ts";
 import {dtoToMasks, masksToDto} from "@/lib/services/api/task/mappers.ts";
+import {EmptyFolderError} from "@/lib/services/api/folder/service.ts";
+import {TaskFromFolder} from "@/lib/services/api/task/domain.ts";
 
 const BASE = "/api/task";
 
@@ -35,5 +38,22 @@ export const taskService = {
             data: masksToDto(masks),
         };
         await api.post(`${BASE}/save`, body);
+    },
+
+    /** Opens the OS folder picker on the backend and load task. */
+    openTaskFromFolder: async (): Promise<TaskFromFolder> => {
+        const res = await api.post<OpenTaskFromFolderResponseDTO>(
+            `${BASE}/open-from-folder`,
+        );
+        if (res.data.image_count === 0) {
+            throw new EmptyFolderError();
+        }
+        return {
+            pairsCode: res.data.pairsCode,
+            sampleId: res.data.sampleId,
+            annotations: res.data.annotations
+                ? dtoToMasks(res.data.annotations)
+                : null,
+        };
     },
 };
