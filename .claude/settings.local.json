@@ -12,7 +12,9 @@
       "Bash(npx eslint *)",
       "Bash(yarn add *)",
       "Bash(echo \"exit=$?\")",
-      "Artifact"
+      "Artifact",
+      "Bash(yarn build *)",
+      "Bash(npx vitest *)"
     ]
   }
 }

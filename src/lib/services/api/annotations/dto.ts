@@ -4,6 +4,7 @@ import type {RLEDTO} from "@/lib/services/api/task/dto.ts";
 // from the domain model: masks are flattened to a single RLE segmentation and
 // the mineral fields are spread alongside it.
 
+//@TODO rename to thinCoco
 export interface CocoImageDTO {
     file_name: string | undefined;
     width: number;
