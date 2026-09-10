@@ -15,8 +15,11 @@
  */
 import "@/global.css";
 import App from '@/App.tsx';
+import {initTelemetry} from '@/telemetry/index.ts';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
+
+initTelemetry();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

@@ -152,6 +152,15 @@ const T = {
         finishSave: "Enregistrer et quitter",
         finishDiscard: "Quitter sans enregistrer",
 
+        // Inactivity prompt
+        idleTitle: "Toujours là ?",
+        idleBody:
+            "Aucune activité détectée depuis un moment. Sans réponse, la tâche sera enregistrée et fermée.",
+        idleStay: "Je suis toujours là",
+        idleCountdown: "Fermeture dans",
+        idleSaveFailed:
+            "Échec de l'enregistrement — la tâche reste ouverte.",
+
         // Annotation panel
         annotationPanel: "Panneau d'annotation",
         startSession: "Commencer la session",
@@ -552,6 +561,14 @@ const T = {
         finishConfirm: "Do you want to save your changes before leaving?",
         finishSave: "Save and leave",
         finishDiscard: "Leave without saving",
+
+        // Inactivity prompt
+        idleTitle: "Still there?",
+        idleBody:
+            "No activity for a while. Without a response the task will be saved and closed.",
+        idleStay: "I am still here",
+        idleCountdown: "Closing in",
+        idleSaveFailed: "Save failed — the task stays open.",
 
         // Annotation panel
         annotationPanel: "Annotation panel",

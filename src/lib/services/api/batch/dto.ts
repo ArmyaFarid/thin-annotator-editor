@@ -23,6 +23,7 @@ export interface BatchTaskResponseDTO {
     pairsCode: string;
     sampleId: string;
     annotations: MaskDTO[] | null;
+    taskTiming?: unknown;
     imageCount: number;
     index: number;
     total: number;

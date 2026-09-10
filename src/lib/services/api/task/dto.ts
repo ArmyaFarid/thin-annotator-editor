@@ -29,6 +29,8 @@ export interface MaskLayerDTO {
     layerKind?: "fill" | "hole";
 }
 
+// `timing` and `taskTiming` are opaque here on purpose: they are owned by
+// src/telemetry, versioned separately, and this file must not depend on it.
 export interface MaskDTO {
     id: number;
     label: string;
@@ -37,6 +39,7 @@ export interface MaskDTO {
     point_coords: [number, number][];
     color: {r: number; g: number; b: number; a: number};
     annotation?: unknown;
+    timing?: unknown;
 }
 
 /** POST /api/task/save */
@@ -45,6 +48,7 @@ export interface SaveTaskRequestDTO {
     sampleId: string;
     version: number;
     data: MaskDTO[];
+    taskTiming?: unknown;
 }
 
 /**
@@ -57,11 +61,13 @@ export interface SaveTaskRequestDTO {
 export interface LoadTaskResponseDTO {
     version?: number;
     annotations: MaskDTO[] | null;
+    taskTiming?: unknown;
 }
 
 export interface OpenTaskFromFolderResponseDTO {
     pairsCode: string;
     sampleId: string;
     annotations: MaskDTO[] | null;
+    taskTiming?: unknown;
     image_count: number;
 }

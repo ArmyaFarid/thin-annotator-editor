@@ -14,6 +14,7 @@ import FilterGammaSelector from "@/common/components/filter-gamma-selector/Filte
 import {ZoomPreferenceToggle} from "@/common/components/zoom-preference/ZoomPreferenceToggle.tsx";
 import {RestoreDraftBanner} from "@/common/components/restore-draft/RestoreDraftBanner.tsx";
 import {RestoreAnnotationsModal} from "@/common/components/restore-annotations/RestoreAnnotationsModal.tsx";
+import {IdlePrompt} from "@/common/components/idle-prompt/IdlePrompt.tsx";
 import useAutosaveDraft from "@/app/useAutosaveDraft.ts";
 import useLoadTask from "@/pages/annotator/useLoadTask.ts";
 import {useSaveTask} from "@/lib/services/api/task/hooks.ts";
@@ -76,6 +77,7 @@ export default function AnnotatorPage() {
                 onDiscard={refetchAnnotations}
             />
             <RestoreAnnotationsModal />
+            <IdlePrompt pairsCode={pairsCode} sampleId={sampleId} />
             {showFinishModal ? (
                 <div
                     onClick={() => setShowFinishModal(false)}
