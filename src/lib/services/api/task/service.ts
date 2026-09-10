@@ -9,6 +9,7 @@ import {
 import {dtoToMasks, masksToDto} from "@/lib/services/api/task/mappers.ts";
 import {EmptyFolderError} from "@/lib/services/api/folder/service.ts";
 import {TaskFromFolder} from "@/lib/services/api/task/domain.ts";
+import {absorbLoadedTiming, attachTiming} from "@/telemetry/index.ts";
 
 const BASE = "/api/task";
 
@@ -23,6 +24,11 @@ export const taskService = {
         const res = await api.get<LoadTaskResponseDTO>(`${BASE}/load`, {
             params: {pairsCode, sampleId},
         });
+        absorbLoadedTiming(
+            {pairsCode, sampleId},
+            res.data?.annotations,
+            res.data?.taskTiming,
+        );
         return dtoToMasks(res.data?.annotations ?? []);
     },
 
@@ -31,11 +37,13 @@ export const taskService = {
         sampleId,
         masks,
     }: TaskRef & {masks: Mask[]}): Promise<void> => {
+        const {data, taskTiming} = attachTiming(masksToDto(masks));
         const body: SaveTaskRequestDTO = {
             pairsCode,
             sampleId,
             version: TASK_FORMAT_VERSION,
-            data: masksToDto(masks),
+            data,
+            taskTiming,
         };
         await api.post(`${BASE}/save`, body);
     },
@@ -48,6 +56,11 @@ export const taskService = {
         if (res.data.image_count === 0) {
             throw new EmptyFolderError();
         }
+        absorbLoadedTiming(
+            {pairsCode: res.data.pairsCode, sampleId: res.data.sampleId},
+            res.data.annotations,
+            res.data.taskTiming,
+        );
         return {
             pairsCode: res.data.pairsCode,
             sampleId: res.data.sampleId,

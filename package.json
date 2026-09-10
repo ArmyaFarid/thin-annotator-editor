@@ -8,6 +8,7 @@
     "merge-schemas": "tsx schemas/merge-schemas",
     "relay": "yarn merge-schemas && relay-compiler",
     "build": "tsc && vite build",
+    "test": "vitest run",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview --open"
   },
@@ -85,7 +86,8 @@
     "vite-plugin-babel": "^1.2.0",
     "vite-plugin-relay": "^2.0.0",
     "vite-plugin-stylex-dev": "^0.5.2",
-    "vite-plugin-svgr": "^4.5.0"
+    "vite-plugin-svgr": "^4.5.0",
+    "vitest": "^1.6.0"
   },
   "resolutions": {
     "wrap-ansi": "7.0.0"

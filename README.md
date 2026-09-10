@@ -105,6 +105,7 @@ Other commands:
 ```bash
 yarn build      # typecheck + production build
 yarn lint       # eslint
+yarn test       # vitest
 yarn preview    # serve the production build
 ```
 
@@ -125,6 +126,12 @@ without touching the source.
 
 Language (French/English) is chosen in the app, under the gear icon at the bottom of the
 toolbar, and remembered between sessions.
+
+**Annotation timing** (`src/telemetry`) measures how long each mineral grain and each task
+takes. It is off unless `VITE_TELEMETRY=on` — see `.env.example` — and a single machine can
+be switched with `localStorage.telemetry = "on"` without a rebuild. When it is on, the
+measurements are written into the task file alongside the masks; the COCO export is
+unaffected. Turning it off leaves the application byte-identical to before.
 
 ### Docker
 

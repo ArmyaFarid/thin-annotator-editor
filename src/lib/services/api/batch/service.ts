@@ -6,6 +6,7 @@ import type {
     ListBatchesResponseDTO,
 } from "@/lib/services/api/batch/dto.ts";
 import {dtoToMasks} from "@/lib/services/api/task/mappers.ts";
+import {absorbLoadedTiming} from "@/telemetry/index.ts";
 
 const BASE = "/api/batch";
 
@@ -58,6 +59,13 @@ export type BatchPosition =
     | {kind: "done"; total: number};
 
 function toBatchTask(dto: BatchTaskResponseDTO): BatchTask {
+    // The batch flow never calls /api/task/load, so this is the only place
+    // stored timing enters when stepping through a batch.
+    absorbLoadedTiming(
+        {pairsCode: dto.pairsCode, sampleId: dto.sampleId},
+        dto.annotations,
+        dto.taskTiming,
+    );
     return {
         taskId: dto.taskId,
         pairsCode: dto.pairsCode,

@@ -5,3 +5,4 @@ tailwind.config.js
 postcss.config.js
 vite.config.ts
 eslint.config.js
+vitest.config.ts
