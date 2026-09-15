@@ -24,6 +24,16 @@ export function getLang(): Lang {
     return currentLang;
 }
 
+// Absent means the annotator has never picked one — readStoredLang falls back
+// to English, which is a default, not a choice. The startup step forces one.
+export function hasStoredLang(): boolean {
+    try {
+        return localStorage.getItem(LANG_STORAGE_KEY) !== null;
+    } catch {
+        return true;
+    }
+}
+
 export function setLang(lang: Lang): void {
     currentLang = lang;
     try {

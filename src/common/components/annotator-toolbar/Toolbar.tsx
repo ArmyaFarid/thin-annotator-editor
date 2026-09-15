@@ -39,7 +39,6 @@ import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
 import {t, type TranslationKey} from "@/i18n/index.ts";
 import {GROUP_BY_TOOL, type ToolGroup} from "@/common/components/annotator-toolbar/tool-groups.ts";
 import useToolbarLayout from "@/common/components/annotator-toolbar/useToolbarLayout.ts";
-import {CustomizeModal} from "@/common/components/customize/CustomizeModal.tsx";
 
 const TOOL_ICONS: Record<Tool, React.FC<React.SVGProps<SVGSVGElement>>> = {
     "idle": PointerIcon,
@@ -211,7 +210,6 @@ export const Toolbar: React.FC<ToolbarProps> = () => {
                     </button>
                 </Tooltip>
             </div>
-            <CustomizeModal />
         </div>
     );
 };

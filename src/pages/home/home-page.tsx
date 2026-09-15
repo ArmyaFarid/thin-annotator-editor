@@ -4,12 +4,14 @@ import {toast} from "sonner";
 import {useSetAtom} from "jotai";
 import {
     ChevronDownIcon,
+    Cog6ToothIcon,
     FolderOpenIcon,
     RectangleStackIcon,
     Squares2X2Icon,
 } from "@heroicons/react/24/outline";
 import {
     activePairAtom,
+    customizeOpenAtom,
     pendingAnnotationsAtom,
     resetTaskStateAtom,
 } from "@/app/atom.ts";
@@ -17,6 +19,7 @@ import {clearHistoryAtom} from "@/app/history.ts";
 import {clearDraft} from "@/app/persistence.ts";
 import {t} from "@/i18n/index.ts";
 import {AnnotatorBadge} from "@/common/components/annotator-profile/AnnotatorBadge.tsx";
+import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
 import {EmptyFolderError} from "@/lib/services/api/folder/service.ts";
 import {useOpenTaskFromFolder} from "@/lib/services/api/task/hooks.ts";
 import {
@@ -110,6 +113,7 @@ const Disclosure: React.FC<DisclosureProps> = ({title, children}) => {
 export default function HomePage() {
     const navigate = useNavigate();
     const setActivePair = useSetAtom(activePairAtom);
+    const setCustomizeOpen = useSetAtom(customizeOpenAtom);
     const setPendingAnnotations = useSetAtom(pendingAnnotationsAtom);
     const resetTaskState = useSetAtom(resetTaskStateAtom);
     const clearHistory = useSetAtom(clearHistoryAtom);
@@ -182,7 +186,15 @@ export default function HomePage() {
 
     return (
         <div className="relative flex-1 overflow-y-auto">
-            <div className="absolute top-2 right-2 z-10">
+            <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
+                <Tooltip content={t("customizeTitle")} side="bottom">
+                    <button
+                        onClick={() => setCustomizeOpen(true)}
+                        aria-label={t("customizeTitle")}
+                        className="w-7 h-7 flex items-center justify-center rounded border border-white/15 text-white/50 hover:text-white hover:bg-white/5 transition-colors">
+                        <Cog6ToothIcon className="w-4 h-4" />
+                    </button>
+                </Tooltip>
                 <AnnotatorBadge />
             </div>
             <div className="flex flex-col items-center gap-6 px-4 py-8">
