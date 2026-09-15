@@ -102,8 +102,6 @@ const T = {
         batchStructureTitle: "Organisation attendue du dossier racine",
         batchStructureBody:
             "Sélectionnez n'importe quel dossier racine. L'application le parcourt récursivement : chaque dossier qui contient des images conformes à la règle de nommage devient une tâche du lot. La profondeur des sous-dossiers est libre ; les dossiers sans image conforme sont ignorés.",
-        batchStructureExample:
-            "<racine> / … / <lame-mince> / <FOV> / images",
         batchStructureNote:
             "Une tâche du lot est identique à une tâche ouverte depuis un dossier ; seule la recherche change, elle est récursive. Le dossier parent du dossier FOV donne le nom de la lame mince.",
 
@@ -112,13 +110,10 @@ const T = {
         importStructureHeading: "Structure du dossier",
         importStructureBody:
             "Sélectionnez le dossier FOV (champ de vision). Son dossier parent doit être nommé d'après la lame mince.",
-        importStructureExample: "<lame-mince> / <FOV> / images",
         importFormatsHeading: "Formats acceptés",
         importFormatsBody: ".jpg, .jpeg, .png, .tif, .tiff, .bmp",
         importNamingHeading: "Nom des fichiers",
         importNamingPattern: "<préfixe>_mod-<MOD>_comp-<COMP>_rot-<deg>.<ext>",
-        importNamingExampleLabel: "Exemple :",
-        importNamingExample: "echantillon01_mod-XPL_comp-add_rot-45.png",
         importNamingOrder:
             "ordre : les trois jetons _mod-, _comp- et _rot- sont obligatoires, mais leur ordre est libre. D'autres jetons _clé-valeur sont acceptés. Tout ce qui suit le préfixe doit être un jeton.",
         importNamingMod:
@@ -129,6 +124,19 @@ const T = {
             "rot : angle de rotation en degrés, entier, négatif autorisé (par ex. -45)",
         importNamingPrefix:
             "préfixe : texte libre d'au moins un caractère — tout ce qui précède le premier jeton",
+        // Diagram labels (folder tree + filename anatomy)
+        illusPickHere: "dossier à sélectionner",
+        illusAnyDepth: "profondeur et noms libres",
+        illusThinSection: "lame mince",
+        illusOneTask: "1 tâche",
+        illusIgnored: "ignoré",
+        illusPrefix: "préfixe",
+        illusModality: "modalité",
+        illusCompensator: "compensateur",
+        illusRotation: "rotation",
+        illusExtension: "extension",
+        illusFreeOrder: "ordre libre · jetons supplémentaires acceptés",
+
         importTipHeading: "Conseil",
         importTipBody:
             "Conservez la même valeur de rotation pour toutes les images d'un même dossier FOV.",
@@ -510,7 +518,6 @@ const T = {
         batchStructureTitle: "Expected layout of the root folder",
         batchStructureBody:
             "Pick any root folder. The app walks it recursively: every folder that holds images matching the naming rule becomes one task in the batch. Nesting depth is free; folders with no matching image are ignored.",
-        batchStructureExample: "<root> / … / <thin-section> / <FOV> / images",
         batchStructureNote:
             "A batch task is the same as a task opened from a folder; only the search differs, it is recursive. The parent folder of the FOV folder gives the thin-section name.",
 
@@ -519,13 +526,10 @@ const T = {
         importStructureHeading: "Folder structure",
         importStructureBody:
             "Select the FOV (field of view) folder. Its parent folder must be named after the thin section.",
-        importStructureExample: "<thin-section> / <FOV> / images",
         importFormatsHeading: "Accepted formats",
         importFormatsBody: ".jpg, .jpeg, .png, .tif, .tiff, .bmp",
         importNamingHeading: "File naming",
         importNamingPattern: "<prefix>_mod-<MOD>_comp-<COMP>_rot-<deg>.<ext>",
-        importNamingExampleLabel: "Example:",
-        importNamingExample: "sample01_mod-XPL_comp-add_rot-45.png",
         importNamingOrder:
             "order: the three tokens _mod-, _comp- and _rot- are all required, but their order is free. Extra _key-value tokens are accepted. Everything after the prefix must be a token.",
         importNamingMod:
@@ -536,6 +540,19 @@ const T = {
             "rot: rotation angle in degrees, integer, negative allowed (e.g. -45)",
         importNamingPrefix:
             "prefix: free text, at least one character — everything before the first token",
+        // Diagram labels (folder tree + filename anatomy)
+        illusPickHere: "folder you select",
+        illusAnyDepth: "any depth, any names",
+        illusThinSection: "thin section",
+        illusOneTask: "1 task",
+        illusIgnored: "ignored",
+        illusPrefix: "prefix",
+        illusModality: "modality",
+        illusCompensator: "compensator",
+        illusRotation: "rotation",
+        illusExtension: "extension",
+        illusFreeOrder: "order is free · extra tokens allowed",
+
         importTipHeading: "Tip",
         importTipBody:
             "Keep the same rotation value across all images of a single FOV folder.",

@@ -32,6 +32,7 @@ import {
     NoMatchingTaskError,
     type Batch,
 } from "@/lib/services/api/batch/service.ts";
+import {BatchStructure, ImportInstructions} from "./import-instructions.tsx";
 
 interface OptionCardProps {
     icon: React.ReactNode;
@@ -295,77 +296,13 @@ export default function HomePage() {
                 </div>
 
                 <Disclosure title={t("batchStructureTitle")}>
-                    <div className="space-y-2">
-                        <p className="text-xs text-white/70">
-                            {t("batchStructureBody")}
-                        </p>
-                        <code className="block text-xs text-white/80 bg-black/30 rounded px-2 py-1">
-                            {t("batchStructureExample")}
-                        </code>
-                        <p className="text-xs text-white/50">
-                            {t("batchStructureNote")}
-                        </p>
-                    </div>
+                    <BatchStructure />
                 </Disclosure>
 
                 <Disclosure title={t("importInstructionsTitle")}>
                     <ImportInstructions />
                 </Disclosure>
             </div>
-        </div>
-    );
-}
-
-function ImportInstructions() {
-    return (
-        <div className="space-y-4 text-sm text-white/70">
-            <section className="space-y-1">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-white/50">
-                    {t("importStructureHeading")}
-                </h3>
-                <p>{t("importStructureBody")}</p>
-                <code className="block mt-1 text-xs text-white/80 bg-black/30 rounded px-2 py-1">
-                    {t("importStructureExample")}
-                </code>
-            </section>
-
-            <section className="space-y-1">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-white/50">
-                    {t("importFormatsHeading")}
-                </h3>
-                <p>{t("importFormatsBody")}</p>
-            </section>
-
-            <section className="space-y-2">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-white/50">
-                    {t("importNamingHeading")}
-                </h3>
-                <code className="block text-xs text-white/80 bg-black/30 rounded px-2 py-1">
-                    {t("importNamingPattern")}
-                </code>
-                <p className="text-xs">
-                    <span className="text-white/50">
-                        {t("importNamingExampleLabel")}{" "}
-                    </span>
-                    <code className="text-white/80">
-                        {t("importNamingExample")}
-                    </code>
-                </p>
-                <ul className="list-disc list-inside text-xs space-y-0.5 marker:text-white/30">
-                    <li>{t("importNamingMod")}</li>
-                    <li>{t("importNamingComp")}</li>
-                    <li>{t("importNamingRot")}</li>
-                    <li>{t("importNamingPrefix")}</li>
-                    <li>{t("importNamingOrder")}</li>
-                </ul>
-            </section>
-
-            <section className="space-y-1 pt-1 border-t border-white/10">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-400/80">
-                    {t("importTipHeading")}
-                </h3>
-                <p className="text-xs">{t("importTipBody")}</p>
-            </section>
         </div>
     );
 }
