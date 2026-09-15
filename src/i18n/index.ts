@@ -101,11 +101,11 @@ const T = {
         // Root folder structure (batch)
         batchStructureTitle: "Organisation attendue du dossier racine",
         batchStructureBody:
-            "Sélectionnez le dossier qui contient toutes vos lames. Chaque champ de vision qui respecte la structure ci-dessous devient une tâche du lot ; les autres dossiers sont ignorés.",
+            "Sélectionnez n'importe quel dossier racine. L'application le parcourt récursivement : chaque dossier qui contient des images conformes à la règle de nommage devient une tâche du lot. La profondeur des sous-dossiers est libre ; les dossiers sans image conforme sont ignorés.",
         batchStructureExample:
-            "<racine> / <lame-mince> / <FOV> / images",
+            "<racine> / … / <lame-mince> / <FOV> / images",
         batchStructureNote:
-            "Les images doivent se trouver dans le dossier du champ de vision et suivre la règle de nommage détaillée ci-dessous.",
+            "Une tâche du lot est identique à une tâche ouverte depuis un dossier ; seule la recherche change, elle est récursive. Le dossier parent du dossier FOV donne le nom de la lame mince.",
 
         // Import instructions (shown on the home page above the picker button)
         importInstructionsTitle: "Préparer le dossier de la tâche",
@@ -119,12 +119,16 @@ const T = {
         importNamingPattern: "<préfixe>_mod-<MOD>_comp-<COMP>_rot-<deg>.<ext>",
         importNamingExampleLabel: "Exemple :",
         importNamingExample: "echantillon01_mod-XPL_comp-add_rot-45.png",
+        importNamingOrder:
+            "ordre : les trois jetons _mod-, _comp- et _rot- sont obligatoires, mais leur ordre est libre. D'autres jetons _clé-valeur sont acceptés. Tout ce qui suit le préfixe doit être un jeton.",
         importNamingMod:
-            "mod : PPL (polarisé plan), XPL (polarisé croisé), RL (réfléchi), FL (fluorescence), TR (transmis)",
+            "mod : lettres et chiffres uniquement — PPL (polarisé plan), XPL (polarisé croisé), RL (réfléchi), FL (fluorescence), TR (transmis)",
         importNamingComp:
-            "comp : add (+λ), sous (−λ) ou na (sans compensateur)",
-        importNamingRot: "rot : angle de rotation en degrés (entier)",
-        importNamingPrefix: "préfixe : texte libre (non utilisé par l'import)",
+            "comp : lettres et chiffres uniquement — add (+λ), sous (−λ) ou na (sans compensateur)",
+        importNamingRot:
+            "rot : angle de rotation en degrés, entier, négatif autorisé (par ex. -45)",
+        importNamingPrefix:
+            "préfixe : texte libre d'au moins un caractère — tout ce qui précède le premier jeton",
         importTipHeading: "Conseil",
         importTipBody:
             "Conservez la même valeur de rotation pour toutes les images d'un même dossier FOV.",
@@ -505,10 +509,10 @@ const T = {
         // Root folder structure (batch)
         batchStructureTitle: "Expected layout of the root folder",
         batchStructureBody:
-            "Select the folder that holds all your thin sections. Every field of view following the layout below becomes one task in the batch; any other folder is ignored.",
-        batchStructureExample: "<root> / <thin-section> / <FOV> / images",
+            "Pick any root folder. The app walks it recursively: every folder that holds images matching the naming rule becomes one task in the batch. Nesting depth is free; folders with no matching image are ignored.",
+        batchStructureExample: "<root> / … / <thin-section> / <FOV> / images",
         batchStructureNote:
-            "Images must sit inside the field-of-view folder and follow the naming rule detailed below.",
+            "A batch task is the same as a task opened from a folder; only the search differs, it is recursive. The parent folder of the FOV folder gives the thin-section name.",
 
         // Import instructions (shown on the home page above the picker button)
         importInstructionsTitle: "Prepare your task folder",
@@ -522,11 +526,16 @@ const T = {
         importNamingPattern: "<prefix>_mod-<MOD>_comp-<COMP>_rot-<deg>.<ext>",
         importNamingExampleLabel: "Example:",
         importNamingExample: "sample01_mod-XPL_comp-add_rot-45.png",
+        importNamingOrder:
+            "order: the three tokens _mod-, _comp- and _rot- are all required, but their order is free. Extra _key-value tokens are accepted. Everything after the prefix must be a token.",
         importNamingMod:
-            "mod : PPL (plane polarized), XPL (cross polarized), RL (reflected), FL (fluorescence), TR (transmitted)",
-        importNamingComp: "comp: add (+λ), sous (−λ) or na (no compensator)",
-        importNamingRot: "rot: rotation angle in degrees (integer)",
-        importNamingPrefix: "prefix: free text (not used by the import)",
+            "mod: letters and digits only — PPL (plane polarized), XPL (cross polarized), RL (reflected), FL (fluorescence), TR (transmitted)",
+        importNamingComp:
+            "comp: letters and digits only — add (+λ), sous (−λ) or na (no compensator)",
+        importNamingRot:
+            "rot: rotation angle in degrees, integer, negative allowed (e.g. -45)",
+        importNamingPrefix:
+            "prefix: free text, at least one character — everything before the first token",
         importTipHeading: "Tip",
         importTipBody:
             "Keep the same rotation value across all images of a single FOV folder.",

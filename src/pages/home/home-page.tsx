@@ -356,6 +356,7 @@ function ImportInstructions() {
                     <li>{t("importNamingComp")}</li>
                     <li>{t("importNamingRot")}</li>
                     <li>{t("importNamingPrefix")}</li>
+                    <li>{t("importNamingOrder")}</li>
                 </ul>
             </section>
 
