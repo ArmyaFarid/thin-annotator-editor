@@ -1,5 +1,10 @@
 import {atom} from "jotai";
-import {getLang, type Lang, type TranslationKey} from "@/i18n/index.ts";
+import {
+    getLang,
+    hasStoredLang,
+    type Lang,
+    type TranslationKey,
+} from "@/i18n/index.ts";
 import {Tool} from "@/app/types.ts";
 import type {ImageSpacePoint} from "@/canvas/types.ts";
 import defaultAnnotationOptions from "@/data/annotation-options.json";
@@ -218,7 +223,7 @@ export const TOOLBAR_LAYOUTS = ["separators", "pods", "flyout"] as const;
 export type ToolbarLayout = (typeof TOOLBAR_LAYOUTS)[number];
 
 export const toolbarLayoutAtom = atom<ToolbarLayout>(
-    readLocalEnum("toolbarLayout", TOOLBAR_LAYOUTS, "separators"),
+    readLocalEnum("toolbarLayout", TOOLBAR_LAYOUTS, "flyout"),
 );
 export const customizeOpenAtom = atom<boolean>(false);
 
@@ -291,6 +296,9 @@ export const profileModalOpenAtom = atom<boolean>(false);
 // Mirrors the active language held in i18n. The root subscribes to it, so
 // changing it re-renders the tree and every `t()` returns the new language.
 export const langAtom = atom<Lang>(getLang());
+
+// Gates the startup language step. False until the annotator picks one.
+export const langChosenAtom = atom<boolean>(hasStoredLang());
 export const showShortcutsAtom = atom<boolean>(false);
 export const minimapVisibleAtom = atom<boolean>(true);
 export const borderOnlyAtom = atom<boolean>(false);
