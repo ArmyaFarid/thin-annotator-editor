@@ -161,13 +161,13 @@ export default function MaskList() {
                             <button
                                 onClick={() => setSubtractMode(false)}
                                 className={`flex-1 px-2 py-1 text-xs font-medium transition-colors ${!subtractMode ? "bg-blue-500/20 text-blue-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
-                                {t("add")}
+                                {t("fillMode")}
                             </button>
                             <div className="w-px bg-white/15" />
                             <button
                                 onClick={() => setSubtractMode(true)}
                                 className={`flex-1 px-2 py-1 text-xs font-medium transition-colors ${subtractMode ? "bg-red-500/20 text-red-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
-                                {t("subtract")}
+                                {t("eraseMode")}
                             </button>
                         </div>
                         <button

@@ -121,6 +121,7 @@ export const activeImage = atom<ActiveImage | null>(null);
 export const slicPromptsAtom = atom<SlicPrompt | undefined>(undefined);
 export const masksAtom = atom<Mask[]>([]);
 export const currentMaskAtom = atom<number>(0);
+export const hoveredMaskAtom = atom<number>(0);
 export const editorOnAtom = atom<boolean>(false);
 
 export type FilterGammaCombination = {
@@ -324,6 +325,7 @@ export const resetTaskStateAtom = atom(null, (_get, set) => {
     set(slicPromptsAtom, undefined);
     set(masksAtom, []);
     set(currentMaskAtom, 0);
+    set(hoveredMaskAtom, 0);
     set(editorOnAtom, false);
     set(filterGammaCombinationAtom, {
         filter: null,
