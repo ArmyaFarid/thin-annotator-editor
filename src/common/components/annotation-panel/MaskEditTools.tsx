@@ -1,6 +1,11 @@
 import React from "react";
 import {useAtom, useAtomValue, useSetAtom} from "jotai";
-import {EyeIcon, EyeSlashIcon} from "@heroicons/react/24/outline";
+import {
+    EyeIcon,
+    EyeSlashIcon,
+    PaintBrushIcon,
+} from "@heroicons/react/24/outline";
+import EraserIcon from "@/assets/icons/eraser.svg?react";
 import {
     activeToolAtom,
     activeImageSizeAtom,
@@ -72,21 +77,23 @@ export const MaskEditTools: React.FC = () => {
 
     return (
         <div className="flex flex-col gap-1.5">
-            {/* Add / Subtract toggle. Drawing tools live in the left toolbar. */}
+            {/* Fill / Erase toggle. Drawing tools live in the left toolbar. */}
             <div className="flex rounded overflow-hidden border border-white/15">
-                <Tooltip content={t("addModeTooltip")}>
+                <Tooltip content={t("fillModeTooltip")}>
                     <button
                         onClick={() => setSubtractMode(false)}
-                        className={`flex-1 px-2 py-1 text-xs font-medium transition-colors ${!subtractMode ? "bg-blue-500/20 text-blue-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
-                        {t("add")}
+                        className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1 text-xs font-medium transition-colors ${!subtractMode ? "bg-blue-500/20 text-blue-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
+                        <PaintBrushIcon className="w-3.5 h-3.5" />
+                        {t("fillMode")}
                     </button>
                 </Tooltip>
                 <div className="w-px bg-white/15" />
-                <Tooltip content={t("subtractModeTooltip")}>
+                <Tooltip content={t("eraseModeTooltip")}>
                     <button
                         onClick={() => setSubtractMode(true)}
-                        className={`flex-1 px-2 py-1 text-xs font-medium transition-colors ${subtractMode ? "bg-red-500/20 text-red-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
-                        {t("subtract")}
+                        className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1 text-xs font-medium transition-colors ${subtractMode ? "bg-red-500/20 text-red-400" : "text-white/40 hover:text-white/70 hover:bg-white/5"}`}>
+                        <EraserIcon className="w-3.5 h-3.5" />
+                        {t("eraseMode")}
                     </button>
                 </Tooltip>
             </div>

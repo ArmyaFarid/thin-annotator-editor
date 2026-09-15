@@ -87,6 +87,11 @@ export class CanvasEngine {
         this.dataLayer.setMasks(masks);
     }
 
+    setHoveredMask(id: number): void {
+        if (this.activeObjectId !== 0) return;
+        this.setHovered(id);
+    }
+
     setActiveObject(objectId: number, layers: MaskLayer[]): void {
         this.editor.setObject(objectId, layers);
         this.dataLayer.setCurrentMaskId(objectId);

@@ -186,8 +186,8 @@ const T = {
         exportJson: "Exporter JSON",
 
         // Mask edit tools
-        add: "+ Ajout",
-        subtract: "− Soustraction",
+        fillMode: "Remplir",
+        eraseMode: "Effacer",
         freeform: "Forme libre",
         polygon: "Polygone",
         refine: "Raffiner",
@@ -378,10 +378,10 @@ const T = {
             "Sauvegarde le travail en cours pour le reprendre plus tard",
         exportAnnotationTooltip:
             "Exporte l'annotation finale de l'image actuelle au format COCO",
-        addModeTooltip:
-            "Mode ajout : les tracés deviennent des zones de la région",
-        subtractModeTooltip:
-            "Mode soustraction : les tracés creusent des trous dans la région",
+        fillModeTooltip:
+            "Mode remplissage : les tracés ajoutent de la matière à la région",
+        eraseModeTooltip:
+            "Mode effacement : les tracés retirent de la matière de la région",
         refineTooltip: "Ouvrir l'outil de raffinement (gomme/pinceau)",
         hideAnchorsTooltip: "Masquer les ancres (fusionner les sommets en masque)",
         showAnchorsTooltip: "Afficher les sommets éditables (points d'ancrage)",
@@ -601,8 +601,8 @@ const T = {
         exportJson: "Export JSON",
 
         // Mask edit tools
-        add: "+ Add",
-        subtract: "− Subtract",
+        fillMode: "Fill",
+        eraseMode: "Erase",
         freeform: "Freeform",
         polygon: "Polygon",
         refine: "Refine",
@@ -791,9 +791,9 @@ const T = {
         saveTaskTooltip: "Save the work in progress to resume it later",
         exportAnnotationTooltip:
             "Export the final annotation of the current image in COCO format",
-        addModeTooltip: "Add mode: strokes become areas of the region",
-        subtractModeTooltip:
-            "Subtract mode: strokes cut holes in the region",
+        fillModeTooltip: "Fill mode: strokes add material to the region",
+        eraseModeTooltip:
+            "Erase mode: strokes remove material from the region",
         refineTooltip: "Open the refine tool (eraser/brush)",
         hideAnchorsTooltip: "Hide the anchors (merge the vertices into a mask)",
         showAnchorsTooltip: "Show the editable vertices (anchor points)",
