@@ -142,7 +142,7 @@ export default function AnnotatorPage() {
                             {batch.position ? (
                                 <span className="flex items-center gap-1.5">
                                     <span className="text-xs text-white/60 font-mono tabular-nums">
-                                        {batch.position.index + 1} /{" "}
+                                        {batch.position.index} /{" "}
                                         {batch.position.total}
                                     </span>
                                     {batch.position.isAnnotated ? (
