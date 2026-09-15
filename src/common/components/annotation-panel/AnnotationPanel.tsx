@@ -1,6 +1,7 @@
 import React from "react";
-import {useAtom} from "jotai";
+import {useAtom, useSetAtom} from "jotai";
 import {toast} from "sonner";
+import {TrashIcon} from "@heroicons/react/24/outline";
 import useAnnotationOptions from "@/common/components/annotation-panel/useAnnotationOptions.ts";
 import {useParams} from "react-router-dom";
 import {useSaveTask} from "@/lib/services/api/task/hooks.ts";
@@ -9,10 +10,12 @@ import {
     activeImageSizeAtom,
     currentMaskAtom,
     editorOnAtom,
+    hoveredMaskAtom,
     masksAtom,
     promptsAtom,
     subtractModeAtom,
 } from "@/app/atom.ts";
+import {commitHistoryAtom} from "@/app/history.ts";
 import {mergeToCanvas, canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {MaskEditTools} from "@/common/components/annotation-panel/MaskEditTools.tsx";
 import {MineralAnnotationForm} from "@/common/components/annotation-panel/MineralAnnotationForm.tsx";
@@ -25,7 +28,9 @@ export const AnnotationPanel: React.FC = () => {
     const [currentMask, setCurrentMask] = useAtom(currentMaskAtom);
     const [, setEditorOn] = useAtom(editorOnAtom);
     const [, setSubtractMode] = useAtom(subtractModeAtom);
+    const [hoveredMask, setHoveredMask] = useAtom(hoveredMaskAtom);
     const [imageSize] = useAtom(activeImageSizeAtom);
+    const commitHistory = useSetAtom(commitHistoryAtom);
 
     const activeMask =
         currentMask !== 0 ? masks.find((m) => m.id === currentMask) : null;
@@ -69,6 +74,7 @@ export const AnnotationPanel: React.FC = () => {
             return;
         }
         setPrompts([]);
+        setHoveredMask(0);
         setCurrentMask(maskId);
         setEditorOn(true);
     }
@@ -167,6 +173,10 @@ export const AnnotationPanel: React.FC = () => {
                                 <button
                                     aria-label={t("deleteRegion")}
                                     onClick={() => {
+                                        commitHistory({
+                                            action: "mask.delete",
+                                            payload: {maskId: activeMask.id},
+                                        });
                                         setMasks((prev) =>
                                             prev.filter(
                                                 (m) => m.id !== activeMask.id,
@@ -175,8 +185,8 @@ export const AnnotationPanel: React.FC = () => {
                                         setCurrentMask(0);
                                         setPrompts([]);
                                     }}
-                                    className="shrink-0 w-7 h-7 flex items-center justify-center rounded border border-red-500/30 text-red-400 hover:bg-red-500/15 transition-colors text-base leading-none">
-                                    ×
+                                    className="shrink-0 w-7 h-7 flex items-center justify-center rounded border border-red-500/30 bg-red-500/15 text-red-400 hover:bg-red-500/25 transition-colors">
+                                    <TrashIcon className="w-4 h-4" />
                                 </button>
                             </Tooltip>
                         </div>
@@ -253,7 +263,11 @@ export const AnnotationPanel: React.FC = () => {
                                 {masks.map((mask) => (
                                     <button
                                         key={mask.id}
-                                        className="w-full flex items-center gap-2 px-2 py-2 rounded hover:bg-[#2F2F2F] text-left transition-colors"
+                                        className={`w-full flex items-center gap-2 px-2 py-2 rounded text-left transition-colors ${hoveredMask === mask.id ? "bg-[#2F2F2F]" : "hover:bg-[#2F2F2F]"}`}
+                                        onMouseEnter={() =>
+                                            setHoveredMask(mask.id)
+                                        }
+                                        onMouseLeave={() => setHoveredMask(0)}
                                         onClick={() =>
                                             handleMaskClick(mask.id)
                                         }>

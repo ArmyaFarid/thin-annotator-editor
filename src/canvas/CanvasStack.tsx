@@ -9,6 +9,7 @@ import {
     currentMaskAtom,
     cursorHudVisibleAtom,
     editorOnAtom,
+    hoveredMaskAtom,
     masksAtom,
     promptsAtom,
     subtractModeAtom,
@@ -86,8 +87,10 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({
     const currentMask = useAtomValue(currentMaskAtom);
     const setCurrentMask = useSetAtom(currentMaskAtom);
     const setEditorOn = useSetAtom(editorOnAtom);
-    // Mask under the cursor (0 = none). Only used to switch the cursor.
-    const [hoveredMaskId, setHoveredMaskId] = useState(0);
+    const [hoveredMaskId, setHoveredMaskId] = useAtom(hoveredMaskAtom);
+    useEffect(() => {
+        engineRef.current?.setHoveredMask(hoveredMaskId);
+    }, [hoveredMaskId]);
     const subtractMode = useAtomValue(subtractModeAtom);
     const subtractModeRef = useRef(subtractMode);
     useEffect(() => {
@@ -561,6 +564,7 @@ export const CanvasStack: React.FC<CanvasStackProps> = ({
             setSlicPrompts,
             commitHistory,
             setEditorOn,
+            setHoveredMaskId,
         ],
     );
 
