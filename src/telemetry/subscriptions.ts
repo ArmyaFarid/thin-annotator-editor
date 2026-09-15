@@ -23,8 +23,7 @@ const FIELD_EDIT_DEBOUNCE_MS = 400;
 
 // Silence long enough to doubt the annotator is at the desk. A grain already
 // under way earns more rope: starting one is evidence of intent to finish it.
-// const IDLE_MS = 4 * 60_000;
-const IDLE_MS = 20_000;
+const IDLE_MS = 4 * 60_000;
 const IDLE_WITH_OBJECT_MS = 8 * 60_000;
 const IDLE_GRACE_MS = 2 * 60_000;
 
