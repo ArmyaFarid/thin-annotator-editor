@@ -1,0 +1,1938 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ThinAnnotator User Manual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: sticky left index (like a microscope logbook's tab strip) + one reading column; figures break wider than text. Dark-first to match the app. */
+:root {
+    --bg: #222629;
+    --surface: #2c3135;
+    --surface-2: #353b40;
+    --line: rgba(255, 255, 255, 0.10);
+    --line-strong: rgba(255, 255, 255, 0.20);
+    --fg: #eceff1;
+    --fg-soft: #c4cbd0;
+    --muted: #8e989f;
+    --accent: #4fc3f7;
+    --accent-ink: #0b2633;
+    --accent-soft: rgba(79, 195, 247, 0.14);
+    --mod: #60a5fa;
+    --comp: #34d399;
+    --rot: #fbbf24;
+    --pos: #22c55e;
+    --neg: #f87171;
+    --warn-bg: rgba(251, 191, 36, 0.10);
+    --warn-line: rgba(251, 191, 36, 0.45);
+    --note-bg: rgba(79, 195, 247, 0.08);
+    --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+    --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    --step--1: 0.875rem;
+    --step-0: 1.0625rem;
+    --step-1: 1.25rem;
+    --step-2: 1.6rem;
+    --step-3: 2.3rem;
+    --step-4: clamp(2.4rem, 5vw, 3.6rem);
+    --nav-w: 270px;
+    --col: 46rem;
+    color-scheme: dark;
+}
+@media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+        --bg: #f4f6f7; --surface: #ffffff; --surface-2: #e9edf0;
+        --line: rgba(20, 30, 40, 0.10); --line-strong: rgba(20, 30, 40, 0.22);
+        --fg: #172026; --fg-soft: #36434c; --muted: #5d6a73;
+        --accent: #0277bd; --accent-ink: #ffffff; --accent-soft: rgba(2, 119, 189, 0.10);
+        --mod: #1d4ed8; --comp: #047857; --rot: #b45309; --pos: #15803d; --neg: #dc2626;
+        --warn-bg: #fff7e0; --warn-line: #e3b341; --note-bg: #eaf5fb;
+        --shadow: 0 14px 40px rgba(20, 30, 40, 0.15);
+        color-scheme: light;
+    }
+}
+:root[data-theme="light"] {
+    --bg: #f4f6f7; --surface: #ffffff; --surface-2: #e9edf0;
+    --line: rgba(20, 30, 40, 0.10); --line-strong: rgba(20, 30, 40, 0.22);
+    --fg: #172026; --fg-soft: #36434c; --muted: #5d6a73;
+    --accent: #0277bd; --accent-ink: #ffffff; --accent-soft: rgba(2, 119, 189, 0.10);
+    --mod: #1d4ed8; --comp: #047857; --rot: #b45309; --pos: #15803d; --neg: #dc2626;
+    --warn-bg: #fff7e0; --warn-line: #e3b341; --note-bg: #eaf5fb;
+    --shadow: 0 14px 40px rgba(20, 30, 40, 0.15);
+    color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { scroll-behavior: smooth; scroll-padding-top: 1.5rem; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: var(--step-0);
+    line-height: 1.6;
+}
+img { max-width: 100%; display: block; }
+a { color: var(--accent); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+code, kbd, .mono { font-family: var(--font-mono); font-size: 0.86em; }
+code { background: var(--surface-2); padding: 0.1em 0.35em; border-radius: 4px; overflow-wrap: anywhere; }
+kbd {
+    display: inline-block; min-width: 1.7em; padding: 0.05em 0.45em; text-align: center;
+    background: var(--surface); border: 1px solid var(--line-strong); border-bottom-width: 2px;
+    border-radius: 5px; color: var(--fg); line-height: 1.5;
+}
+.ui { font-weight: 600; color: var(--fg); white-space: nowrap; }
+
+/* ── Shell ─────────────────────────────────────────── */
+.shell { display: grid; grid-template-columns: var(--nav-w) minmax(0, 1fr); min-height: 100vh; }
+.side {
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    border-right: 1px solid var(--line); padding: 1.4rem 1rem 2rem;
+    display: flex; flex-direction: column; gap: 1rem; background: var(--bg);
+}
+.brand { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; color: var(--fg); }
+.brand-mark { width: 30px; height: 30px; flex: none; }
+.brand b { font-family: var(--font-display); font-stretch: 115%; font-weight: 700; font-size: 1.05rem; letter-spacing: 0.01em; }
+.brand small { display: block; color: var(--muted); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.search { position: relative; }
+.search input {
+    width: 100%; padding: 0.55rem 2.2rem 0.55rem 0.75rem; border-radius: 8px;
+    border: 1px solid var(--line-strong); background: var(--surface); color: var(--fg);
+    font: inherit; font-size: var(--step--1);
+}
+.search .hint { position: absolute; right: 0.55rem; top: 0.5rem; font-size: 0.75rem; }
+.results {
+    position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 20;
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px;
+    box-shadow: var(--shadow); max-height: 60vh; overflow-y: auto; padding: 0.3rem;
+}
+.results a { display: block; padding: 0.45rem 0.6rem; border-radius: 6px; color: var(--fg); text-decoration: none; font-size: var(--step--1); }
+.results a small { display: block; color: var(--muted); }
+.results a:hover, .results a.on { background: var(--accent-soft); }
+.results p { margin: 0.5rem; color: var(--muted); font-size: var(--step--1); }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+nav.toc a {
+    display: grid; grid-template-columns: 2.1rem 1fr; align-items: baseline;
+    padding: 0.36rem 0.5rem; border-radius: 6px; color: var(--fg-soft); text-decoration: none; font-size: 0.95rem;
+}
+nav.toc a span { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); }
+nav.toc a:hover { background: var(--surface); color: var(--fg); }
+nav.toc a.active { background: var(--accent-soft); color: var(--fg); }
+nav.toc a.active span { color: var(--accent); }
+.side-foot { margin-top: auto; color: var(--muted); font-size: 0.8rem; }
+.menu-btn { display: none; }
+
+main { min-width: 0; padding-inline: clamp(16px, 4vw, 56px); padding-block: 0 6rem; }
+.col { max-width: var(--col); margin-inline: auto; }
+.wide { max-width: 64rem; margin-inline: auto; }
+
+/* ── Hero ──────────────────────────────────────────── */
+.hero { padding-block: 3.2rem 2.2rem; display: grid; gap: 1.6rem; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+h1 {
+    font-family: var(--font-display); font-stretch: 120%; font-weight: 800; font-size: var(--step-4);
+    line-height: 1.02; margin: 0.3rem 0 0; letter-spacing: -0.01em; text-wrap: balance;
+}
+h1 em { font-style: normal; color: var(--accent); }
+.lead { font-size: var(--step-1); color: var(--fg-soft); max-width: 40rem; margin: 0; }
+.hero-figure { margin: 0; }
+.hero-figure figcaption { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+
+/* ── Sections ──────────────────────────────────────── */
+section.chapter { padding-block: 3.2rem 1rem; border-top: 1px solid var(--line); }
+.chap-head { display: flex; align-items: baseline; gap: 0.9rem; flex-wrap: wrap; }
+.chap-no {
+    font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent);
+    border: 1px solid currentColor; border-radius: 999px; padding: 0.1rem 0.55rem;
+}
+h2 {
+    font-family: var(--font-display); font-stretch: 112%; font-weight: 750; font-size: var(--step-3);
+    line-height: 1.1; margin: 0; text-wrap: balance;
+}
+h3 { font-family: var(--font-display); font-stretch: 108%; font-weight: 650; font-size: var(--step-1); margin: 2.2rem 0 0.4rem; text-wrap: balance; }
+h4 { font-size: var(--step-0); margin: 1.4rem 0 0.2rem; }
+.copy-link {
+    margin-left: auto; font: inherit; font-size: 0.8rem; color: var(--muted); background: none;
+    border: 1px solid var(--line); border-radius: 6px; padding: 0.15rem 0.5rem; cursor: pointer;
+}
+.copy-link:hover { color: var(--fg); border-color: var(--line-strong); }
+p { margin: 0.6rem 0; }
+.chapter > .col > p:first-of-type { color: var(--fg-soft); }
+ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 0.8rem 0; display: flex; flex-direction: column; gap: 0.35rem; }
+ol.steps > li { counter-increment: s; position: relative; padding-left: 2.3rem; }
+ol.steps > li::before {
+    content: counter(s); font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent);
+    width: 1.5rem; height: 1.5rem; border-radius: 50%; border: 1px solid var(--line-strong);
+    display: grid; place-items: center; position: absolute; left: 0; top: 0.15rem;
+}
+ol.steps .result { display: block; color: var(--muted); font-size: 0.95rem; }
+ul.plain { padding-left: 1.2rem; margin: 0.6rem 0; }
+ul.plain li { margin: 0.25rem 0; }
+
+.callout { border: 1px solid var(--line-strong); background: var(--note-bg); border-radius: 10px; padding: 0.8rem 1rem; margin: 1.2rem 0; }
+.callout.warn { background: var(--warn-bg); border-color: var(--warn-line); }
+.callout b:first-child { display: block; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.2rem; }
+.callout p { margin: 0.2rem 0; }
+
+figure.shot { margin: 1.4rem 0; }
+figure.shot img, .compare, .tour-img {
+    border-radius: 10px; border: 1px solid var(--line-strong); box-shadow: var(--shadow); background: #111;
+}
+figure.shot img { cursor: zoom-in; width: 100%; height: auto; }
+figcaption { color: var(--muted); font-size: 0.9rem; margin-top: 0.55rem; }
+.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.pair figure.shot { margin: 0; }
+
+.table-wrap { overflow-x: auto; margin: 1rem 0; border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.96rem; }
+th, td { text-align: left; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; background: var(--surface); }
+tr:last-child td { border-bottom: 0; }
+
+.chip { display: inline-block; font-family: var(--font-mono); font-size: 0.78rem; padding: 0.05rem 0.45rem; border-radius: 5px; border: 1px solid currentColor; white-space: nowrap; }
+.chip.mod { color: var(--mod); } .chip.comp { color: var(--comp); } .chip.rot { color: var(--rot); }
+.chip.pos { color: var(--pos); } .chip.neg { color: var(--neg); }
+
+/* ── Quick start ───────────────────────────────────── */
+.quick { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1.2rem 1.3rem; }
+.quick h2 { font-size: var(--step-1); font-stretch: 110%; }
+.quick-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+.quick ol { list-style: none; margin: 0.9rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }
+.quick li label {
+    display: grid; grid-template-columns: auto 1fr; gap: 0.55rem; align-items: start; height: 100%;
+    padding: 0.7rem 0.75rem; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; background: var(--bg);
+}
+.quick li input { accent-color: var(--accent); margin-top: 0.3rem; width: 1rem; height: 1rem; }
+.quick li b { display: block; font-size: 0.98rem; }
+.quick li a { font-size: 0.86rem; }
+.quick li input:checked + span b { text-decoration: line-through; color: var(--muted); }
+.progress { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); }
+.btn-text { background: none; border: 0; color: var(--accent); font: inherit; font-size: 0.85rem; cursor: pointer; padding: 0; }
+
+/* ── Compare slider ────────────────────────────────── */
+.compare { position: relative; overflow: hidden; aspect-ratio: 16 / 9; max-width: 100%; user-select: none; }
+.compare img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.compare .top { clip-path: inset(0 0 0 var(--pos, 50%)); }
+.compare .bar { position: absolute; top: 0; bottom: 0; left: var(--pos, 50%); width: 2px; background: #fff; transform: translateX(-1px); pointer-events: none; box-shadow: 0 0 0 1px rgba(0,0,0,.35); }
+.compare .bar::after {
+    content: "◀ ▶"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: #fff; color: #111; font-size: 0.65rem; padding: 0.35rem 0.45rem; border-radius: 999px; white-space: nowrap; letter-spacing: 0.1em;
+}
+.compare input[type=range] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: ew-resize; margin: 0; }
+.compare .tag {
+    position: absolute; top: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 6px; font-family: var(--font-mono);
+    font-size: 0.75rem; background: rgba(0,0,0,.7); color: #fff; pointer-events: none;
+}
+.compare .tag.l { left: 0.7rem; } .compare .tag.r { right: 0.7rem; }
+
+/* ── Editor tour ───────────────────────────────────── */
+.tour { display: grid; grid-template-columns: minmax(0, 1fr) 17rem; gap: 1.2rem; align-items: start; margin-top: 1.2rem; }
+.tour-stage { position: relative; }
+.tour-img { width: 100%; height: auto; }
+.hot {
+    position: absolute; transform: translate(-50%, -50%); width: 1.4rem; height: 1.4rem; border-radius: 50%;
+    border: 2px solid #fff; background: var(--accent); color: #0b2633; font: 700 0.72rem/1 var(--font-mono);
+    cursor: pointer; display: grid; place-items: center; box-shadow: 0 0 0 4px rgba(79,195,247,.25);
+}
+.hot:hover, .hot.on { background: #fff; box-shadow: 0 0 0 6px rgba(79,195,247,.45); }
+.tour-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; position: sticky; top: 1rem; }
+.tour-card h4 { margin: 0.1rem 0 0.4rem; font-family: var(--font-display); font-size: 1.1rem; }
+.tour-card p { font-size: 0.96rem; color: var(--fg-soft); }
+.tour-nav { display: flex; gap: 0.5rem; margin-top: 0.8rem; }
+.tour-nav button, .btn {
+    font: inherit; font-size: 0.88rem; padding: 0.35rem 0.75rem; border-radius: 7px; cursor: pointer;
+    border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg);
+}
+.tour-nav button:hover, .btn:hover { border-color: var(--accent); }
+.tour-legend { columns: 2; column-gap: 1.5rem; padding: 0; list-style: none; font-size: 0.92rem; margin: 1rem 0 0; }
+.tour-legend li { break-inside: avoid; padding: 0.15rem 0; }
+.tour-legend button { background: none; border: 0; color: var(--fg-soft); font: inherit; cursor: pointer; text-align: left; padding: 0; }
+.tour-legend button:hover { color: var(--accent); }
+.tour-legend span { font-family: var(--font-mono); color: var(--accent); margin-right: 0.4rem; }
+
+/* ── Tool tabs ─────────────────────────────────────── */
+.tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1.2rem 0 0; }
+.tabs button {
+    display: flex; align-items: center; gap: 0.45rem; font: inherit; font-size: 0.93rem; cursor: pointer;
+    padding: 0.4rem 0.75rem; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--fg-soft);
+}
+.tabs button[aria-selected=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--fg); }
+.tabs kbd { font-size: 0.72rem; }
+.tabpanel { padding-top: 0.6rem; }
+.tool-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; color: var(--muted); font-size: 0.9rem; margin-top: 0.8rem; }
+
+/* ── Filename decoder ──────────────────────────────── */
+.decoder { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.1rem; margin: 1.2rem 0; }
+.decoder label { font-weight: 600; display: block; margin-bottom: 0.4rem; }
+.decoder input {
+    width: 100%; font: 0.95rem var(--font-mono); padding: 0.6rem 0.7rem; border-radius: 8px;
+    border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg);
+}
+.examples { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.6rem; font-size: 0.85rem; color: var(--muted); align-items: center; }
+.examples button { font: 0.78rem var(--font-mono); padding: 0.2rem 0.45rem; border-radius: 6px; border: 1px dashed var(--line-strong); background: none; color: var(--fg-soft); cursor: pointer; }
+.anatomy { font-family: var(--font-mono); font-size: 0.95rem; margin: 1rem 0 0.4rem; display: flex; flex-wrap: wrap; gap: 4px 6px; overflow-wrap: anywhere; }
+.seg { display: inline-flex; flex-direction: column; align-items: center; }
+.seg i { font-style: normal; padding: 0.1rem 0.15rem; border-bottom: 2px solid var(--muted); }
+.seg small { font-size: 0.66rem; color: var(--muted); margin-top: 0.15rem; letter-spacing: 0.04em; }
+.seg.k-prefix i { border-color: var(--fg-soft); }
+.seg.k-mod i { border-color: var(--mod); color: var(--mod); }
+.seg.k-comp i { border-color: var(--comp); color: var(--comp); }
+.seg.k-rot i { border-color: var(--rot); color: var(--rot); }
+.seg.k-extra i { border-color: var(--muted); color: var(--muted); }
+.seg.k-bad i { border-color: var(--neg); color: var(--neg); }
+.verdict { margin-top: 0.6rem; font-size: 0.95rem; }
+.verdict.ok { color: var(--pos); } .verdict.bad { color: var(--neg); }
+.verdict ul { margin: 0.3rem 0 0; padding-left: 1.2rem; color: var(--fg-soft); }
+
+/* ── Folder tree ───────────────────────────────────── */
+.tree { font-family: var(--font-mono); font-size: 0.88rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.9rem 1rem; overflow-x: auto; white-space: pre; line-height: 1.75; }
+.tree .note { color: var(--muted); }
+.tree .pick { color: var(--accent); }
+.tree .task { color: var(--comp); }
+
+/* ── Launcher mockup ───────────────────────────────── */
+.mock-wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.2rem; margin: 1.2rem 0; }
+.win { border-radius: 10px; overflow: hidden; border: 1px solid #c9cdd1; box-shadow: var(--shadow); background: #ececec; color: #1d1d1f; font: 13px/1.4 -apple-system, "Segoe UI", system-ui, sans-serif; }
+.win-bar { display: flex; align-items: center; gap: 6px; padding: 8px 10px; background: linear-gradient(#e7e7e7, #d9d9d9); border-bottom: 1px solid #c4c4c4; }
+.win-bar i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; }
+.win-bar i:nth-child(2) { background: #febc2e; } .win-bar i:nth-child(3) { background: #28c840; }
+.win-bar span { flex: 1; text-align: center; font-weight: 600; font-size: 12px; color: #4a4a4a; margin-right: 40px; }
+.win-body { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.win-status { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #fff; border: 1px solid #d0d0d0; border-radius: 6px; font-size: 12px; }
+.win-status .dot { width: 9px; height: 9px; border-radius: 50%; background: #9b9b9b; flex: none; }
+.win-status.starting .dot { background: #f5a623; animation: pulse 0.9s infinite alternate; }
+.win-status.running .dot { background: #28c840; }
+@keyframes pulse { to { opacity: 0.3; } }
+.win button.w {
+    font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid #b5b5b5; background: #fff; color: #1d1d1f; cursor: pointer; text-align: center;
+}
+.win button.w.primary { background: #0a84ff; border-color: #0a74e0; color: #fff; }
+.win button.w:disabled { opacity: 0.45; cursor: not-allowed; }
+.win .field { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; }
+.win .field label { grid-column: 1 / -1; font-size: 12px; color: #555; }
+.win .field output { background: #fff; border: 1px solid #d0d0d0; border-radius: 5px; padding: 4px 8px; font: 12px var(--font-mono); color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.win .check { display: flex; gap: 6px; align-items: center; font-size: 12px; }
+.win .log { background: #1e1e1e; color: #b8f5b8; font: 11px/1.5 var(--font-mono); padding: 8px; border-radius: 5px; min-height: 3.2em; white-space: pre-wrap; }
+.mock-note { font-size: 0.85rem; color: var(--muted); }
+
+
+/* App dialog replica: fixed dark look, same as the app in both page themes */
+.app-modal-stage { margin: 1.2rem 0 0.4rem; padding: 2.4rem 1rem; border-radius: 10px; border: 1px solid var(--line-strong); display: grid; place-items: center;
+    background: radial-gradient(circle at 30% 30%, #5b6b5a, #2d3330 60%, #1f2321); }
+.app-modal { width: 100%; max-width: 24rem; background: #1c1c1c; color: #fff; border: 1px solid rgba(255,255,255,.15); border-radius: 12px; padding: 1.75rem; display: flex; flex-direction: column; gap: 0.4rem; box-shadow: 0 25px 50px rgba(0,0,0,.5); font: 14px/1.5 system-ui, sans-serif; }
+.app-modal b { font-size: 14px; }
+.app-modal p { margin: 0; font-size: 12px; color: rgba(255,255,255,.55); }
+.app-modal .count { font-size: 12px; color: #fbbf24; font-variant-numeric: tabular-nums; }
+.app-modal button { margin-top: 0.7rem; padding: 0.5rem; border-radius: 8px; font: 500 14px system-ui, sans-serif; cursor: pointer; background: rgba(59,130,246,.2); color: #60a5fa; border: 1px solid rgba(59,130,246,.3); }
+.app-modal button:hover { background: rgba(59,130,246,.3); }
+
+
+/* Screenshot first; the redrawn view shows only when the image file is missing */
+figure.with-fallback { margin: 0; }
+figure.with-fallback > img.real { width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line-strong); box-shadow: var(--shadow); cursor: zoom-in; }
+
+
+/* ── Tool animations ───────────────────────────────── */
+figure.anim { margin: 1.2rem 0; position: relative; }
+figure.anim canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; max-width: 100%; border-radius: 10px; border: 1px solid var(--line-strong); box-shadow: var(--shadow); background: #111; cursor: pointer; }
+.anim-toggle {
+    position: absolute; right: 0.7rem; top: 0.7rem; font: 600 0.78rem var(--font-body); padding: 0.25rem 0.7rem; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.35); background: rgba(0,0,0,.65); color: #fff; cursor: pointer;
+}
+.anim-toggle:hover { background: rgba(0,0,0,.85); }
+
+
+/* App toolbar icons, drawn as the dark rail tiles the app shows */
+.ti { display: inline-grid; place-items: center; width: 1.65em; height: 1.65em; border-radius: 6px; background: #2b2b2b; border: 1px solid rgba(255,255,255,.14); color: #B8B8B8; vertical-align: -0.48em; margin-inline: 0.1em; flex: none; }
+.ti svg { width: 1.05em; height: 1.05em; }
+.ti.on { color: #4FC3F7; }
+.ti.fill-on { color: #60a5fa; background: rgba(59,130,246,.22); border-color: rgba(96,165,250,.45); }
+.ti.erase-on { color: #f87171; background: rgba(239,68,68,.22); border-color: rgba(248,113,113,.45); }
+.ti.blank { visibility: hidden; }
+.ti.q { font: 700 0.85em/1 system-ui, sans-serif; }
+.tabs .ti { font-size: 0.95em; }
+#kb-table td:nth-child(2) .ti { margin-right: 0.45em; }
+
+/* ── Shortcuts ─────────────────────────────────────── */
+.kb-tools { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: center; margin-top: 1rem; }
+.kb-tools input { flex: 1 1 14rem; min-width: 0; padding: 0.5rem 0.7rem; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--fg); font: inherit; }
+.kb-live { font-size: 0.88rem; color: var(--muted); }
+#kb-table tr.hit td { background: var(--accent-soft); }
+#kb-table td:first-child { white-space: nowrap; }
+
+/* ── FAQ ───────────────────────────────────────────── */
+details { border: 1px solid var(--line); border-radius: 10px; padding: 0.2rem 1rem; margin: 0.5rem 0; background: var(--surface); }
+details[open] { padding-bottom: 0.7rem; }
+summary { cursor: pointer; font-weight: 600; padding: 0.55rem 0; }
+summary::marker { color: var(--accent); }
+
+pre.json { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.9rem 1rem; overflow-x: auto; font: 0.82rem/1.55 var(--font-mono); color: var(--fg-soft); }
+pre.json .k { color: var(--mod); } pre.json .s { color: var(--comp); } pre.json .c { color: var(--muted); }
+
+.minerals { display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem; margin: 0.8rem 0; font-size: 0.93rem; }
+.minerals div { min-width: 0; }
+.minerals b { display: block; font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+/* ── Lightbox ──────────────────────────────────────── */
+dialog.lightbox { border: 0; padding: 0; background: transparent; max-width: 96vw; max-height: 94vh; }
+dialog.lightbox::backdrop { background: rgba(0,0,0,.82); }
+dialog.lightbox img { max-width: 96vw; max-height: 88vh; border-radius: 8px; }
+dialog.lightbox p { color: #ddd; text-align: center; margin: 0.5rem 0 0; font-size: 0.9rem; }
+dialog.lightbox button { position: fixed; top: 1rem; right: 1rem; font: inherit; background: #fff; color: #111; border: 0; border-radius: 999px; padding: 0.35rem 0.8rem; cursor: pointer; }
+
+.toast { position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 0.45rem 0.9rem; border-radius: 8px; font-size: 0.9rem; z-index: 50; }
+
+/* ── Responsive ────────────────────────────────────── */
+@media (max-width: 1100px) {
+    .tour { grid-template-columns: minmax(0, 1fr); }
+    .tour-card { position: static; }
+}
+@media (max-width: 900px) {
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    .side {
+        position: fixed; inset: 0 auto 0 0; width: min(85vw, 300px); z-index: 40;
+        transform: translateX(-102%); transition: transform 0.2s; box-shadow: var(--shadow);
+        padding-top: calc(1.4rem + env(safe-area-inset-top, 0px));
+    }
+    .side.open { transform: none; }
+    .menu-btn {
+        display: flex; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30; gap: 0.5rem; align-items: center;
+        margin-inline: calc(-1 * clamp(16px, 4vw, 56px)); padding: 0.6rem clamp(16px, 4vw, 56px);
+        background: var(--bg); border-bottom: 1px solid var(--line);
+    }
+    .menu-btn button { font: inherit; font-size: 0.9rem; padding: 0.35rem 0.7rem; border-radius: 7px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--fg); cursor: pointer; }
+    .menu-btn b { font-family: var(--font-display); font-stretch: 112%; }
+    .quick ol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+    .pair { grid-template-columns: minmax(0, 1fr); }
+    .quick ol { grid-template-columns: minmax(0, 1fr); }
+    .tour-legend { columns: 1; }
+    .copy-link { display: none; }
+}
+@media print {
+    .side, .menu-btn, .copy-link, .kb-tools, .examples, .tour-nav, .hot { display: none !important; }
+    .shell { display: block; }
+    body { background: #fff; color: #000; }
+    section.chapter { break-inside: auto; }
+    figure, .compare, table { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-pointer" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="m4 3 7.5 18 2.7-7.8L22 10.5z"/></symbol>
+    <symbol id="i-select-add" viewBox="0 0 24 24"><path fill="currentColor" d="M6.49875 2.49375C6.8025 2.34 7.17 2.37375 7.44 2.58L19.44 11.5762C19.7513 11.8087 19.875 12.2137 19.755 12.5812C19.635 12.9487 19.29 13.1962 18.9 13.1962H13.1888L16.5225 19.86C16.8188 20.4525 16.5787 21.1725 15.9862 21.4687C15.3938 21.765 14.6737 21.525 14.3775 20.9325L11.0438 14.2687L7.62 18.8362C7.3875 19.1475 6.9825 19.2712 6.615 19.1512C6.2475 19.0312 6 18.6862 6 18.3V3.3C6 2.95875 6.19125 2.6475 6.49875 2.49375Z"/><path fill="#1AA270" d="M20.5714 0.571429C20.5714 0.255357 20.3161 0 20 0C19.6839 0 19.4286 0.255357 19.4286 0.571429V3.42857H16.5714C16.2554 3.42857 16 3.68393 16 4C16 4.31607 16.2554 4.57143 16.5714 4.57143H19.4286V7.42857C19.4286 7.74464 19.6839 8 20 8C20.3161 8 20.5714 7.74464 20.5714 7.42857V4.57143H23.4286C23.7446 4.57143 24 4.31607 24 4C24 3.68393 23.7446 3.42857 23.4286 3.42857H20.5714V0.571429Z"/></symbol>
+    <symbol id="i-select-remove" viewBox="0 0 24 24"><path fill="currentColor" d="M6.49875 2.49375C6.8025 2.34 7.17 2.37375 7.44 2.58L19.44 11.5762C19.7513 11.8087 19.875 12.2137 19.755 12.5812C19.635 12.9487 19.29 13.1962 18.9 13.1962H13.1888L16.5225 19.86C16.8188 20.4525 16.5787 21.1725 15.9862 21.4687C15.3938 21.765 14.6737 21.525 14.3775 20.9325L11.0438 14.2687L7.62 18.8362C7.3875 19.1475 6.9825 19.2712 6.615 19.1512C6.2475 19.0312 6 18.6862 6 18.3V3.3C6 2.95875 6.19125 2.6475 6.49875 2.49375Z"/><path fill="#FB0000" d="M12 1C12 0.446875 12.3192 0 12.7143 0H21.2857C21.6808 0 22 0.446875 22 1C22 1.55313 21.6808 2 21.2857 2H12.7143C12.3192 2 12 1.55313 12 1Z"/></symbol>
+    <symbol id="i-bbox" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M13 8V6H19C20.1046 6 21 6.89543 21 8V19C21 20.1046 20.1046 21 19 21H8C6.89543 21 6 20.1046 6 19V13H8V19H19V8H13ZM6 6V3H8V6H11V8H8V11H6V8H3V6H6Z"/></symbol>
+    <symbol id="i-sam-group" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 21 9-9"/><path d="M15 4V2"/><path d="M15 16v-2"/><path d="M8 9h2"/><path d="M20 9h2"/><path d="M17.8 11.8 19 13"/><path d="M17.8 6.2 19 5"/><path d="m11 5 1.2 1.2"/></g></symbol>
+    <symbol id="i-freeform" viewBox="0 0 20 20"><path d="M3 15 C5 10, 7 6, 10 8 S14 14, 17 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="3" cy="15" r="1.5" fill="currentColor"/></symbol>
+    <symbol id="i-polygon" viewBox="0 0 20 20"><polygon points="10,2 18,8 15,17 5,17 2,8" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/><g fill="currentColor"><circle cx="10" cy="2" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="15" cy="17" r="2"/><circle cx="5" cy="17" r="2"/><circle cx="2" cy="8" r="2"/></g></symbol>
+    <symbol id="i-slic" viewBox="0 0 20 20"><rect x="2" y="2" width="16" height="16" rx="1.5" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2" fill="none"/><g stroke="currentColor" stroke-width="1" fill="none" opacity="0.7"><path d="M2 8 Q6 6 10 8 Q14 10 18 8"/><path d="M2 13 Q7 11 10 13 Q13 15 18 13"/><path d="M8 2 Q7 6 8 10 Q9 14 8 18"/><path d="M13 2 Q12 7 13 10 Q14 13 13 18"/></g></symbol>
+    <symbol id="i-zoom-in" viewBox="0 0 24 24"><path fill="currentColor" d="M18 10.2C18 11.9213 17.4413 13.5113 16.5 14.8013L21.2475 19.5525C21.7163 20.0213 21.7163 20.7825 21.2475 21.2513C20.7788 21.72 20.0175 21.72 19.5488 21.2513L14.8013 16.5C13.5113 17.4413 11.9213 18 10.2 18C5.89127 18 2.40002 14.5088 2.40002 10.2C2.40002 5.89125 5.89127 2.4 10.2 2.4C14.5088 2.4 18 5.89125 18 10.2ZM10.2 6.6C9.70127 6.6 9.30002 7.00125 9.30002 7.5V9.3H7.50002C7.00127 9.3 6.60002 9.70125 6.60002 10.2C6.60002 10.6988 7.00127 11.1 7.50002 11.1H9.30002V12.9C9.30002 13.3988 9.70127 13.8 10.2 13.8C10.6988 13.8 11.1 13.3988 11.1 12.9V11.1H12.9C13.3988 11.1 13.8 10.6988 13.8 10.2C13.8 9.70125 13.3988 9.3 12.9 9.3H11.1V7.5C11.1 7.00125 10.6988 6.6 10.2 6.6Z"/></symbol>
+    <symbol id="i-zoom-out" viewBox="0 0 24 24"><path fill="currentColor" d="M18 10.2C18 11.9212 17.4413 13.5112 16.5 14.8012L21.2475 19.5525C21.7163 20.0212 21.7163 20.7825 21.2475 21.2512C20.7788 21.72 20.0175 21.72 19.5488 21.2512L14.8013 16.5C13.5113 17.4412 11.9213 18 10.2 18C5.89127 18 2.40002 14.5087 2.40002 10.2C2.40002 5.89124 5.89127 2.39999 10.2 2.39999C14.5088 2.39999 18 5.89124 18 10.2ZM7.50002 9.29999C7.00127 9.29999 6.60002 9.70124 6.60002 10.2C6.60002 10.6987 7.00127 11.1 7.50002 11.1H12.9C13.3988 11.1 13.8 10.6987 13.8 10.2C13.8 9.70124 13.3988 9.29999 12.9 9.29999H7.50002Z"/></symbol>
+    <symbol id="i-grab" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></g></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" d="m15 15 6-6m0 0-6-6m6 6H9a6 6 0 0 0 0 12h3"/></symbol>
+    <symbol id="i-cog" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></g></symbol>
+    <symbol id="i-brush" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 1-2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128Zm0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42"/></symbol>
+    <symbol id="i-eraser" viewBox="0 0 20 20"><g stroke="currentColor" stroke-width="1.6" fill="none"><path stroke-linejoin="round" d="M8.5 16.5 3.9 11.9a1.6 1.6 0 0 1 0-2.3l6.4-6.4a1.6 1.6 0 0 1 2.3 0l3.8 3.8a1.6 1.6 0 0 1 0 2.3l-6.6 6.6a1.6 1.6 0 0 1-1.1.5Z"/><path stroke-linecap="round" d="M7.2 6.8 13.2 12.8"/><path stroke-linecap="round" d="M8.9 17H17"/></g></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></symbol>
+    <symbol id="i-eye-slash" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></symbol>
+    <symbol id="i-borders" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="2" fill="none"/><rect x="5" y="5" width="6" height="6" rx="1" fill="currentColor" opacity="0.4"/></symbol>
+</svg>
+<div class="shell">
+
+<aside class="side" id="side" aria-label="Manual contents">
+    <a class="brand" href="#top">
+        <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+            <circle cx="16" cy="16" r="14" fill="none" stroke="var(--accent)" stroke-width="2"/>
+            <path d="M16 2v28M2 16h28" stroke="var(--line-strong)" stroke-width="1"/>
+            <path d="M8 21l5-11 5 7 3-4 4 8z" fill="var(--accent)" opacity=".85"/>
+        </svg>
+        <span><b>ThinAnnotator</b><small>User manual</small></span>
+    </a>
+    <div class="search">
+        <input id="q" type="search" placeholder="Search the manual" autocomplete="off" aria-label="Search the manual">
+        <kbd class="hint" aria-hidden="true">/</kbd>
+        <div class="results" id="results" hidden></div>
+    </div>
+    <nav class="toc" aria-label="Chapters">
+        <ol id="toc">
+            <li><a href="#start"><span>01</span>Start the app</a></li>
+            <li><a href="#prepare"><span>02</span>Prepare your images</a></li>
+            <li><a href="#open"><span>03</span>Open your work</a></li>
+            <li><a href="#tour"><span>04</span>The editor</a></li>
+            <li><a href="#navigate"><span>05</span>Move around the image</a></li>
+            <li><a href="#segment"><span>06</span>Outline a grain</a></li>
+            <li><a href="#fill-erase"><span>07</span>Fill and Erase</a></li>
+            <li><a href="#correct"><span>08</span>Correct an outline</a></li>
+            <li><a href="#describe"><span>09</span>Describe the mineral</a></li>
+            <li><a href="#save"><span>10</span>Save and export</a></li>
+            <li><a href="#customize"><span>11</span>Customize</a></li>
+            <li><a href="#shortcuts"><span>12</span>Keyboard shortcuts</a></li>
+            <li><a href="#help"><span>13</span>Troubleshooting</a></li>
+        </ol>
+    </nav>
+    <p class="side-foot">Screenshots use demo mineral names. They are not expert identifications.</p>
+</aside>
+
+<main id="top">
+<div class="menu-btn"><button type="button" id="menu-open" aria-controls="side" aria-expanded="false">Contents</button><b>ThinAnnotator manual</b></div>
+
+<header class="hero wide">
+    <div>
+        <div class="eyebrow">User manual · English</div>
+        <h1>Annotate thin sections with <em>ThinAnnotator</em></h1>
+    </div>
+    <p class="lead">ThinAnnotator helps you outline mineral grains in polarized-light micrographs. Click a grain and the SAM&nbsp;2 model proposes its outline. Correct the outline with drawing tools, then record what the mineral is.</p>
+    <figure class="hero-figure">
+        <div class="compare" style="--pos: 50%">
+            <img width="1600" height="900" src="img/10-fully-annotated-fill.jpg" alt="Annotated grains under plane-polarized light">
+            <img width="1600" height="900" class="top" src="img/16-polarization-switch-xpl.jpg" alt="The same grains under cross-polarized light">
+            <div class="bar"></div>
+            <span class="tag l">PPL</span><span class="tag r">XPL</span>
+            <input type="range" min="0" max="100" value="50" aria-label="Compare plane-polarized and cross-polarized views">
+        </div>
+        <figcaption><span>Drag across the image. The outlines stay in place when you switch from PPL to XPL.</span><span class="mono">GDX-22-PI / FOV_1 · rot 45°</span></figcaption>
+    </figure>
+
+    <div class="quick" aria-labelledby="quick-title">
+        <div class="quick-head">
+            <h2 id="quick-title">Your first grain, in six steps</h2>
+            <span><span class="progress" id="quick-progress">0 / 6 done</span> · <button type="button" class="btn-text" id="quick-reset">Reset</button></span>
+        </div>
+        <ol>
+            <li><label><input type="checkbox" id="qs-1"><span><b>Start the server</b><a href="#start">Launcher window</a></span></label></li>
+            <li><label><input type="checkbox" id="qs-2"><span><b>Tell the app who you are</b><a href="#profile">Annotator profile</a></span></label></li>
+            <li><label><input type="checkbox" id="qs-3"><span><b>Open a field-of-view folder</b><a href="#open-one">Open one task</a></span></label></li>
+            <li><label><input type="checkbox" id="qs-4"><span><b>Press <kbd>S</kbd> and click a grain</b><a href="#segment">Outline a grain</a></span></label></li>
+            <li><label><input type="checkbox" id="qs-5"><span><b>Pick three minerals and Save</b><a href="#describe">Describe the mineral</a></span></label></li>
+            <li><label><input type="checkbox" id="qs-6"><span><b>Export the annotation</b><a href="#save">Save and export</a></span></label></li>
+        </ol>
+    </div>
+</header>
+
+<!-- ═══════════════════════ 01 START ═══════════════════════ -->
+<section class="chapter" id="start" data-title="Start the app">
+<div class="col">
+    <div class="chap-head"><span class="chap-no">01</span><h2>Start the app</h2></div>
+    <p>ThinAnnotator has two parts. A local service runs the SAM&nbsp;2 model and reads your image folders. The annotator runs in your web browser. Nothing goes to the internet: images and results stay on your computer.</p>
+
+    <h3 id="launcher">The launcher window</h3>
+    <ol class="steps">
+        <li>Open the <span class="ui">ThinAnnotator</span> application.<span class="result">The ThinAnnotator Control Panel opens.</span></li>
+        <li>Click <span class="ui">Start Server</span>.<span class="result">The service starts and loads the SAM&nbsp;2 model. The first start can take a few minutes.</span></li>
+        <li>When the status shows that the server runs, click <span class="ui">Open Annotator</span>.<span class="result">Your browser opens <code>http://127.0.0.1:7263</code>.</span></li>
+        <li>Keep the Control Panel open while you work.</li>
+    </ol>
+    <p>The same window also builds a training dataset from your finished annotations. See <a href="#dataset">Build a Thin-COCO dataset</a> at the end of chapter 10.</p>
+</div>
+<div class="wide">
+    <div class="mock-wrap">
+        <div class="win" role="group" aria-label="Launcher illustration">
+            <div class="win-bar"><i></i><i></i><i></i><span>ThinAnnotator Control Panel</span></div>
+            <div class="win-body">
+                <div class="win-status" id="mock-status"><span class="dot"></span><span id="mock-status-text">Server stopped</span></div>
+                <button type="button" class="w primary" id="mock-start">Start Server</button>
+                <button type="button" class="w" id="mock-open" disabled>Open Annotator</button>
+                <button type="button" class="w" id="mock-dataset">Generate Thin-COCO dataset</button>
+            </div>
+        </div>
+    </div>
+    <p class="mock-note col">Illustration. Click the buttons to see the sequence. The real window can look slightly different on your system.</p>
+</div>
+<div class="col">
+    <h3 id="language">Choose your language</h3>
+    <p>On the first launch, the app asks <span class="ui">Choose your language</span>. Click <span class="ui">English</span> or <span class="ui">Français</span>. You can change the language later in <a href="#customize">Customize</a>.</p>
+
+    <h3 id="profile">Tell the app who is annotating</h3>
+    <div class="pair">
+        <figure class="shot"><img width="1600" height="900" src="img/00a-language-choice.jpg" alt="Language choice dialog" loading="lazy"><figcaption>First launch: language.</figcaption></figure>
+        <figure class="shot"><img width="1600" height="900" src="img/00b-annotator-profile.jpg" alt="Who is annotating dialog" loading="lazy"><figcaption>Then: your annotator profile.</figcaption></figure>
+    </div>
+    <ol class="steps">
+        <li>Type your <span class="ui">Full name</span>.</li>
+        <li>Type a <span class="ui">Username</span>, for example <code>blefevre</code>.</li>
+        <li>Choose your <span class="ui">Level of expertise</span>.</li>
+        <li>Click <span class="ui">Start</span>.<span class="result">The home screen opens.</span></li>
+    </ol>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Level</th><th>Meaning in the app</th></tr></thead>
+        <tbody>
+            <tr><td>Expert</td><td>Established command of petrography</td></tr>
+            <tr><td>Mid-expert</td><td>Solid experience, still developing</td></tr>
+            <tr><td>Trainee</td><td>Learning the domain</td></tr>
+            <tr><td>Outside the domain</td><td>No petrography background</td></tr>
+        </tbody>
+    </table></div>
+    <div class="callout">
+        <b>Use the same username every time</b>
+        <p>Your username names your files. If you change it, the app does not find your earlier drafts. No password is needed: the profile only records who made each annotation.</p>
+    </div>
+    <p>To edit the profile later, click your name badge in the top-right corner (<span class="ui">Edit annotator profile</span>).</p>
+</div>
+</section>
+
+<!-- ═══════════════════════ 02 PREPARE ═══════════════════════ -->
+<section class="chapter" id="prepare" data-title="Prepare your images">
+<div class="col">
+    <div class="chap-head"><span class="chap-no">02</span><h2>Prepare your images</h2></div>
+    <p>The app reads your images where they already are. It finds the lighting conditions of each image from its file name, so the folder layout and the names must follow one rule.</p>
+
+    <h3 id="layout">Folder layout</h3>
+    <p>One <b>field of view</b> (FOV) is one place on the thin section, photographed under several lighting conditions. Put all the images of one FOV in one folder. The parent folder carries the thin-section name. In the app, one FOV folder is one <b>task</b>.</p>
+<div class="tree">thin-section-01/                    <span class="note">thin section name</span>
+├── FOV-3/                       <span class="pick">← the folder you select · 1 task</span>
+│   ├── sample01_mod-PPL_comp-na_rot-45.png
+│   ├── sample01_mod-XPL_comp-na_rot-45.png
+│   └── sample01_mod-XPL_comp-add_rot-45.png
+└── notes/                       <span class="note">ignored (no matching image)</span></div>
+    <p>Accepted formats: <code>.jpg</code> <code>.jpeg</code> <code>.png</code> <code>.tif</code> <code>.tiff</code> <code>.bmp</code>.</p>
+
+    <h3 id="naming">File names</h3>
+    <p>Each name follows this pattern:</p>
+    <p><code>&lt;prefix&gt;_mod-&lt;MOD&gt;_comp-&lt;COMP&gt;_rot-&lt;deg&gt;.&lt;ext&gt;</code></p>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Token</th><th>Values</th><th>Shown in the app as</th></tr></thead>
+        <tbody>
+            <tr><td><span class="chip mod">mod</span> modality</td><td><code>PPL</code> plane polarized · <code>XPL</code> cross polarized · <code>RL</code> reflected · <code>FL</code> fluorescence · <code>TR</code> transmitted</td><td>PPL, XPL…</td></tr>
+            <tr><td><span class="chip comp">comp</span> compensator</td><td><code>add</code> +λ · <code>sous</code> −λ · <code>na</code> no compensator</td><td>γ1, γ-1, γ0</td></tr>
+            <tr><td><span class="chip rot">rot</span> rotation</td><td>Stage angle in degrees, integer, negative allowed (<code>-45</code>)</td><td>45°</td></tr>
+            <tr><td>prefix</td><td>Free text, at least one character. The app ignores it.</td><td>—</td></tr>
+        </tbody>
+    </table></div>
+    <ul class="plain">
+        <li>The three tokens <code>_mod-</code>, <code>_comp-</code> and <code>_rot-</code> are required. Their order is free.</li>
+        <li>Extra <code>_key-value</code> tokens are accepted.</li>
+        <li>Keep the same rotation value for all images of one FOV folder.</li>
+    </ul>
+
+    <div class="decoder">
+        <label for="fname">Check a file name</label>
+        <input id="fname" type="text" value="GDX-22-PI_mod-XPL_comp-add_rot-45.bmp" spellcheck="false" autocomplete="off">
+        <div class="examples">Try:
+            <button type="button" data-ex="sample01_mod-PPL_comp-na_rot-0.png">valid</button>
+            <button type="button" data-ex="FOV3_rot--30_mod-XPL_comp-sous_stage-B.tif">free order</button>
+            <button type="button" data-ex="sample01_PPL_rot-45.png">missing tokens</button>
+            <button type="button" data-ex="sample01_mod-XPL_comp-na_rot-45.webp">wrong format</button>
+        </div>
+        <div class="anatomy" id="anatomy" aria-hidden="true"></div>
+        <div class="verdict" id="verdict" aria-live="polite"></div>
+    </div>
+
+    <h3 id="batch-layout">Layout for a batch</h3>
+    <p>A batch gathers many tasks. Select any root folder. The app searches it at any depth, and every folder that holds correctly named images becomes one task.</p>
+<div class="tree">campaign-2026/                      <span class="pick">← the folder you select</span>
+└── site-A/                        <span class="note">any depth, any names</span>
+    └── thin-section-01/           <span class="note">thin section</span>
+        ├── FOV-3/                 <span class="task">1 task</span>
+        │   ├── sample01_mod-PPL_comp-na_rot-0.png
+        │   └── sample01_mod-XPL_comp-add_rot-0.png
+        └── notes/                 <span class="note">ignored</span></div>
+    <p>The home screen shows both diagrams under <span class="ui">Prepare your task folder</span> and <span class="ui">Expected layout of the root folder</span>.</p>
+</div>
+</section>
+
+<!-- ═══════════════════════ 03 OPEN ═══════════════════════ -->
+<section class="chapter" id="open" data-title="Open your work">
+<div class="col">
+    <div class="chap-head"><span class="chap-no">03</span><h2>Open your work</h2></div>
+    <p>The home screen asks <span class="ui">How would you like to start?</span> and gives three choices. <span class="ui">Create a project</span> is marked <span class="ui">Coming soon</span> and is not available yet.</p>
+    <figure class="shot"><img width="1600" height="900" src="img/02-home-with-batch.jpg" alt="Home screen with three start options and one batch" loading="lazy"><figcaption>Home screen with one batch under <span class="ui">Your batches</span>.</figcaption></figure>
+
+    <h3 id="open-one">Open one task</h3>
+    <p>Use this for a single field of view.</p>
+    <ol class="steps">
+        <li>Under <span class="ui">Open one task</span>, click <span class="ui">Choose a folder</span>.<span class="result">Your system's folder dialog opens.</span></li>
+        <li>Select the FOV folder, not the thin-section folder.<span class="result">The editor opens and shows the first image.</span></li>
+    </ol>
+    <figure class="shot"><img width="1600" height="900" src="img/03-image-imported.jpg" alt="Editor with a freshly opened task, no annotations" loading="lazy"><figcaption>A freshly opened task: the PPL image fits the view and the panel shows <span class="ui">No annotations</span>.</figcaption></figure>
+
+    <h3 id="batch">Work through a batch</h3>
+    <p>Use a batch for a whole campaign: several thin sections, several fields of view.</p>
+    <ol class="steps">
+        <li>Under <span class="ui">Create a batch of tasks</span>, click <span class="ui">Choose a root folder</span>.</li>
+        <li>Select the root folder.<span class="result">The app shows <span class="ui">Scanning the folder...</span>, then lists the batch under <span class="ui">Your batches</span> with its number of tasks.</span></li>
+        <li>Click <span class="ui">Start</span> (or <span class="ui">Resume</span> for a batch you began earlier).<span class="result">The editor opens on the current task of the batch.</span></li>
+    </ol>
+    <figure class="shot"><img width="1600" height="900" src="img/02b-batch-task-open.jpg" alt="Editor in batch mode with Previous, position and Next" loading="lazy"><figcaption>In a batch, the top bar shows <span class="ui">Previous</span>, your position (<span class="mono">1 / 2</span>) and <span class="ui">Next</span>.</figcaption></figure>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Control</th><th>What it does</th></tr></thead>
+        <tbody>
+            <tr><td><span class="ui">Next</span></td><td>Saves and exports this task for every lighting variant, marks it as done, and opens the next task that is not annotated.</td></tr>
+            <tr><td><span class="ui">Previous</span></td><td>Goes back to the previous task in the batch.</td></tr>
+            <tr><td><span class="ui">already annotated</span></td><td>Badge on a task that was finished earlier.</td></tr>
+        </tbody>
+    </table></div>
+    <p>If the export fails, you stay on the same task, so you lose nothing. When every task is done, the app shows <span class="ui">This batch is finished — every task is annotated.</span></p>
+
+    <h3 id="resume">Come back to a task</h3>
+    <p>The browser keeps a copy of your work while you annotate. When you open a task that has work the browser kept but you did not save, the app asks what to do.</p>
+    <div class="pair">
+        <figure class="shot"><img width="1600" height="900" src="img/17-restore-draft-prompt.jpg" alt="Draft found dialog" loading="lazy"><figcaption><span class="ui">Draft found</span>: work kept by the browser.</figcaption></figure>
+        <div>
+            <ul class="plain">
+                <li><span class="ui">Draft found</span>: click <span class="ui">Restore</span> to continue, or <span class="ui">Discard</span> to start from the saved state.</li>
+                <li>If you saved a draft file earlier (<span class="ui">Save draft</span>), the app loads it automatically when you open the task. No dialog appears.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+</section>
+
+<!-- ═══════════════════════ 04 TOUR ═══════════════════════ -->
+<section class="chapter" id="tour" data-title="The editor">
+<div class="col">
+    <div class="chap-head"><span class="chap-no">04</span><h2>The editor</h2></div>
+    <p>The editor has a tool rail on the left, the image in the middle, and the annotation panel on the right. Click a numbered marker to learn what each part does.</p>
+</div>
+<div class="wide">
+    <div class="tour">
+        <div class="tour-stage" id="tour-stage">
+            <img width="1600" height="900" class="tour-img" src="img/10-fully-annotated-fill.jpg" alt="The annotation editor with six annotated grains">
+        </div>
+        <div class="tour-card" aria-live="polite">
+            <div class="eyebrow" id="tour-count">1 / 12</div>
+            <h4 id="tour-title"></h4>
+            <p id="tour-text"></p>
+            <div class="tour-nav"><button type="button" id="tour-prev">Previous</button><button type="button" id="tour-next">Next</button></div>
+        </div>
+    </div>
+    <ol class="tour-legend" id="tour-legend"></ol>
+</div>
+</section>
+
+<!-- ═══════════════════════ 05 NAVIGATE ═══════════════════════ -->
+<section class="chapter" id="navigate" data-title="Move around the image">
+<div class="col">
+    <div class="chap-head"><span class="chap-no">05</span><h2>Move around the image</h2></div>
+    <p>Micrographs are large. Zoom in close to the grain edges before you correct an outline.</p>
+
+    <h3 id="zoom">Zoom and pan</h3>
+    <div class="table-wrap"><table>
+        <thead><tr><th>To do this</th><th>Do this</th></tr></thead>
+        <tbody>
+            <tr><td>Zoom around the cursor</td><td>Turn the mouse wheel.</td></tr>
+            <tr><td>Zoom in / out by steps</td><td>Press <kbd>+</kbd> / <kbd>−</kbd>, or use the <span class="ti" aria-hidden="true"><svg><use href="#i-zoom-in"/></svg></span> <span class="ui">Zoom in</span> and <span class="ti" aria-hidden="true"><svg><use href="#i-zoom-out"/></svg></span> <span class="ui">Zoom out</span> tools.</td></tr>
+            <tr><td>Pan</td><td>Hold the middle mouse button and drag, or press <kbd>G</kbd> for the <span class="ti" aria-hidden="true"><svg><use href="#i-grab"/></svg></span> <span class="ui">Pan</span> tool.</td></tr>
+            <tr><td>See where you are</td><td>Press <kbd>M</kbd> to show or hide the minimap (bottom left).</td></tr>
+            <tr><td>Read pixel coordinates</td><td>Press <kbd>H</kbd> to show or hide the cursor position. It turns red outside the image.</td></tr>
+        </tbody>
+    </table></div>
+    <p>Zoom goes from 5&nbsp;% to 2000&nbsp;%. Outlines stay sharp at every zoom level.</p>
+    <div class="pair">
+        <figure class="shot"><img width="1600" height="900" src="img/04-deep-zoom-on-grains.jpg" alt="Deep zoom on grain edges with minimap and cursor position" loading="lazy"><figcaption>Deep zoom. Minimap at the bottom left, cursor position at the top left.</figcaption></figure>
+        <figure class="shot"><img width="1600" height="900" src="img/04b-deep-zoom-cursor-hud-hidden.jpg" alt="Same view with the cursor position hidden" loading="lazy"><figcaption>The same view after <kbd>H</kbd> hides the cursor position.</figcaption></figure>
+    </div>
+    <p>The button at the bottom right of the image controls what happens when you switch images. <span class="ui">Zoom locked</span> keeps the same zoom and position. <span class="ui">Zoom reset</span> fits the new image to the view. Click the button to switch between the two.</p>
+
+    <h3 id="lighting">Switch the lighting</h3>
+    <p>The pills in the tool rail list the lighting variants found in the folder. Click <span class="chip mod">PPL</span> or <span class="chip mod">XPL</span> to change the modality. When the folder has compensator images, the pills <span class="chip comp">γ1</span> (+λ), <span class="chip comp">γ-1</span> (−λ) and <span class="chip comp">γ0</span> (no compensator) appear below. The badges at the top right of the image show the current modality, compensator and rotation.</p>
+    <p>Your outlines belong to the field of view, not to one image. They stay in place on every variant, so you can check a grain under crossed polars without redrawing it.</p>
+</div>
+<div class="wide">
+    <figure class="shot">
+        <div class="compare" style="--pos: 50%">
+            <img width="1600" height="900" src="img/16-polarization-switch-xpl.jpg" alt="XPL without compensator">
+            <img width="1600" height="900" class="top" src="img/16b-xpl-compensator-plus-lambda.jpg" alt="XPL with plus lambda compensator">
+            <div class="bar"></div>
+            <span class="tag l">XPL · γ0</span><span class="tag r">XPL · γ1 (+λ)</span>
+            <input type="range" min="0" max="100" value="50" aria-label="Compare XPL without and with compensator">
+        </div>
+        <figcaption>Drag to compare XPL without compensator and with the +λ plate.</figcaption>
+    </figure>
+</div>
+<div class="col">
+    <h3 id="undo">Undo and redo</h3>
+    <p>Press <kbd>Ctrl</kbd>+<kbd>Z</kbd> to undo and <kbd>Ctrl</kbd>+<kbd>⇧</kbd>+<kbd>Z</kbd> (or <kbd>Ctrl</kbd>+<kbd>Y</kbd>) to redo. On a Mac, use <kbd>⌘</kbd> instead of <kbd>Ctrl</kbd>. The arrows <span class="ti" aria-hidden="true"><svg><use href="#i-undo"/></svg></span> <span class="ti" aria-hidden="true"><svg><use href="#i-redo"/></svg></span> at the top of the tool rail do the same; their tooltip names the step, for example <span class="ui">Undo: SAM result</span>.</p>
+    <ul class="plain">
+        <li>The app keeps the last 50 steps.</li>
+        <li>Switching between PPL and XPL keeps the history. Opening another task clears it.</li>
+        <li>The <span class="ui">Refine</span> and <span class="ui">SLIC superpixels</span> windows have their own undo while they are open. When you click <span class="ui">Apply</span>, the whole session becomes one step.</li>
+    </ul>
+</div>
+</section>
+
+<!-- ═══════════════════════ 06 SEGMENT ═══════════════════════ -->
+<section class="chapter" id="segment" data-title="Outline a grain">
+<div class="col">
+    <div class="chap-head"><span class="chap-no">06</span><h2>Outline a grain</h2></div>
+    <p>One <b>object</b> (also called a region) is one mineral grain. You can build an object with any mix of tools: start with the model, then add or cut by hand.</p>
+    <div class="callout">
+        <b>How objects start</b>
+        <p>When no object is selected, your first point, box or shape creates a new object and the panel switches to that object.</p>
+        <p>When no object is selected, a click on an existing grain selects that grain instead of drawing.</p>
+        <p>While an object is selected, every click goes to the active tool. Click <span class="ui">Save</span> in the panel to finish the object before you start the next one.</p>
+    </div>
+    <p>Pick a tool to see how it works:</p>
+    <div class="tabs" role="tablist" aria-label="Annotation tools">
+        <button type="button" role="tab" id="tab-point" aria-controls="panel-point" aria-selected="true"><span class="ti" aria-hidden="true"><svg><use href="#i-select-add"/></svg></span><span class="ti" aria-hidden="true"><svg><use href="#i-select-remove"/></svg></span>Add / Remove point <kbd>S</kbd><kbd>X</kbd></button>
+        <button type="button" role="tab" id="tab-box" aria-controls="panel-box" aria-selected="false"><span class="ti" aria-hidden="true"><svg><use href="#i-bbox"/></svg></span>Bounding box <kbd>B</kbd></button>
+        <button type="button" role="tab" id="tab-poly" aria-controls="panel-poly" aria-selected="false"><span class="ti" aria-hidden="true"><svg><use href="#i-polygon"/></svg></span>Polygon lasso <kbd>P</kbd></button>
+        <button type="button" role="tab" id="tab-free" aria-controls="panel-free" aria-selected="false"><span class="ti" aria-hidden="true"><svg><use href="#i-freeform"/></svg></span>Freeform draw <kbd>F</kbd></button>
+        <button type="button" role="tab" id="tab-slic" aria-controls="panel-slic" aria-selected="false"><span class="ti" aria-hidden="true"><svg><use href="#i-slic"/></svg></span>Superpixels (SLIC) <kbd>L</kbd></button>
+    </div>
+
+    <div class="tabpanel" role="tabpanel" id="panel-point" aria-labelledby="tab-point">
+        <h3>Click the grain: Add point and Remove point</h3>
+        <p>These are the SAM tools. You place points; the model finds the grain that contains them. <span class="chip pos">+ point</span> means "this is part of the grain". <span class="chip neg">− point</span> means "this is not".</p>
+        <ol class="steps">
+            <li>Press <kbd>S</kbd>, or click <span class="ti" aria-hidden="true"><svg><use href="#i-select-add"/></svg></span> <span class="ui">Add point</span> in the tool rail.</li>
+            <li>Click inside the grain.<span class="result">An outline appears after about one second.</span></li>
+            <li>If the outline misses part of the grain, click in the missing part.</li>
+            <li>If the outline spills onto a neighbour, press <kbd>X</kbd> (or click <span class="ti" aria-hidden="true"><svg><use href="#i-select-remove"/></svg></span> <span class="ui">Remove point</span>) and click the part to exclude.<span class="result">The outline updates after each point.</span></li>
+        </ol>
+        <p>The panel lists each point under <span class="ui">SAM points</span>. Click <span class="ui">×</span> next to a point to remove it.</p>
+        <div class="callout"><b>First click on a new image</b><p>The first click on each image takes longer, often about ten seconds, because the model prepares the image. The next clicks are fast.</p></div>
+    </div>
+</div>
+<div class="wide" data-for="panel-point">
+    <div class="pair">
+        <figure class="shot">
+            <div class="compare" style="--pos: 50%">
+                <img width="1600" height="900" src="img/06-ai-segmentation-before.jpg" alt="Cursor over a crystal before clicking">
+                <img width="1600" height="900" class="top" src="img/07-ai-segmentation-after.jpg" alt="SAM outline after one click">
+                <div class="bar"></div><span class="tag l">before</span><span class="tag r">1 point</span>
+                <input type="range" min="0" max="100" value="50" aria-label="Compare before and after one SAM point">
+            </div>
+            <figcaption>One click: SAM outlines part of the crystal.</figcaption>
+        </figure>
+        <figure class="shot"><img width="1600" height="900" src="img/07b-ai-segmentation-refined-second-point.jpg" alt="Outline after a second positive point" loading="lazy"><figcaption>A second <span class="chip pos">+ point</span> in the missing part extends the outline.</figcaption></figure>
+    </div>
+</div>
+<div class="col">
+    <div class="tabpanel" role="tabpanel" id="panel-box" aria-labelledby="tab-box" hidden>
+        <h3>Draw a box around the grain</h3>
+        <p>A box tells the model where the whole grain is. It often gives the full crystal in one step.</p>
+        <ol class="steps">
+            <li>Press <kbd>B</kbd>, or click <span class="ti" aria-hidden="true"><svg><use href="#i-bbox"/></svg></span> <span class="ui">Bounding box</span> in the tool rail.</li>
+            <li>Drag a box that encloses the grain with a small margin.<span class="result">The outline of the grain appears.</span></li>
+            <li>If needed, add <span class="ti" aria-hidden="true"><svg><use href="#i-select-add"/></svg></span> <kbd>S</kbd> or <span class="ti" aria-hidden="true"><svg><use href="#i-select-remove"/></svg></span> <kbd>X</kbd> points to adjust the result.</li>
+        </ol>
+    </div>
+</div>
+<div class="wide" data-for="panel-box" hidden>
+    <figure class="shot">
+        <div class="compare" style="--pos: 50%">
+            <img width="1600" height="900" src="img/06b-box-prompt-drawing.jpg" alt="Dashed box dragged around a crystal">
+            <img width="1600" height="900" class="top" src="img/07c-box-prompt-result.jpg" alt="Full crystal outline from the box">
+            <div class="bar"></div><span class="tag l">drag the box</span><span class="tag r">result</span>
+            <input type="range" min="0" max="100" value="50" aria-label="Compare box prompt and result">
+        </div>
+        <figcaption>One box gives the outline of the whole crystal.</figcaption>
+    </figure>
+</div>
+<div class="col">
+    <div class="tabpanel" role="tabpanel" id="panel-poly" aria-labelledby="tab-poly" hidden>
+        <h3>Trace the grain with a polygon</h3>
+        <p>Use the polygon when the model cannot find the edge, for example on very low-contrast grains.</p>
+        <ol class="steps">
+            <li>Press <kbd>P</kbd>, or click <span class="ti" aria-hidden="true"><svg><use href="#i-polygon"/></svg></span> <span class="ui">Polygon lasso</span> in the tool rail.</li>
+            <li>Click along the edge of the grain to place vertices.</li>
+            <li>To remove the last vertex, press <kbd>Backspace</kbd>.</li>
+            <li>To close the shape, click the first vertex.<span class="result">The polygon becomes a new object, or a new piece of the selected object.</span></li>
+        </ol>
+        <p>To cancel the polygon in progress, press <kbd>Esc</kbd>.</p>
+    </div>
+</div>
+<div class="wide" data-for="panel-poly" hidden>
+    <figure class="anim" data-scene="polygon">
+        <canvas role="img" aria-label="Animation: placing polygon vertices around a grain, then closing the shape"></canvas>
+        <button type="button" class="anim-toggle" aria-label="Pause animation">Pause</button>
+        <figcaption>Replay: click vertices along the edge, then click the first vertex to close.</figcaption>
+    </figure>
+    <div class="pair">
+        <figure class="shot"><img width="1600" height="900" src="img/05-manual-polygon-in-progress.jpg" alt="Polygon with six vertices, not closed" loading="lazy"><figcaption>Vertices in progress.</figcaption></figure>
+        <figure class="shot"><img width="1600" height="900" src="img/05b-manual-polygon-closed.jpg" alt="Polygon closed as a new object" loading="lazy"><figcaption>Closed: the object opens in the panel.</figcaption></figure>
+    </div>
+</div>
+<div class="col">
+    <div class="tabpanel" role="tabpanel" id="panel-free" aria-labelledby="tab-free" hidden>
+        <h3>Draw the grain freehand</h3>
+        <ol class="steps">
+            <li>Press <kbd>F</kbd>, or click <span class="ti" aria-hidden="true"><svg><use href="#i-freeform"/></svg></span> <span class="ui">Freeform draw</span> in the tool rail.</li>
+            <li>Hold the mouse button and draw around the grain.</li>
+            <li>Release the button.<span class="result">The app closes the stroke and fills it.</span></li>
+        </ol>
+        <p>Freeform is fast for small grains and for patching a gap in a SAM outline. To cut instead of add, switch the panel to <span class="ui">Erase</span> first (see <a href="#fill-erase">Fill and Erase</a>).</p>
+    </div>
+</div>
+<div class="wide" data-for="panel-free" hidden>
+    <figure class="anim" data-scene="freeform">
+        <canvas role="img" aria-label="Animation: drawing a freehand stroke around an opaque grain"></canvas>
+        <button type="button" class="anim-toggle" aria-label="Pause animation">Pause</button>
+        <figcaption>Replay: hold the button, draw around the grain, release.</figcaption>
+    </figure>
+</div>
+<div class="col">
+
+    <div class="tabpanel" role="tabpanel" id="panel-slic" aria-labelledby="tab-slic" hidden>
+        <h3>Build the grain from superpixels</h3>
+        <p>SLIC cuts an area into small patches of similar colour, called superpixels. You keep the patches that belong to the grain. This works well on grains with fuzzy edges.</p>
+        <ol class="steps">
+            <li>Press <kbd>L</kbd>, or click <span class="ti" aria-hidden="true"><svg><use href="#i-slic"/></svg></span> <span class="ui">Superpixels (SLIC)</span> in the tool rail.</li>
+            <li>Drag a box around the area.<span class="result">The app shows <span class="ui">Computing SLIC...</span>, then opens the <span class="ui">SLIC superpixels</span> window. All patches start as kept.</span></li>
+            <li>Click each patch that does not belong to the grain.<span class="result">The counter at the top shows how many patches you keep.</span></li>
+            <li>If an object is selected, choose <span class="ui">Add to mask</span> or <span class="ui">Remove from mask</span>. With no object selected, the kept patches form a new object.</li>
+            <li>Click <span class="ui">Apply</span>.</li>
+        </ol>
+        <p>Inside the window, the wheel zooms and the middle button pans. <span class="ui">Reset</span> brings back every patch. <span class="ui">Cancel</span> closes the window without changes. If the app says <span class="ui">SLIC area too large</span>, draw a smaller box.</p>
+    </div>
+</div>
+<div class="wide" data-for="panel-slic" hidden>
+    <figure class="anim" data-scene="slic">
+        <canvas role="img" aria-label="Animation: dragging a box, dropping superpixels outside the crystal, then applying"></canvas>
+        <button type="button" class="anim-toggle" aria-label="Pause animation">Pause</button>
+        <figcaption>Replay: drag a box, click the patches outside the grain, then click Apply.</figcaption>
+    </figure>
+    <figure class="shot"><img width="1600" height="900" src="img/16d-slic-superpixel-review.jpg" alt="SLIC review window with superpixels" loading="lazy"><figcaption>The SLIC review window. Click patches to drop them, then click <span class="ui">Apply</span>.</figcaption></figure>
+</div>
+<div class="col">
+    <div class="tool-meta">Every tool also has a button in the tool rail. With the default <span class="ui">Flyout menus</span> layout, the three SAM tools share one button, <span class="ti" aria-hidden="true"><svg><use href="#i-sam-group"/></svg></span> <span class="ui">SAM tools</span>: hover it to pick one. Once you pick a tool, the button shows that tool's icon.</div>
+</div>
+</section>
+
+<!-- ═══════════════════════ 07 FILL / ERASE ═══════════════════════ -->
+<section class="chapter" id="fill-erase" data-title="Fill and Erase">
+<div class="col">
+    <div class="chap-head"><span class="chap-no">07</span><h2>Fill and Erase</h2></div>
+    <p>Polygon lasso and Freeform draw do two jobs. With no object selected, the shape you draw becomes a new object. With an object selected, the <span class="ui">Fill</span> / <span class="ui">Erase</span> switch in the panel decides what the shape does to that object.</p>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Switch</th><th>The shape you draw</th><th>Preview while drawing</th></tr></thead>
+        <tbody>
+            <tr><td><span class="ti fill-on" aria-hidden="true" title="Fill"><svg><use href="#i-brush"/></svg></span> <span class="ui">Fill</span></td><td>is added to the object. Use it to cover a part the outline missed.</td><td>Solid amber (polygon) or orange (freeform) line</td></tr>
+            <tr><td><span class="ti erase-on" aria-hidden="true" title="Erase"><svg><use href="#i-eraser"/></svg></span> <span class="ui">Erase</span></td><td>is removed from the object. Use it to trim an edge or cut a hole, for example around an inclusion.</td><td>Dashed red line</td></tr>
+        </tbody>
+    </table></div>
+    <p>The switch works on any object, however you made it: SAM points, a box, a polygon, a freeform stroke or superpixels.</p>
+
+    <h3 id="fill">Add a missing part</h3>
+    <ol class="steps">
+        <li>Select the object: click it on the image or in the panel.</li>
+        <li>In the panel, click <span class="ti fill-on" aria-hidden="true"><svg><use href="#i-brush"/></svg></span> <span class="ui">Fill</span>.</li>
+        <li>Press <span class="ti" aria-hidden="true"><svg><use href="#i-polygon"/></svg></span> <kbd>P</kbd> or <span class="ti" aria-hidden="true"><svg><use href="#i-freeform"/></svg></span> <kbd>F</kbd> and draw the missing part. Let the shape overlap the object a little.<span class="result">The shape joins the object. The outline now goes around both.</span></li>
+    </ol>
+</div>
+<div class="wide">
+    <figure class="anim" data-scene="fill">
+        <canvas role="img" aria-label="Animation: with Fill on, a polygon over the missing lower part joins the object"></canvas>
+        <button type="button" class="anim-toggle" aria-label="Pause animation">Pause</button>
+        <figcaption>Fill: the polygon is added to the selected object.</figcaption>
+    </figure>
+</div>
+<div class="col">
+    <h3 id="erase">Cut a part or a hole</h3>
+    <ol class="steps">
+        <li>Select the object.</li>
+        <li>In the panel, click <span class="ti erase-on" aria-hidden="true"><svg><use href="#i-eraser"/></svg></span> <span class="ui">Erase</span>.</li>
+        <li>Press <span class="ti" aria-hidden="true"><svg><use href="#i-polygon"/></svg></span> <kbd>P</kbd> or <span class="ti" aria-hidden="true"><svg><use href="#i-freeform"/></svg></span> <kbd>F</kbd> and draw around the part to remove.<span class="result">The part disappears from the object. A shape inside the object leaves a hole.</span></li>
+        <li>Click <span class="ui">Fill</span> to go back to adding.</li>
+    </ol>
+</div>
+<div class="wide">
+    <figure class="anim" data-scene="erase">
+        <canvas role="img" aria-label="Animation: with Erase on, a freeform loop around an inclusion cuts a hole in the object"></canvas>
+        <button type="button" class="anim-toggle" aria-label="Pause animation">Pause</button>
+        <figcaption>Erase: the loop is cut out of the selected object and leaves a hole.</figcaption>
+    </figure>
+</div>
+<div class="col">
+    <div class="callout">
+        <b>Good to know</b>
+        <p><span class="ui">Save</span> sets the switch back to <span class="ui">Fill</span>, so the next object starts in Fill.</p>
+        <p>Holes are kept in the draft and in the export: the saved mask is the filled parts minus the erased parts.</p>
+        <p>New SAM points replace the previous SAM outline of the object. Pieces you added with Fill and cuts you made with Erase stay.</p>
+        <p>The SLIC window has its own switch, <span class="ui">Add to mask</span> / <span class="ui">Remove from mask</span>, and the brush in <a href="#refine">Refine</a> has <span class="ui">Add</span> / <span class="ui">Eraser</span>.</p>
+    </div>
+</div>
+</section>
+
+<!-- ═══════════════════════ 08 CORRECT ═══════════════════════ -->
+<section class="chapter" id="correct" data-title="Correct an outline">
+<div class="col">
+    <div class="chap-head"><span class="chap-no">08</span><h2>Correct an outline</h2></div>
+    <p>Select an object to correct it: click the grain on the image, or click its name in the panel. The panel shows the edit tools at the top.</p>
+    <figure class="shot"><img width="1600" height="900" src="img/08a-edit-mode-selected-grain.jpg" alt="Selected grain with Fill, Erase, Refine and Show anchors" loading="lazy"><figcaption>A selected object: name, delete button, <span class="ui">Fill</span> / <span class="ui">Erase</span>, <span class="ui">Refine</span>, <span class="ui">Show anchors</span>, then the mineral form.</figcaption></figure>
+
+    <p>To add a missing part or cut a hole with a polygon or a freeform stroke, use <a href="#fill-erase">Fill and Erase</a>. The tools below work on the pixels of the mask.</p>
+
+    <h3 id="refine">Refine with a brush</h3>
+    <p>Use <span class="ui">Refine</span> for pixel-level touch-ups along an edge.</p>
+    <ol class="steps">
+        <li>Select the object and click <span class="ui">Refine</span>.<span class="result">The <span class="ui">Refinement</span> window opens on the object.</span></li>
+        <li>Choose <span class="ui">Add</span> or <span class="ui">Eraser</span>.</li>
+        <li>Set the <span class="ui">Brush</span> size (5 to 100 px).</li>
+        <li>Paint on the mask. Use the wheel to zoom and the middle button to pan.</li>
+        <li>Click <span class="ui">Apply</span> to keep the changes, or <span class="ui">Cancel</span>.</li>
+    </ol>
+    <figure class="shot"><img width="1600" height="900" src="img/08-refinement-overlay.jpg" alt="Refinement window with brush and eraser" loading="lazy"><figcaption>The Refinement window has its own undo and redo.</figcaption></figure>
+
+    <h3 id="anchors">Move vertices with anchors</h3>
+    <ol class="steps">
+        <li>Select the object and click <span class="ti" aria-hidden="true"><svg><use href="#i-eye-slash"/></svg></span> <span class="ui">Show anchors</span>.<span class="result">The outline becomes a set of vertices you can drag.</span></li>
+        <li>Drag a vertex to move the edge.</li>
+        <li>To delete a whole piece of the object, click its red <span class="ui">×</span> handle.</li>
+        <li>Click <span class="ui">Show anchors</span> again to merge the vertices back into one mask.</li>
+    </ol>
+    <div class="callout warn">
+        <b>Anchors simplify the outline</b>
+        <p>To make the vertices editable, the app simplifies the outline. Very fine details along the edge can be lost, and that loss is kept when you save. Use anchors on grains with simple shapes, and check the edge before you save.</p>
+    </div>
+
+    <h3 id="delete">Delete an object</h3>
+    <p>Select the object, then click the red <span class="ti erase-on" aria-hidden="true"><svg><use href="#i-trash"/></svg></span> trash button next to its name, or press <kbd>Delete</kbd>. When you are not drawing, <kbd>Backspace</kbd> also deletes the selected object. Press <kbd>Ctrl</kbd>+<kbd>Z</kbd> to get it back.</p>
+</div>
+</section>
+
+<!-- ═══════════════════════ 09 DESCRIBE ═══════════════════════ -->
+<section class="chapter" id="describe" data-title="Describe the mineral">
+<div class="col">
+    <div class="chap-head"><span class="chap-no">09</span><h2>Describe the mineral</h2></div>
+    <p>Each object records your identification as three ranked hypotheses, plus the optical properties you observed. A ranked list keeps the uncertainty that a single label would hide.</p>
+    <figure class="shot"><img width="1600" height="900" src="img/09-mineral-annotation-form.jpg" alt="Mineral annotation form with three hypotheses and optical properties" loading="lazy"><figcaption>The <span class="ui">Mineral annotation</span> form, filled with demo values.</figcaption></figure>
+    <ol class="steps">
+        <li>Choose the <span class="ui">1st hypothesis — most probable</span>.<span class="result">The object takes the name of this mineral. You can still edit the name in the field at the top.</span></li>
+        <li>Choose the <span class="ui">2nd hypothesis</span>.</li>
+        <li>Choose the <span class="ui">3rd hypothesis — least probable</span>.<span class="result"><span class="ui">Save</span> becomes available. All three hypotheses are required.</span></li>
+        <li>Fill in the optical properties you observed. They are optional.</li>
+        <li>Click <span class="ui">Save</span>.<span class="result">The panel returns to the object list, for example <span class="mono">Augite — Augite › Hypersthene › Hornblende</span>.</span></li>
+    </ol>
+    <div class="callout warn">
+        <b>Save is not a file save</b>
+        <p><span class="ui">Save</span> in the form closes the object and merges its pieces into one shape. It does not write anything to disk. To keep your work, use <span class="ui">Save draft</span> or <span class="ui">Export annotation (current image)</span>. See <a href="#save">Save and export</a>.</p>
+    </div>
+
+    <h3 id="properties">Optical properties</h3>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Field</th><th>Choices</th></tr></thead>
+        <tbody>
+            <tr><td>Relief</td><td>Low · Medium · High</td></tr>
+            <tr><td>Birefringence</td><td>Low · Medium · High · Very high</td></tr>
+            <tr><td>Cleavage</td><td>None · Indistinct · Good · Perfect</td></tr>
+            <tr><td>Pleochroism</td><td>None · Weak · Strong</td></tr>
+            <tr><td>Crystal system</td><td>Cubic · Tetragonal · Orthorhombic · Monoclinic · Triclinic · Hexagonal</td></tr>
+            <tr><td>Extinction (°)</td><td>A number, for example <code>25</code></td></tr>
+            <tr><td>Observed colour</td><td>Free text, for example <i>colourless, brown, pale green</i></td></tr>
+            <tr><td>Notes</td><td>Free text</td></tr>
+        </tbody>
+    </table></div>
+
+    <h3 id="minerals">The mineral list</h3>
+    <p>The lists group minerals by family. Your lab can change the list on the service side, so your installation can show more or different minerals. The default list is:</p>
+    <div class="minerals">
+        <div><b>Tectosilicates</b>Quartz, K-feldspar, Plagioclase</div>
+        <div><b>Phyllosilicates</b>Muscovite, Biotite, Chlorite, Serpentine</div>
+        <div><b>Inosilicates</b>Hornblende, Augite, Hypersthene</div>
+        <div><b>Nesosilicates</b>Olivine, Garnet, Zircon</div>
+        <div><b>Cyclosilicates</b>Tourmaline</div>
+        <div><b>Sorosilicates</b>Epidote, Titanite</div>
+        <div><b>Carbonates</b>Calcite, Dolomite</div>
+        <div><b>Oxides</b>Magnetite, Ilmenite, Hematite</div>
+        <div><b>Phosphates</b>Apatite</div>
+    </div>
+    <p>Each object has its own colour so you can tell neighbours apart. Colours do not depend on the mineral.</p>
+</div>
+</section>
+
+<!-- ═══════════════════════ 10 SAVE ═══════════════════════ -->
+<section class="chapter" id="save" data-title="Save and export">
+<div class="col">
+    <div class="chap-head"><span class="chap-no">10</span><h2>Save and export</h2></div>
+    <p>Three actions keep your work at three levels. The two file buttons sit at the bottom of the panel when no object is selected.</p>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Action</th><th>Writes</th><th>Use it to</th></tr></thead>
+        <tbody>
+            <tr><td><span class="ui">Save</span> (in the form)</td><td>Nothing on disk</td><td>Finish one object.</td></tr>
+            <tr><td><span class="ui">Save draft</span></td><td><code>&lt;username&gt;_task.json</code> next to the images</td><td>Stop and resume later. The draft keeps every piece of every object, ready to edit.</td></tr>
+            <tr><td><span class="ui">Export annotation (current image)</span></td><td><code>&lt;image&gt;_annotator-&lt;username&gt;.thinannotation</code> next to the image</td><td>Deliver the final result for the image on screen.</td></tr>
+        </tbody>
+    </table></div>
+    <div class="pair">
+        <figure class="shot"><img width="1600" height="900" src="img/13a-save-draft-toast.jpg" alt="Draft saved message" loading="lazy"><figcaption><span class="ui">Draft saved</span> confirms the draft file.</figcaption></figure>
+        <figure class="shot"><img width="1600" height="900" src="img/13-export-annotation-toast.jpg" alt="Annotation exported message" loading="lazy"><figcaption><span class="ui">Annotation exported</span> confirms the export.</figcaption></figure>
+    </div>
+    <ul class="plain">
+        <li>The export covers the image on screen only. To export another lighting variant, switch to it and click <span class="ui">Export annotation (current image)</span> again.</li>
+        <li>In a batch, <span class="ui">Next</span> exports every lighting variant of the task for you.</li>
+        <li>The browser also keeps a copy as you work. If the browser closes, the app offers to restore it (see <a href="#resume">Come back to a task</a>). This copy is a safety net, not a replacement for <span class="ui">Save draft</span>.</li>
+    </ul>
+
+    <h3 id="leave">Leave a task</h3>
+    <p>Click <span class="ui">Finish</span> in the top-right corner. The <span class="ui">Finish task</span> dialog asks <span class="ui">Do you want to save your changes before leaving?</span></p>
+    <ul class="plain">
+        <li><span class="ui">Save and leave</span> saves the draft, then returns to the home screen.</li>
+        <li><span class="ui">Leave without saving</span> returns without saving.</li>
+    </ul>
+    <p><span class="ui">Open a new task</span> in the top-left corner also leaves the task.</p>
+    <figure class="shot"><img width="1600" height="900" src="img/18-finish-task-dialog.jpg" alt="Finish task dialog" loading="lazy"><figcaption>The Finish task dialog.</figcaption></figure>
+    <h3 id="idle">If you step away</h3>
+    <p>Some installations close an idle task. After 4 minutes without activity (8 minutes while an object is open), the app plays a sound, flashes the browser tab title and asks <span class="ui">Still there?</span>. The sound and the flashing tab help when you are looking into the microscope.</p>
+    <ol class="steps">
+        <li>Click <span class="ui">I am still here</span> within 2 minutes.<span class="result">The dialog closes and you continue where you were.</span></li>
+    </ol>
+    <p>If nobody answers, the app saves the draft and returns to the home screen. If that save fails, the task stays open and the app shows <span class="ui">Save failed — the task stays open.</span></p>
+    <figure class="with-fallback">
+    <img class="real" src="img/19-idle-prompt.jpg" alt="Still there dialog" hidden>
+    <div class="fallback" hidden>
+    <div class="app-modal-stage" role="group" aria-label="Still there dialog illustration">
+        <div class="app-modal">
+            <b>Still there?</b>
+            <p>No activity for a while. Without a response the task will be saved and closed.</p>
+            <span class="count" id="idle-count">Closing in 2:00</span>
+            <button type="button" class="primary" id="idle-stay">I am still here</button>
+        </div>
+    </div>
+    <p class="mock-note">Illustration with the real wording, redrawn because no screenshot is available yet. The countdown runs here; click the button to restart it.</p>
+    </div>
+    </figure>
+
+    <h3 id="export-format">What the export contains</h3>
+    <p>The <code>.thinannotation</code> file is JSON in a COCO-like layout. Each grain stores its mask as RLE (run-length encoding) and the mineral data you entered. The file also records the lighting conditions of the image and your annotator profile.</p>
+<pre class="json"><span class="k">"metadata"</span>: { <span class="k">"lightning_modality"</span>: <span class="s">"PPL"</span>, <span class="k">"gamma"</span>: <span class="s">"na"</span>, <span class="k">"rotation"</span>: 45 },
+<span class="k">"image"</span>: { <span class="k">"file_name"</span>: <span class="s">"GDX-22-PI_mod-PPL_comp-na_rot-45.bmp"</span>, <span class="k">"width"</span>: 2448, <span class="k">"height"</span>: 2048 },
+<span class="k">"annotations"</span>: [{
+    <span class="k">"segmentation"</span>: { <span class="k">"counts"</span>: <span class="s">"dS]d11fo1a0C7@?K5I7L4M2M…"</span>, <span class="k">"size"</span>: [2048, 2448] },
+    <span class="k">"mineralIds"</span>: [<span class="s">"aug"</span>, <span class="s">"hyp"</span>, <span class="s">"hbl"</span>],   <span class="c">// 1st, 2nd, 3rd hypothesis</span>
+    <span class="k">"relief"</span>: <span class="s">"high"</span>, <span class="k">"birefringence"</span>: <span class="s">"medium"</span>, <span class="k">"cleavage"</span>: <span class="s">"good"</span>, <span class="c">…</span>
+}],
+<span class="k">"annotator_profile"</span>: { <span class="k">"username"</span>: <span class="s">"demo"</span>, <span class="k">"level"</span>: <span class="s">"expert"</span>, <span class="c">…</span> }</pre>
+    <div class="pair">
+        <figure class="shot"><img width="1600" height="1338" src="img/14a-exported-masks-decoded.jpg" alt="Masks decoded from an export, flat colours on black" loading="lazy"><figcaption>Masks decoded from an export file.</figcaption></figure>
+        <figure class="shot"><img width="1600" height="1338" src="img/14b-exported-masks-over-image.jpg" alt="Decoded masks over the PPL image" loading="lazy"><figcaption>The same masks over the PPL image. Both pictures were made outside the app.</figcaption></figure>
+    </div>
+
+    <h3 id="dataset">Build a Thin-COCO dataset</h3>
+    <p>The launcher gathers finished annotations into one dataset for machine learning.</p>
+    <ol class="steps">
+        <li>In the Control Panel, click <span class="ui">Generate Thin-COCO dataset</span>.</li>
+        <li>Choose the <span class="ui">Source Folder</span> that holds your annotated images.</li>
+        <li>Choose the <span class="ui">Destination Folder</span>.</li>
+        <li>To get a single archive, select <span class="ui">Compress as .zip archive</span>.</li>
+        <li>Click <span class="ui">Generate</span>.<span class="result">The app writes <code>dataset_&lt;timestamp&gt;/</code> with <code>annotations.json</code>, an <code>images/</code> folder and <code>build.log</code>.</span></li>
+    </ol>
+    <p>In the dataset, the category of each grain is its 1st hypothesis. Each annotation also gets its area and bounding box in pixels. Try the steps in the illustration below.</p>
+</div>
+<div class="wide">
+    <div class="mock-wrap">
+        <div class="win" role="group" aria-label="Dataset builder illustration" id="mock-ds">
+            <div class="win-bar"><i></i><i></i><i></i><span>Generate Thin-COCO dataset</span></div>
+            <div class="win-body">
+                <div class="field"><label>Source Folder</label><output id="mock-src">No folder selected</output><button type="button" class="w" data-pick="mock-src" data-path="~/Lab/campaign-2026">Browse…</button></div>
+                <div class="field"><label>Destination Folder</label><output id="mock-dst">No folder selected</output><button type="button" class="w" data-pick="mock-dst" data-path="~/Lab/datasets">Browse…</button></div>
+                <label class="check"><input type="checkbox" id="mock-zip"> Compress as .zip archive</label>
+                <button type="button" class="w primary" id="mock-gen" disabled>Generate</button>
+                <div class="log" id="mock-log" aria-live="polite"></div>
+            </div>
+        </div>
+    </div>
+    <p class="mock-note col">Illustration. Click the buttons to see the sequence. The real window can look slightly different on your system.</p>
+</div>
+</section>
+
+<!-- ═══════════════════════ 11 CUSTOMIZE ═══════════════════════ -->
+<section class="chapter" id="customize" data-title="Customize">
+<div class="col">
+    <div class="chap-head"><span class="chap-no">11</span><h2>Customize</h2></div>
+    <p>Click the gear <span class="ti" aria-hidden="true"><svg><use href="#i-cog"/></svg></span> at the bottom of the tool rail to open <span class="ui">Customization</span>. The app remembers your choices on this computer.</p>
+    <figure class="shot"><img width="1600" height="900" src="img/15-customize-settings.jpg" alt="Customization window" loading="lazy"><figcaption>Language, toolbar layout and mask display.</figcaption></figure>
+    <div class="table-wrap"><table>
+        <thead><tr><th>Setting</th><th>Choices</th></tr></thead>
+        <tbody>
+            <tr><td><span class="ui">Language</span></td><td>Français · English</td></tr>
+            <tr><td><span class="ui">Toolbar layout</span></td><td><span class="ui">Separators</span>: a thin line between groups. <span class="ui">Groups</span>: each group on its own panel, with its icon. <span class="ui">Flyout menus</span> (default): one icon per group; hover or click to pick a tool.</td></tr>
+            <tr><td><span class="ui">Mask display</span></td><td><span class="ui">Fill</span> shows tinted grains. <span class="ui">Borders</span> shows outlines only.</td></tr>
+        </tbody>
+    </table></div>
+    <figure class="shot"><img width="1600" height="900" src="img/15b-toolbar-layout-groups.jpg" alt="Tool rail in the Groups layout" loading="lazy"><figcaption>The tool rail in the <span class="ui">Groups</span> layout.</figcaption></figure>
+    <p>The square button <span class="ti" aria-hidden="true"><svg><use href="#i-borders"/></svg></span> in the tool rail switches between fill and borders without opening the window. Borders make it easier to judge an edge against the minerals underneath.</p>
+</div>
+<div class="wide">
+    <figure class="shot">
+        <div class="compare" style="--pos: 50%">
+            <img width="1600" height="900" src="img/10-fully-annotated-fill-crop.jpg" alt="Masks shown with fill">
+            <img width="1600" height="900" class="top" src="img/10b-fully-annotated-borders-only-crop.jpg" alt="Masks shown as borders only">
+            <div class="bar"></div><span class="tag l">Fill</span><span class="tag r">Borders</span>
+            <input type="range" min="0" max="100" value="50" aria-label="Compare fill and borders display">
+        </div>
+        <figcaption>Drag across the grains. Left: <span class="ui">Fill</span> tints each object. Right: <span class="ui">Borders</span> leaves the minerals visible inside the outline.</figcaption>
+    </figure>
+</div>
+</section>
+
+<!-- ═══════════════════════ 12 SHORTCUTS ═══════════════════════ -->
+<section class="chapter" id="shortcuts" data-title="Keyboard shortcuts">
+<div class="col">
+    <div class="chap-head"><span class="chap-no">12</span><h2>Keyboard shortcuts</h2></div>
+    <p>Press <kbd>?</kbd> in the editor, or click <span class="ti q" aria-hidden="true">?</span> in the tool rail, to show this list at any time. Shortcuts do nothing while you type in a text field.</p>
+    <div class="kb-tools">
+        <input id="kb-filter" type="search" placeholder="Filter shortcuts" aria-label="Filter shortcuts">
+        <span class="kb-live" id="kb-live">Press a key on your keyboard to find it.</span>
+    </div>
+    <div class="table-wrap"><table id="kb-table">
+        <thead><tr><th>Key</th><th>Action</th></tr></thead>
+        <tbody>
+            <tr data-k="v"><td><kbd>V</kbd></td><td><span class="ti" aria-hidden="true"><svg><use href="#i-pointer"/></svg></span>Pointer: select without drawing</td></tr>
+            <tr data-k="s"><td><kbd>S</kbd></td><td><span class="ti" aria-hidden="true"><svg><use href="#i-select-add"/></svg></span>Add point (SAM positive point)</td></tr>
+            <tr data-k="x"><td><kbd>X</kbd></td><td><span class="ti" aria-hidden="true"><svg><use href="#i-select-remove"/></svg></span>Remove point (SAM negative point)</td></tr>
+            <tr data-k="b"><td><kbd>B</kbd></td><td><span class="ti" aria-hidden="true"><svg><use href="#i-bbox"/></svg></span>Bounding box (SAM)</td></tr>
+            <tr data-k="p"><td><kbd>P</kbd></td><td><span class="ti" aria-hidden="true"><svg><use href="#i-polygon"/></svg></span>Polygon lasso</td></tr>
+            <tr data-k="f"><td><kbd>F</kbd></td><td><span class="ti" aria-hidden="true"><svg><use href="#i-freeform"/></svg></span>Freeform draw</td></tr>
+            <tr data-k="l"><td><kbd>L</kbd></td><td><span class="ti" aria-hidden="true"><svg><use href="#i-slic"/></svg></span>Superpixels (SLIC)</td></tr>
+            <tr data-k="g"><td><kbd>G</kbd></td><td><span class="ti" aria-hidden="true"><svg><use href="#i-grab"/></svg></span>Pan (or hold the middle mouse button)</td></tr>
+            <tr data-k="= +"><td><kbd>+</kbd></td><td><span class="ti" aria-hidden="true"><svg><use href="#i-zoom-in"/></svg></span>Zoom in</td></tr>
+            <tr data-k="-"><td><kbd>−</kbd></td><td><span class="ti" aria-hidden="true"><svg><use href="#i-zoom-out"/></svg></span>Zoom out</td></tr>
+            <tr data-k="m"><td><kbd>M</kbd></td><td><span class="ti blank" aria-hidden="true"></span>Show / hide the minimap</td></tr>
+            <tr data-k="h"><td><kbd>H</kbd></td><td><span class="ti blank" aria-hidden="true"></span>Show / hide the cursor position in pixels</td></tr>
+            <tr data-k="?"><td><kbd>?</kbd></td><td><span class="ti q" aria-hidden="true">?</span>Show / hide the shortcut list</td></tr>
+            <tr data-k="ctrl+z"><td><kbd>Ctrl</kbd>+<kbd>Z</kbd></td><td><span class="ti" aria-hidden="true"><svg><use href="#i-undo"/></svg></span>Undo the last action (<kbd>⌘</kbd>+<kbd>Z</kbd> on Mac)</td></tr>
+            <tr data-k="ctrl+shift+z ctrl+y"><td><kbd>Ctrl</kbd>+<kbd>⇧</kbd>+<kbd>Z</kbd></td><td><span class="ti" aria-hidden="true"><svg><use href="#i-redo"/></svg></span>Redo (also <kbd>Ctrl</kbd>+<kbd>Y</kbd>)</td></tr>
+            <tr data-k="escape"><td><kbd>Esc</kbd></td><td><span class="ti blank" aria-hidden="true"></span>Cancel the drawing in progress</td></tr>
+            <tr data-k="backspace"><td><kbd>⌫</kbd></td><td><span class="ti blank" aria-hidden="true"></span>Remove the last polygon vertex; when not drawing, delete the selected object</td></tr>
+            <tr data-k="delete"><td><kbd>Del</kbd></td><td><span class="ti" aria-hidden="true"><svg><use href="#i-trash"/></svg></span>Delete the selected object</td></tr>
+        </tbody>
+    </table></div>
+    <figure class="shot"><img width="1600" height="900" src="img/16c-keyboard-shortcuts-panel.jpg" alt="Keyboard shortcuts panel in the editor" loading="lazy"><figcaption>The shortcut panel in the editor.</figcaption></figure>
+</div>
+</section>
+
+<!-- ═══════════════════════ 13 HELP ═══════════════════════ -->
+<section class="chapter" id="help" data-title="Troubleshooting">
+<div class="col">
+    <div class="chap-head"><span class="chap-no">13</span><h2>Troubleshooting</h2></div>
+
+    <details><summary>The first click on an image takes a long time</summary>
+        <p>The model prepares each image once, on the first SAM point or box. This often takes about ten seconds. The next clicks on the same image take about one second. The app keeps the preparation, so opening the image again later is faster.</p></details>
+
+    <details><summary>"No image in this folder. Please select a valid task folder."</summary>
+        <p>The selected folder has no image the app can read.</p>
+        <ul class="plain"><li>Check that you selected the FOV folder, not its parent.</li><li>Check the file names with the <a href="#naming">file name checker</a>.</li><li>Check that the format is one of <code>.jpg .jpeg .png .tif .tiff .bmp</code>.</li></ul></details>
+
+    <details><summary>"No folder inside that root matches the expected structure."</summary>
+        <p>The batch search found no folder with correctly named images. Check one image name with the <a href="#naming">file name checker</a>, then check the <a href="#batch-layout">batch layout</a>.</p></details>
+
+    <details><summary>"The service is not answering" or "Please check your connection and retry"</summary>
+        <p>The local server is stopped. Open the Control Panel, click <span class="ui">Start Server</span>, wait until it runs, then reload the browser page.</p></details>
+
+    <details><summary>The Save button stays grey</summary>
+        <p>All three hypotheses are required. Choose a mineral in the 1st, 2nd and 3rd hypothesis lists.</p></details>
+
+    <details><summary>My click selects another grain instead of drawing</summary>
+        <p>When no object is selected, a click on an existing grain selects it. Start the new grain on an empty area, or use the box tool around it. When an object is selected, clicks always go to the tool.</p></details>
+
+    <details><summary>Ctrl+Z does nothing inside Refine or SLIC</summary>
+        <p>Those windows have their own undo while they are open. Use their undo arrows, or <kbd>Ctrl</kbd>+<kbd>Z</kbd> inside the window. After <span class="ui">Apply</span>, the whole session is one step in the main history.</p></details>
+
+    <details><summary>Where are my files?</summary>
+        <p>Next to your images, in the FOV folder: <code>&lt;username&gt;_task.json</code> for the draft and one <code>&lt;image&gt;_annotator-&lt;username&gt;.thinannotation</code> per exported image.</p></details>
+
+    <details><summary>Can several people annotate the same folder?</summary>
+        <p>Yes. Each username gets its own draft and export files, so annotators do not overwrite each other. Do not share a username between two people.</p></details>
+</div>
+</section>
+</main>
+</div>
+
+<dialog class="lightbox" id="lightbox"><button type="button" id="lb-close">Close</button><img id="lb-img" alt=""><p id="lb-cap"></p></dialog>
+
+<script>
+(() => {
+    const $ = (s, r = document) => r.querySelector(s);
+    const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+    const store = {
+        get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+        set(k, v) { try { localStorage.setItem(k, v); } catch { /* storage unavailable */ } },
+    };
+
+    function toast(msg) {
+        const el = document.createElement("div");
+        el.className = "toast"; el.textContent = msg;
+        document.body.append(el);
+        setTimeout(() => el.remove(), 1600);
+    }
+
+    // Compare sliders
+    $$(".compare").forEach((c) => {
+        const r = $("input[type=range]", c);
+        r.addEventListener("input", () => c.style.setProperty("--pos", r.value + "%"));
+    });
+
+    // Lightbox
+    const lb = $("#lightbox");
+    $$("figure.shot > img").forEach((img) => img.addEventListener("click", () => {
+        $("#lb-img").src = img.src;
+        $("#lb-img").alt = img.alt;
+        $("#lb-cap").textContent = img.closest("figure").querySelector("figcaption")?.textContent ?? "";
+        lb.showModal();
+    }));
+    $("#lb-close").addEventListener("click", () => lb.close());
+    lb.addEventListener("click", (e) => { if (e.target === lb) lb.close(); });
+
+
+    // Real screenshot when the file exists, redrawn view otherwise
+    $$("figure.with-fallback").forEach((fig) => {
+        const img = $("img.real", fig), fallback = $(".fallback", fig);
+        const useImage = () => { img.hidden = false; fallback.hidden = true; };
+        const useFallback = () => { img.hidden = true; fallback.hidden = false; };
+        if (img.complete) { img.naturalWidth ? useImage() : useFallback(); }
+        img.addEventListener("load", useImage);
+        img.addEventListener("error", useFallback);
+        img.addEventListener("click", () => {
+            $("#lb-img").src = img.src; $("#lb-img").alt = img.alt;
+            $("#lb-cap").textContent = fig.querySelector("figcaption")?.textContent ?? "";
+            lb.showModal();
+        });
+    });
+
+    // Mobile menu
+    const side = $("#side"), menuBtn = $("#menu-open");
+    menuBtn.addEventListener("click", () => {
+        const open = side.classList.toggle("open");
+        menuBtn.setAttribute("aria-expanded", String(open));
+    });
+    $$("#toc a, .brand").forEach((a) => a.addEventListener("click", () => side.classList.remove("open")));
+
+    // Scroll-spy
+    const links = new Map($$("#toc a").map((a) => [a.getAttribute("href").slice(1), a]));
+    const spy = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+            if (!e.isIntersecting) return;
+            links.forEach((a) => a.classList.remove("active"));
+            links.get(e.target.id)?.classList.add("active");
+        });
+    }, {rootMargin: "-30% 0px -65% 0px"});
+    $$("section.chapter").forEach((s) => spy.observe(s));
+
+    // Copy-link buttons on chapter titles
+    $$(".chap-head").forEach((h) => {
+        const id = h.closest("section").id;
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "copy-link"; b.textContent = "Copy link";
+        b.addEventListener("click", () => {
+            const url = location.href.split("#")[0] + "#" + id;
+            navigator.clipboard?.writeText(url).then(() => toast("Link copied"), () => toast(url));
+        });
+        h.append(b);
+    });
+
+    // Quick start checklist
+    const qs = $$(".quick input[type=checkbox]");
+    const qsUpdate = () => {
+        const n = qs.filter((c) => c.checked).length;
+        $("#quick-progress").textContent = `${n} / ${qs.length} done`;
+    };
+    qs.forEach((c) => {
+        c.checked = store.get(c.id) === "1";
+        c.addEventListener("change", () => { store.set(c.id, c.checked ? "1" : "0"); qsUpdate(); });
+    });
+    $("#quick-reset").addEventListener("click", () => { qs.forEach((c) => { c.checked = false; store.set(c.id, "0"); }); qsUpdate(); });
+    qsUpdate();
+
+    // Search
+    const index = [];
+    $$("section.chapter").forEach((sec) => {
+        const chapter = sec.dataset.title;
+        index.push({id: sec.id, title: chapter, chapter, text: sec.textContent.toLowerCase()});
+        $$("h3[id]", sec).forEach((h) => {
+            let text = "", n = h.nextElementSibling;
+            while (n && n.tagName !== "H3") { text += " " + n.textContent; n = n.nextElementSibling; }
+            index.push({id: h.id, title: h.textContent, chapter, text: (h.textContent + text).toLowerCase()});
+        });
+    });
+    const q = $("#q"), results = $("#results");
+    let hits = [], sel = 0;
+    function renderResults() {
+        const term = q.value.trim().toLowerCase();
+        if (!term) { results.hidden = true; return; }
+        const words = term.split(/\s+/).map((w) => new RegExp("(^|[^a-z0-9])" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+        hits = index
+            .filter((e) => words.every((w) => w.test(e.text)))
+            .map((e) => ({...e, score: words.reduce((s, w) => s + (w.test(e.title.toLowerCase()) ? 3 : 0), e.id === e.chapter ? 0 : 1)}))
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 8);
+        sel = 0;
+        results.innerHTML = hits.length
+            ? hits.map((h, i) => `<a href="#${h.id}" class="${i === 0 ? "on" : ""}">${h.title}<small>${h.chapter}</small></a>`).join("")
+            : "<p>No match. Try another word.</p>";
+        results.hidden = false;
+    }
+    q.addEventListener("input", renderResults);
+    q.addEventListener("keydown", (e) => {
+        const items = $$("a", results);
+        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault();
+            if (!items.length) return;
+            sel = (sel + (e.key === "ArrowDown" ? 1 : items.length - 1)) % items.length;
+            items.forEach((a, i) => a.classList.toggle("on", i === sel));
+        } else if (e.key === "Enter" && items[sel]) {
+            e.preventDefault(); items[sel].click();
+        } else if (e.key === "Escape") {
+            q.value = ""; results.hidden = true; q.blur();
+        }
+    });
+    results.addEventListener("click", (e) => {
+        if (e.target.closest("a")) { results.hidden = true; q.value = ""; side.classList.remove("open"); }
+    });
+    document.addEventListener("click", (e) => { if (!e.target.closest(".search")) results.hidden = true; });
+
+    // Tool tabs: each tab shows its text panel and the wide figure block tied to it
+    const tabs = $$('[role="tab"]');
+    function selectTab(tab) {
+        tabs.forEach((t) => {
+            const on = t === tab;
+            t.setAttribute("aria-selected", String(on));
+            t.tabIndex = on ? 0 : -1;
+            const id = t.getAttribute("aria-controls");
+            $("#" + id).hidden = !on;
+            $$(`[data-for="${id}"]`).forEach((w) => { w.hidden = !on; });
+        });
+    }
+    tabs.forEach((t, i) => {
+        t.addEventListener("click", () => selectTab(t));
+        t.addEventListener("keydown", (e) => {
+            if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+            const next = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+            selectTab(next); next.focus();
+        });
+    });
+    selectTab(tabs[0]);
+
+
+    // Content above an anchor settles after the browser's initial jump; jump again once it has.
+    const jumpToHash = () => {
+        const target = location.hash && document.getElementById(location.hash.slice(1));
+        if (!target) return;
+        const tabPanel = target.closest('[role="tabpanel"]');
+        if (tabPanel) selectTab($(`[aria-controls="${tabPanel.id}"]`));
+        target.scrollIntoView({behavior: "instant", block: "start"});
+    };
+    if (document.readyState === "complete") jumpToHash(); else addEventListener("load", jumpToHash);
+    document.fonts?.ready.then(jumpToHash);
+
+    // Editor tour. Positions are percentages of the 1600×900 screenshot.
+    const spots = [
+        {x: 3.8, y: 2, t: "Open a new task", d: "Leaves this task and returns to the home screen. Save a draft first if you want to resume."},
+        {x: 49.8, y: 2, t: "Task name", d: "The thin section and the field of view you are annotating, for example GDX-22-PI / FOV_1."},
+        {x: 94, y: 2, t: "Finish and profile", d: "Finish ends the session and offers to save. The badge next to it shows your username; click it to edit your profile."},
+        {x: 4.6, y: 7.6, t: "Undo and redo", d: `<span class="ti" aria-hidden="true"><svg><use href="#i-undo"/></svg></span><span class="ti" aria-hidden="true"><svg><use href="#i-redo"/></svg></span> Step back or forward through your last 50 actions. The tooltip names the step.`},
+        {x: 4.6, y: 25, t: "Tools", d: `From top to bottom:<br><span class="ti" aria-hidden="true"><svg><use href="#i-pointer"/></svg></span> Pointer <kbd>V</kbd><br><span class="ti" aria-hidden="true"><svg><use href="#i-sam-group"/></svg></span> SAM tools: <span class="ti" aria-hidden="true"><svg><use href="#i-select-add"/></svg></span> <kbd>S</kbd> <span class="ti" aria-hidden="true"><svg><use href="#i-select-remove"/></svg></span> <kbd>X</kbd> <span class="ti" aria-hidden="true"><svg><use href="#i-bbox"/></svg></span> <kbd>B</kbd><br><span class="ti" aria-hidden="true"><svg><use href="#i-freeform"/></svg></span> Freeform draw <kbd>F</kbd><br><span class="ti" aria-hidden="true"><svg><use href="#i-polygon"/></svg></span> Polygon lasso <kbd>P</kbd><br><span class="ti" aria-hidden="true"><svg><use href="#i-slic"/></svg></span> Superpixels (SLIC) <kbd>L</kbd><br><span class="ti" aria-hidden="true"><svg><use href="#i-zoom-in"/></svg></span> <span class="ti" aria-hidden="true"><svg><use href="#i-zoom-out"/></svg></span> Zoom in / out <kbd>+</kbd> <kbd>−</kbd><br><span class="ti" aria-hidden="true"><svg><use href="#i-grab"/></svg></span> Pan <kbd>G</kbd>`},
+        {x: 4.6, y: 39.6, t: "Lighting pills", d: "Switch between PPL and XPL. When compensator images exist, γ1, γ-1 and γ0 pills appear under XPL."},
+        {x: 4.6, y: 45.5, t: "Display and help", d: `<span class="ti" aria-hidden="true"><svg><use href="#i-borders"/></svg></span> shows the objects as tinted areas or as outlines only. <span class="ti q" aria-hidden="true">?</span> opens the list of keyboard shortcuts.`},
+        {x: 4.6, y: 97, t: "Customize", d: `<span class="ti" aria-hidden="true"><svg><use href="#i-cog"/></svg></span> Language, toolbar layout and mask display.`},
+        {x: 82, y: 6, t: "Image badges", d: "The modality, compensator and rotation of the image on screen."},
+        {x: 7.5, y: 92.8, t: "Minimap", d: "The whole image with your current view. Press M to show or hide it."},
+        {x: 81, y: 97, t: "Zoom locked", d: "Keeps the zoom and position when you switch between lighting variants. Click to change to Zoom reset."},
+        {x: 92, y: 22, t: "Annotation panel", d: "Lists your objects with their three mineral hypotheses. Hover a name to highlight the grain; click it to edit the grain. At the bottom: Save draft and Export annotation (current image)."},
+    ];
+    const stage = $("#tour-stage"), legend = $("#tour-legend");
+    let cur = 0;
+    spots.forEach((s, i) => {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "hot"; b.textContent = i + 1;
+        b.style.left = s.x + "%"; b.style.top = s.y + "%";
+        b.setAttribute("aria-label", `${i + 1}. ${s.t}`);
+        b.addEventListener("click", () => show(i));
+        stage.append(b);
+        const li = document.createElement("li");
+        li.innerHTML = `<button type="button"><span>${i + 1}</span>${s.t}</button>`;
+        li.firstChild.addEventListener("click", () => show(i));
+        legend.append(li);
+    });
+    function show(i) {
+        cur = (i + spots.length) % spots.length;
+        $$(".hot", stage).forEach((h, j) => h.classList.toggle("on", j === cur));
+        $("#tour-count").textContent = `${cur + 1} / ${spots.length}`;
+        $("#tour-title").textContent = spots[cur].t;
+        $("#tour-text").innerHTML = spots[cur].d;
+    }
+    $("#tour-prev").addEventListener("click", () => show(cur - 1));
+    $("#tour-next").addEventListener("click", () => show(cur + 1));
+    show(0);
+
+    // File name checker. Mirrors the rule on the home screen.
+    const FORMATS = ["jpg", "jpeg", "png", "tif", "tiff", "bmp"];
+    const MODS = {PPL: "plane polarized", XPL: "cross polarized", RL: "reflected", FL: "fluorescence", TR: "transmitted"};
+    const COMPS = {add: "+λ compensator (γ1)", sous: "−λ compensator (γ-1)", na: "no compensator (γ0)"};
+    const fname = $("#fname"), anatomy = $("#anatomy"), verdict = $("#verdict");
+    const esc = (s) => s.replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+    function decode() {
+        const name = fname.value.trim();
+        const segs = [], problems = [], notes = [];
+        const dot = name.lastIndexOf(".");
+        const stem = dot > 0 ? name.slice(0, dot) : name;
+        const ext = dot > 0 ? name.slice(dot + 1) : "";
+        const m = stem.match(/^(.+?)((?:_[A-Za-z0-9]+-[^_]+)+)$/);
+        let prefix = stem, tokens = [];
+        if (m) { prefix = m[1]; tokens = m[2].slice(1).split("_"); }
+        segs.push({k: "prefix", v: prefix, l: "prefix"});
+        const seen = {};
+        tokens.forEach((tok) => {
+            const i = tok.indexOf("-");
+            const key = tok.slice(0, i), val = tok.slice(i + 1);
+            let k = "extra", label = "extra token";
+            if (key === "mod") {
+                k = /^[A-Za-z0-9]+$/.test(val) ? "mod" : "bad"; label = "modality";
+                if (k === "bad") problems.push("mod must use letters and digits only.");
+                else notes.push(`Modality ${val}${MODS[val] ? " — " + MODS[val] : " (not a standard modality)"}`);
+            } else if (key === "comp") {
+                k = /^[A-Za-z0-9]+$/.test(val) ? "comp" : "bad"; label = "compensator";
+                if (k === "bad") problems.push("comp must use letters and digits only.");
+                else notes.push(`Compensator ${val}${COMPS[val] ? " — " + COMPS[val] : " (expected add, sous or na)"}`);
+            } else if (key === "rot") {
+                k = /^-?\d+$/.test(val) ? "rot" : "bad"; label = "rotation";
+                if (k === "bad") problems.push("rot must be a whole number of degrees, for example 45 or -45.");
+                else notes.push(`Stage rotation ${val}°`);
+            }
+            if (key in seen) problems.push(`The token ${key} appears twice.`);
+            seen[key] = true;
+            segs.push({k, v: "_" + tok, l: label});
+        });
+        if (ext) segs.push({k: FORMATS.includes(ext.toLowerCase()) ? "extra" : "bad", v: "." + ext, l: "extension"});
+        ["mod", "comp", "rot"].forEach((t) => { if (!seen[t]) problems.unshift(`The _${t}- token is missing.`); });
+        if (!ext) problems.push("The name has no file extension.");
+        else if (!FORMATS.includes(ext.toLowerCase())) problems.push(`.${ext} is not an accepted format. Use ${FORMATS.map((f) => "." + f).join(", ")}.`);
+        if (!m && name) problems.push("After the prefix, every part must be a _key-value token.");
+        anatomy.innerHTML = segs.map((s) => `<span class="seg k-${s.k}"><i>${esc(s.v)}</i><small>${s.l}</small></span>`).join("");
+        if (!name) { verdict.className = "verdict"; verdict.textContent = "Type a file name."; return; }
+        verdict.className = "verdict " + (problems.length ? "bad" : "ok");
+        verdict.innerHTML = problems.length
+            ? `The app will not read this file.<ul>${problems.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>`
+            : `The app reads this file.<ul>${notes.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>`;
+    }
+    fname.addEventListener("input", decode);
+    $$(".examples button").forEach((b) => b.addEventListener("click", () => { fname.value = b.dataset.ex; decode(); }));
+    decode();
+
+    // Shortcut table: filter and live key lookup
+    const rows = $$("#kb-table tbody tr");
+    $("#kb-filter").addEventListener("input", (e) => {
+        const term = e.target.value.toLowerCase();
+        rows.forEach((r) => { r.hidden = !r.textContent.toLowerCase().includes(term); });
+    });
+    const kbSection = $("#shortcuts");
+    document.addEventListener("keydown", (e) => {
+        const tag = e.target.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA") return;
+        if (e.key === "/" ) { e.preventDefault(); q.focus(); return; }
+        const r = kbSection.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > innerHeight) return;
+        let key = e.key.toLowerCase();
+        if (e.ctrlKey || e.metaKey) {
+            if (key === "z" || key === "y") e.preventDefault();
+            key = "ctrl+" + (e.shiftKey ? "shift+" : "") + key;
+        }
+        const row = rows.find((tr) => tr.dataset.k.split(" ").includes(key));
+        rows.forEach((tr) => tr.classList.remove("hit"));
+        if (row) {
+            row.classList.add("hit");
+            $("#kb-live").textContent = "In the app: " + row.cells[1].textContent;
+        } else if (!["shift", "control", "meta", "alt"].includes(key)) {
+            $("#kb-live").textContent = `${e.key} has no shortcut in the app.`;
+        }
+    });
+
+
+    // "Still there?" replica countdown (the app's grace period is 2 minutes)
+    let idleLeft = 120;
+    const idleCount = $("#idle-count");
+    const idleRender = () => { idleCount.textContent = `Closing in ${Math.floor(idleLeft / 60)}:${String(idleLeft % 60).padStart(2, "0")}`; };
+    setInterval(() => { idleLeft = idleLeft > 0 ? idleLeft - 1 : 120; idleRender(); }, 1000);
+    $("#idle-stay").addEventListener("click", () => { idleLeft = 120; idleRender(); toast("Back to work"); });
+
+    // Tool animations: scripted replays drawn over a real crop of the micrograph.
+    // Colours and line styles follow src/canvas/canvas-theme.ts.
+    const AW = 960, AH = 600, DPR = Math.min(2, window.devicePixelRatio || 1);
+    const COL = {amber: "#F59E0B", orange: "#f97316", red: "#EF4444", blue: "#4FC3F7"};
+    const base = new Image();
+    base.src = "img/anim-base.jpg";
+    const clamp01 = (u) => Math.max(0, Math.min(1, u));
+    const ease = (u) => (u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2);
+    const mix = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
+    const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+    const toPath = (pts, closed = true) => {
+        const p = new Path2D();
+        pts.forEach(([x, y], i) => (i ? p.lineTo(x, y) : p.moveTo(x, y)));
+        if (closed) p.closePath();
+        return p;
+    };
+    const smooth = (pts, n = 10) => {
+        const out = [];
+        for (let i = 0; i < pts.length; i++) {
+            const p0 = pts[(i - 1 + pts.length) % pts.length], p1 = pts[i], p2 = pts[(i + 1) % pts.length], p3 = pts[(i + 2) % pts.length];
+            for (let k = 0; k < n; k++) {
+                const t = k / n, t2 = t * t, t3 = t2 * t;
+                out.push([0, 1].map((d) => 0.5 * (2 * p1[d] + (-p0[d] + p2[d]) * t + (2 * p0[d] - 5 * p1[d] + 4 * p2[d] - p3[d]) * t2 + (-p0[d] + 3 * p1[d] - 3 * p2[d] + p3[d]) * t3)));
+            }
+        }
+        return out;
+    };
+    const inside = (pt, poly) => {
+        let c = false;
+        for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+            const [xi, yi] = poly[i], [xj, yj] = poly[j];
+            if ((yi > pt[1]) !== (yj > pt[1]) && pt[0] < ((xj - xi) * (pt[1] - yi)) / (yj - yi) + xi) c = !c;
+        }
+        return c;
+    };
+    const offscreen = (w = AW, h = AH) => {
+        const c = document.createElement("canvas");
+        c.width = w * DPR; c.height = h * DPR;
+        return c;
+    };
+
+    // Shapes on the crop (image pixels of anim-base.jpg)
+    const CRYSTAL = [[325, 95], [380, 82], [450, 80], [520, 85], [552, 95], [558, 180], [556, 280], [552, 380], [548, 470], [530, 505], [470, 522], [400, 525], [345, 515], [322, 480], [320, 380], [322, 260], [322, 160]];
+    const CHLORITE = [[236, 284], [270, 268], [318, 262], [323, 300], [320, 380], [306, 444], [284, 450], [266, 418], [240, 380], [222, 330]];
+    const OPAQUE = smooth([[856, 314], [895, 296], [938, 306], [952, 345], [931, 400], [880, 406], [846, 389], [848, 350]], 12);
+    const LOWER = [[323, 350], [556, 345], [552, 380], [548, 470], [530, 505], [470, 522], [400, 525], [345, 515], [322, 480], [320, 410]];
+    const INCLUSION = smooth([[440, 250], [478, 242], [505, 262], [502, 300], [470, 318], [438, 305], [428, 276]], 12);
+    const CUT_BELOW = [[0, 370], [AW, 370], [AW, AH], [0, AH]];
+
+    // Mask renderer: fill layers add, hole layers cut; outline = dilated mask minus mask
+    const maskBuf = offscreen(), ringBuf = offscreen();
+    function drawMask(ctx, layers, color) {
+        const m = maskBuf.getContext("2d"), r = ringBuf.getContext("2d");
+        m.setTransform(DPR, 0, 0, DPR, 0, 0);
+        m.clearRect(0, 0, AW, AH);
+        m.fillStyle = color;
+        layers.forEach((l) => {
+            m.globalCompositeOperation = l.hole ? "destination-out" : "source-over";
+            if (l.canvas) m.drawImage(l.canvas, 0, 0, AW, AH);
+            else m.fill(toPath(l.pts));
+        });
+        m.globalCompositeOperation = "source-in";
+        m.fillRect(0, 0, AW, AH);
+        m.globalCompositeOperation = "source-over";
+        r.setTransform(1, 0, 0, 1, 0, 0);
+        r.clearRect(0, 0, ringBuf.width, ringBuf.height);
+        const w = 2.5 * DPR;
+        for (let a = 0; a < 16; a++) r.drawImage(maskBuf, Math.cos(a * Math.PI / 8) * w, Math.sin(a * Math.PI / 8) * w);
+        r.globalCompositeOperation = "destination-out";
+        r.drawImage(maskBuf, 0, 0);
+        r.globalCompositeOperation = "source-over";
+        ctx.save();
+        ctx.globalAlpha = 0.22;
+        ctx.drawImage(maskBuf, 0, 0, AW, AH);
+        ctx.globalAlpha = 1;
+        ctx.drawImage(ringBuf, 0, 0, AW, AH);
+        ctx.restore();
+    }
+
+    function drawCursor(ctx, [x, y], pressed) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.beginPath();
+        ctx.moveTo(0, 0); ctx.lineTo(0, 19); ctx.lineTo(5, 14.5); ctx.lineTo(8.5, 22); ctx.lineTo(11.5, 20.8); ctx.lineTo(8, 13.5); ctx.lineTo(14.5, 13.5); ctx.closePath();
+        ctx.fillStyle = pressed ? "#ffe9a8" : "#fff";
+        ctx.strokeStyle = "#000"; ctx.lineWidth = 1.3;
+        ctx.fill(); ctx.stroke();
+        ctx.restore();
+    }
+    function drawRipple(ctx, [x, y], age) {
+        if (age < 0 || age > 0.45) return;
+        ctx.save();
+        ctx.strokeStyle = `rgba(255,255,255,${1 - age / 0.45})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(x, y, 5 + age * 45, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+    }
+    const iconCache = {};
+    const iconImage = (id, color = "#4FC3F7") => {
+        const key = id + color;
+        if (!iconCache[key]) {
+            const sym = document.getElementById("i-" + id);
+            const img = new Image();
+            img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${sym.getAttribute("viewBox")}" width="44" height="44" color="${color}">${sym.innerHTML}</svg>`);
+            iconCache[key] = img;
+        }
+        return iconCache[key];
+    };
+    function chip(ctx, x, y, text, {bg = "rgba(18,18,18,.82)", fg = "#fff", border = "rgba(255,255,255,.25)", align = "left", icon, iconColor} = {}) {
+        ctx.save();
+        ctx.font = "600 17px system-ui, -apple-system, sans-serif";
+        const pad = icon ? 30 : 0;
+        const w = ctx.measureText(text).width + 24 + pad, h = 32;
+        const left = align === "right" ? x - w : align === "center" ? x - w / 2 : x;
+        ctx.beginPath(); ctx.roundRect(left, y, w, h, 8);
+        ctx.fillStyle = bg; ctx.fill();
+        ctx.strokeStyle = border; ctx.lineWidth = 1; ctx.stroke();
+        if (icon) {
+            const img = iconImage(icon, iconColor);
+            if (img.complete && img.naturalWidth) ctx.drawImage(img, left + 10, y + 6, 20, 20);
+        }
+        ctx.fillStyle = fg; ctx.textBaseline = "middle";
+        ctx.fillText(text, left + 12 + pad, y + h / 2 + 1);
+        ctx.restore();
+    }
+    const MODE = {
+        fill: {bg: "rgba(59,130,246,.30)", fg: "#93c5fd", border: "rgba(96,165,250,.6)"},
+        erase: {bg: "rgba(239,68,68,.30)", fg: "#fca5a5", border: "rgba(248,113,113,.6)"},
+    };
+
+    // Polygon phase: cursor walks the vertices, one click each, last click on the first vertex closes
+    function polygonPhase(ctx, t, V, {start, step = 0.5, from, erase = false}) {
+        const n = V.length;
+        if (t < start) {
+            const cur = mix(from, V[0], ease(clamp01(t / start)));
+            return {cur, closed: false, click: -1};
+        }
+        const k = (t - start) / step;
+        if (k >= n) return {cur: V[0], closed: true, click: (k - n) * step};
+        const placed = Math.floor(k) + 1, u = ease(clamp01((k - Math.floor(k) - 0.15) / 0.75));
+        const cur = mix(V[placed - 1], V[placed % n], u);
+        const pts = V.slice(0, placed).concat([cur]);
+        ctx.save();
+        ctx.fillStyle = erase ? "rgba(239,68,68,0.10)" : "rgba(245,158,11,0.10)";
+        ctx.fill(toPath(pts));
+        ctx.strokeStyle = erase ? COL.red : COL.amber;
+        ctx.lineWidth = 2;
+        if (erase) ctx.setLineDash([8, 5]);
+        ctx.stroke(toPath(pts, false));
+        ctx.setLineDash([]);
+        V.slice(0, placed).forEach(([x, y]) => {
+            ctx.beginPath(); ctx.arc(x, y, 4.5, 0, Math.PI * 2);
+            ctx.fillStyle = erase ? COL.red : COL.amber; ctx.fill();
+        });
+        if (placed === n && dist(cur, V[0]) < 15) {
+            ctx.beginPath(); ctx.arc(V[0][0], V[0][1], 9, 0, Math.PI * 2);
+            ctx.lineWidth = 3; ctx.strokeStyle = erase ? COL.red : COL.amber; ctx.stroke();
+        }
+        ctx.restore();
+        return {cur, closed: false, click: (k - Math.floor(k)) * step};
+    }
+
+    // Freeform phase: button held, stroke follows the cursor, release closes the shape
+    function freeformPhase(ctx, t, P, {start, dur = 2.6, from, erase = false}) {
+        if (t < start) return {cur: mix(from, P[0], ease(clamp01(t / start))), done: false, down: false};
+        const u = clamp01((t - start) / dur);
+        if (u >= 1) return {cur: P[P.length - 1], done: true, down: false, release: t - start - dur};
+        const upto = Math.max(1, Math.floor(u * (P.length - 1)));
+        const pts = P.slice(0, upto + 1);
+        ctx.save();
+        ctx.strokeStyle = erase ? COL.red : COL.orange;
+        ctx.lineWidth = 3; ctx.lineJoin = ctx.lineCap = "round";
+        if (erase) ctx.setLineDash([8, 5]);
+        ctx.stroke(toPath(pts, false));
+        ctx.restore();
+        return {cur: pts[pts.length - 1], done: false, down: true};
+    }
+
+    // SLIC: jittered seeds in the box, nearest-seed labels, contours and dropped-cell shading precomputed
+    const BOX = [300, 58, 590, 302];
+    const slic = (() => {
+        const [x0, y0, x1, y1] = BOX, w = x1 - x0, h = y1 - y0;
+        let seed = 7;
+        const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+        const seeds = [];
+        for (let y = y0 + 15; y < y1; y += 30) for (let x = x0 + 15; x < x1; x += 30) seeds.push([x + (rnd() - 0.5) * 18, y + (rnd() - 0.5) * 18]);
+        const label = new Int16Array(w * h);
+        for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+            let best = 0, bd = Infinity;
+            seeds.forEach(([sx, sy], k) => { const d = (sx - x0 - i) ** 2 + (sy - y0 - j) ** 2; if (d < bd) { bd = d; best = k; } });
+            label[j * w + i] = best;
+        }
+        const keep = seeds.map((sd) => inside(sd, CRYSTAL));
+        const drops = seeds.map((sd, k) => [sd, k]).filter(([, k]) => !keep[k]).sort((a, b) => Math.atan2(a[0][1] - 180, a[0][0] - 440) - Math.atan2(b[0][1] - 180, b[0][0] - 440)).map(([, k]) => k);
+        const paint = (fn) => {
+            const c = document.createElement("canvas"); c.width = w; c.height = h;
+            const g = c.getContext("2d"), img = g.createImageData(w, h);
+            for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const rgba = fn(i, j, label[j * w + i]); if (rgba) img.data.set(rgba, (j * w + i) * 4); }
+            g.putImageData(img, 0, 0);
+            return c;
+        };
+        const contours = paint((i, j, l) => ((i + 1 < w && label[j * w + i + 1] !== l) || (j + 1 < h && label[(j + 1) * w + i] !== l) ? [255, 255, 255, 190] : null));
+        const dropCache = new Map();
+        const dropped = (count) => {
+            if (!dropCache.has(count)) {
+                const off = new Set(drops.slice(0, count));
+                dropCache.set(count, paint((i, j, l) => (off.has(l) ? [0, 0, 0, 150] : null)));
+            }
+            return dropCache.get(count);
+        };
+        const kept = document.createElement("canvas"); kept.width = AW; kept.height = AH;
+        kept.getContext("2d").drawImage(paint((i, j, l) => (keep[l] ? [255, 255, 255, 255] : null)), x0, y0);
+        return {seeds, drops, contours, dropped, kept, total: seeds.length};
+    })();
+
+    const SCENES = {
+        polygon: {
+            icon: "polygon", tool: "P  Polygon lasso", dur: 0.8 + CHLORITE.length * 0.5 + 3,
+            captions: [[0, "Click along the edge to place vertices"], [0.8 + (CHLORITE.length - 1) * 0.5, "Click the first vertex to close"], [0.8 + CHLORITE.length * 0.5, "Closed: a new object"]],
+            draw(ctx, t) {
+                const r = polygonPhase(ctx, t, CHLORITE, {start: 0.8, from: [150, 170]});
+                if (r.closed) drawMask(ctx, [{pts: CHLORITE}], "#11A03B");
+                return r;
+            },
+        },
+        freeform: {
+            icon: "freeform", tool: "F  Freeform draw", dur: 0.8 + 2.6 + 3,
+            captions: [[0, "Hold the button and draw around the grain"], [3.4, "Release: the stroke closes and fills"]],
+            draw(ctx, t) {
+                const r = freeformPhase(ctx, t, OPAQUE, {start: 0.8, from: [760, 230]});
+                if (r.done) drawMask(ctx, [{pts: OPAQUE}], "#A647EA");
+                return {cur: r.cur, down: r.down, click: r.done ? r.release : -1};
+            },
+        },
+        fill: {
+            icon: "polygon", tool: "P  Polygon lasso", mode: "fill", dur: 1.4 + LOWER.length * 0.5 + 3.2,
+            captions: [[0, "The object is selected and Fill is on"], [1.4, "Draw the missing part, overlapping the object"], [1.4 + LOWER.length * 0.5, "Fill: the shape joins the object"]],
+            draw(ctx, t) {
+                const existing = [{pts: CRYSTAL}, {pts: CUT_BELOW, hole: true}];
+                const closed = t >= 1.4 + LOWER.length * 0.5;
+                drawMask(ctx, closed ? existing.concat([{pts: LOWER}]) : existing, "#11A03B");
+                return polygonPhase(ctx, t, LOWER, {start: 1.4, from: [640, 470]});
+            },
+        },
+        erase: {
+            icon: "freeform", tool: "F  Freeform draw", mode: "erase", dur: 1.4 + 2.4 + 3.2,
+            captions: [[0, "The object is selected and Erase is on"], [1.4, "Draw around the inclusion"], [3.8, "Erase: the loop is cut out and leaves a hole"]],
+            draw(ctx, t) {
+                const done = t >= 3.8;
+                drawMask(ctx, done ? [{pts: CRYSTAL}, {pts: INCLUSION, hole: true}] : [{pts: CRYSTAL}], "#11A03B");
+                const r = freeformPhase(ctx, t, INCLUSION, {start: 1.4, dur: 2.4, from: [640, 200], erase: true});
+                return {cur: r.cur, down: r.down, click: r.done ? r.release : -1};
+            },
+        },
+        slic: (() => {
+            const clicks = 4, tBox = 0.7, tDrag = 1.0, tCalc = 0.6, tShow = tBox + tDrag + tCalc, tClick = 0.65, tSweep = 0.07;
+            const tDone = tShow + 0.4 + clicks * tClick + (slic.drops.length - clicks) * tSweep;
+            const apply = [BOX[2] - 40, BOX[3] + 30], tApply = tDone + 0.9;
+            return {
+                icon: "slic", tool: "L  Superpixels (SLIC)", dur: tApply + 3,
+                captions: [[0, "Drag a box around the area"], [tBox + tDrag, "Computing SLIC..."], [tShow, "Click each patch outside the grain"], [tDone, "Click Apply"], [tApply, "The kept patches form a new object"]],
+                draw(ctx, t) {
+                    const [x0, y0, x1, y1] = BOX;
+                    if (t < tBox) return {cur: mix([200, 300], [x0, y0], ease(t / tBox)), click: -1};
+                    if (t < tBox + tDrag) {
+                        const cur = mix([x0, y0], [x1, y1], ease((t - tBox) / tDrag));
+                        ctx.save();
+                        ctx.fillStyle = "rgba(79,195,247,0.10)"; ctx.strokeStyle = COL.blue; ctx.lineWidth = 2; ctx.setLineDash([6, 3]);
+                        ctx.fillRect(x0, y0, cur[0] - x0, cur[1] - y0); ctx.strokeRect(x0, y0, cur[0] - x0, cur[1] - y0);
+                        ctx.restore();
+                        return {cur, down: true, click: -1};
+                    }
+                    if (t >= tApply) {
+                        drawMask(ctx, [{canvas: slic.kept}], "#EA4747");
+                        return {cur: apply, click: t - tApply};
+                    }
+                    ctx.save();
+                    ctx.fillStyle = "rgba(0,0,0,0.5)";
+                    ctx.fillRect(0, 0, AW, y0); ctx.fillRect(0, y1, AW, AH - y1); ctx.fillRect(0, y0, x0, y1 - y0); ctx.fillRect(x1, y0, AW - x1, y1 - y0);
+                    ctx.restore();
+                    if (t < tShow) return {cur: [x1, y1], click: -1};
+                    let count = 0, cur = [x1, y1], click = -1;
+                    const k = t - tShow - 0.4;
+                    if (k >= 0) {
+                        if (k < clicks * tClick) {
+                            const i = Math.floor(k / tClick), u = (k - i * tClick) / tClick;
+                            const prev = i ? slic.seeds[slic.drops[i - 1]] : [x1, y1];
+                            cur = mix(prev, slic.seeds[slic.drops[i]], ease(clamp01(u / 0.7)));
+                            count = i + (u >= 0.7 ? 1 : 0);
+                            click = u >= 0.7 ? (u - 0.7) * tClick : -1;
+                        } else {
+                            count = Math.min(slic.drops.length, clicks + Math.floor((k - clicks * tClick) / tSweep) + 1);
+                            cur = slic.seeds[slic.drops[count - 1]];
+                            click = 0.1;
+                        }
+                    }
+                    if (t >= tDone) cur = mix(cur, apply, ease(clamp01((t - tDone) / 0.7)));
+                    ctx.drawImage(slic.dropped(count), x0, y0);
+                    ctx.drawImage(slic.contours, x0, y0);
+                    chip(ctx, AW / 2, 20, `SLIC superpixels — ${slic.total - count} / ${slic.total} kept`, {align: "center"});
+                    chip(ctx, apply[0] + 20, apply[1] - 16, `Apply (${slic.total - count})`, {align: "right", bg: t >= tDone ? "#4FC3F7" : "rgba(79,195,247,.35)", fg: "#0b2633", border: "transparent"});
+                    chip(ctx, apply[0] - 95, apply[1] - 16, "Cancel", {align: "right"});
+                    return {cur, click};
+                },
+            };
+        })(),
+    };
+
+    function renderScene(anim, t) {
+        const {ctx, scene} = anim;
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        ctx.clearRect(0, 0, AW, AH);
+        if (base.complete && base.naturalWidth) ctx.drawImage(base, 0, 0, AW, AH);
+        const r = scene.draw(ctx, t) || {};
+        chip(ctx, 16, 16, scene.tool, {icon: scene.icon});
+        if (scene.mode) chip(ctx, AW - 16, 16, scene.mode === "fill" ? "Fill" : "Erase", {...MODE[scene.mode], align: "right", icon: scene.mode === "fill" ? "brush" : "eraser", iconColor: MODE[scene.mode].fg});
+        const caption = scene.captions.filter(([t0]) => t >= t0).pop();
+        if (caption) chip(ctx, AW / 2, AH - 52, caption[1], {align: "center", bg: "rgba(0,0,0,.78)"});
+        if (r.cur) {
+            drawRipple(ctx, r.cur, r.click ?? -1);
+            drawCursor(ctx, r.cur, r.down);
+        }
+        const fade = scene.dur - t;
+        if (fade < 0.35) { ctx.fillStyle = `rgba(17,17,17,${1 - fade / 0.35})`; ctx.fillRect(0, 0, AW, AH); }
+    }
+
+    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const anims = $$("figure.anim").map((fig) => {
+        const canvas = $("canvas", fig), btn = $(".anim-toggle", fig);
+        canvas.width = AW * DPR; canvas.height = AH * DPR;
+        const anim = {fig, canvas, btn, ctx: canvas.getContext("2d"), scene: SCENES[fig.dataset.scene], t: 0, playing: !reduceMotion, visible: false};
+        const toggle = () => {
+            anim.playing = !anim.playing;
+            btn.textContent = anim.playing ? "Pause" : "Play";
+            btn.setAttribute("aria-label", anim.playing ? "Pause animation" : "Play animation");
+        };
+        btn.addEventListener("click", toggle);
+        canvas.addEventListener("click", toggle);
+        if (reduceMotion) { anim.t = anim.scene.dur - 0.4; btn.textContent = "Play"; btn.setAttribute("aria-label", "Play animation"); }
+        return anim;
+    });
+    const seen = new IntersectionObserver((entries) => entries.forEach((e) => {
+        const a = anims.find((x) => x.canvas === e.target);
+        if (a) a.visible = e.isIntersecting;
+    }));
+    anims.forEach((a) => seen.observe(a.canvas));
+    let last = performance.now();
+    function tick(now) {
+        const dt = Math.min(0.1, (now - last) / 1000);
+        last = now;
+        anims.forEach((a) => {
+            if (!a.visible) return;
+            if (a.playing) a.t = (a.t + dt) % a.scene.dur;
+            renderScene(a, a.t);
+        });
+        requestAnimationFrame(tick);
+    }
+    base.decode?.().catch(() => {}).finally(() => anims.forEach((a) => renderScene(a, a.t)));
+    requestAnimationFrame(tick);
+
+    // Launcher illustration
+    const st = $("#mock-status"), stText = $("#mock-status-text"), start = $("#mock-start"), openBtn = $("#mock-open");
+    let running = false;
+    start.addEventListener("click", () => {
+        if (running) {
+            running = false; st.className = "win-status"; stText.textContent = "Server stopped";
+            start.textContent = "Start Server"; openBtn.disabled = true; return;
+        }
+        start.disabled = true; st.className = "win-status starting"; stText.textContent = "Starting… loading the SAM 2 model";
+        setTimeout(() => {
+            running = true; start.disabled = false; st.className = "win-status running";
+            stText.textContent = "Running on http://127.0.0.1:7263"; start.textContent = "Stop Server"; openBtn.disabled = false;
+        }, 1800);
+    });
+    openBtn.addEventListener("click", () => toast("Your browser opens the annotator"));
+    $("#mock-dataset").addEventListener("click", () => { $("#mock-ds").scrollIntoView({block: "center"}); });
+    const gen = $("#mock-gen"), log = $("#mock-log");
+    const canGen = () => { gen.disabled = $("#mock-src").textContent.startsWith("No") || $("#mock-dst").textContent.startsWith("No"); };
+    $$("[data-pick]").forEach((b) => b.addEventListener("click", () => { $("#" + b.dataset.pick).textContent = b.dataset.path; canGen(); }));
+    gen.addEventListener("click", () => {
+        const zip = $("#mock-zip").checked;
+        log.textContent = "Scanning annotations…";
+        setTimeout(() => {
+            log.textContent = `Scanning annotations…\nWrote dataset_20261009-1412/annotations.json\nCopied images/  ·  build.log${zip ? "\nCompressed to dataset_20261009-1412.zip" : ""}\nDone.`;
+        }, 900);
+    });
+})();
+</script>
+</body>
+</html>
