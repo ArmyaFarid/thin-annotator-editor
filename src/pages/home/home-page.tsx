@@ -22,6 +22,7 @@ import {AnnotatorBadge} from "@/common/components/annotator-profile/AnnotatorBad
 import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
 import {EmptyFolderError} from "@/lib/services/api/folder/service.ts";
 import {useOpenTaskFromFolder} from "@/lib/services/api/task/hooks.ts";
+import lockupUrl from "@/assets/brand/lockup-horizontal-on-dark.svg";
 import {
     useBatches,
     useBatchStep,
@@ -200,8 +201,12 @@ export default function HomePage() {
             </div>
             <div className="flex flex-col items-center gap-6 px-4 py-8">
                 <div className="flex flex-col items-center gap-2 text-center">
-                    <h1 className="text-xl font-semibold text-white">
-                        {t("appTitle")}
+                    <h1>
+                        <img
+                            src={lockupUrl}
+                            alt={t("appTitle")}
+                            className="h-10 w-auto"
+                        />
                     </h1>
                     <p className="text-sm text-white/50">{t("homeChoose")}</p>
                 </div>
