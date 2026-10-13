@@ -9,6 +9,8 @@ lerna-debug.log*
 
 node_modules
 dist
+# Copied from docs/user-guide by scripts/copy-guide.mjs
+public/guide
 dist-ssr
 *.local
 storybook-static
