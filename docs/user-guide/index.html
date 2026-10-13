@@ -8,425 +8,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
-<style>
-/* Layout: sticky left index (like a microscope logbook's tab strip) + one reading column; figures break wider than text. Dark-first to match the app. */
-:root {
-    --bg: #222629;
-    --surface: #2c3135;
-    --surface-2: #353b40;
-    --line: rgba(255, 255, 255, 0.10);
-    --line-strong: rgba(255, 255, 255, 0.20);
-    --fg: #eceff1;
-    --fg-soft: #c4cbd0;
-    --muted: #8e989f;
-    --accent: #4fc3f7;
-    --accent-ink: #0b2633;
-    --accent-soft: rgba(79, 195, 247, 0.14);
-    --mod: #60a5fa;
-    --comp: #34d399;
-    --rot: #fbbf24;
-    --pos: #22c55e;
-    --neg: #f87171;
-    --warn-bg: rgba(251, 191, 36, 0.10);
-    --warn-line: rgba(251, 191, 36, 0.45);
-    --note-bg: rgba(79, 195, 247, 0.08);
-    --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
-    --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
-    --font-body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
-    --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-    --step--1: 0.875rem;
-    --step-0: 1.0625rem;
-    --step-1: 1.25rem;
-    --step-2: 1.6rem;
-    --step-3: 2.3rem;
-    --step-4: clamp(2.4rem, 5vw, 3.6rem);
-    --nav-w: 270px;
-    --col: 46rem;
-    color-scheme: dark;
-}
-@media (prefers-color-scheme: light) {
-    :root:not([data-theme="dark"]) {
-        --bg: #f4f6f7; --surface: #ffffff; --surface-2: #e9edf0;
-        --line: rgba(20, 30, 40, 0.10); --line-strong: rgba(20, 30, 40, 0.22);
-        --fg: #172026; --fg-soft: #36434c; --muted: #5d6a73;
-        --accent: #0277bd; --accent-ink: #ffffff; --accent-soft: rgba(2, 119, 189, 0.10);
-        --mod: #1d4ed8; --comp: #047857; --rot: #b45309; --pos: #15803d; --neg: #dc2626;
-        --warn-bg: #fff7e0; --warn-line: #e3b341; --note-bg: #eaf5fb;
-        --shadow: 0 14px 40px rgba(20, 30, 40, 0.15);
-        color-scheme: light;
-    }
-}
-:root[data-theme="light"] {
-    --bg: #f4f6f7; --surface: #ffffff; --surface-2: #e9edf0;
-    --line: rgba(20, 30, 40, 0.10); --line-strong: rgba(20, 30, 40, 0.22);
-    --fg: #172026; --fg-soft: #36434c; --muted: #5d6a73;
-    --accent: #0277bd; --accent-ink: #ffffff; --accent-soft: rgba(2, 119, 189, 0.10);
-    --mod: #1d4ed8; --comp: #047857; --rot: #b45309; --pos: #15803d; --neg: #dc2626;
-    --warn-bg: #fff7e0; --warn-line: #e3b341; --note-bg: #eaf5fb;
-    --shadow: 0 14px 40px rgba(20, 30, 40, 0.15);
-    color-scheme: light;
-}
-
-* { box-sizing: border-box; }
-[hidden] { display: none !important; }
-html { scroll-behavior: smooth; scroll-padding-top: 1.5rem; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; animation: none !important; } }
-body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--fg);
-    font-family: var(--font-body);
-    font-size: var(--step-0);
-    line-height: 1.6;
-}
-img { max-width: 100%; display: block; }
-a { color: var(--accent); text-underline-offset: 3px; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
-code, kbd, .mono { font-family: var(--font-mono); font-size: 0.86em; }
-code { background: var(--surface-2); padding: 0.1em 0.35em; border-radius: 4px; overflow-wrap: anywhere; }
-kbd {
-    display: inline-block; min-width: 1.7em; padding: 0.05em 0.45em; text-align: center;
-    background: var(--surface); border: 1px solid var(--line-strong); border-bottom-width: 2px;
-    border-radius: 5px; color: var(--fg); line-height: 1.5;
-}
-.ui { font-weight: 600; color: var(--fg); white-space: nowrap; }
-
-/* ── Shell ─────────────────────────────────────────── */
-.shell { display: grid; grid-template-columns: var(--nav-w) minmax(0, 1fr); min-height: 100vh; }
-.side {
-    position: sticky; top: 0; height: 100vh; overflow-y: auto;
-    border-right: 1px solid var(--line); padding: 1.4rem 1rem 2rem;
-    display: flex; flex-direction: column; gap: 1rem; background: var(--bg);
-}
-.brand { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; color: var(--fg); }
-.brand-mark { width: 32px; height: 32px; flex: none; color: var(--fg); }
-.brand b { font-family: var(--font-display); font-stretch: 115%; font-weight: 700; font-size: 1.05rem; letter-spacing: 0.01em; }
-.brand small { display: block; color: var(--muted); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
-.search { position: relative; }
-.search input {
-    width: 100%; padding: 0.55rem 2.2rem 0.55rem 0.75rem; border-radius: 8px;
-    border: 1px solid var(--line-strong); background: var(--surface); color: var(--fg);
-    font: inherit; font-size: var(--step--1);
-}
-.search .hint { position: absolute; right: 0.55rem; top: 0.5rem; font-size: 0.75rem; }
-.results {
-    position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 20;
-    background: var(--surface); border: 1px solid var(--line-strong); border-radius: 8px;
-    box-shadow: var(--shadow); max-height: 60vh; overflow-y: auto; padding: 0.3rem;
-}
-.results a { display: block; padding: 0.45rem 0.6rem; border-radius: 6px; color: var(--fg); text-decoration: none; font-size: var(--step--1); }
-.results a small { display: block; color: var(--muted); }
-.results a:hover, .results a.on { background: var(--accent-soft); }
-.results p { margin: 0.5rem; color: var(--muted); font-size: var(--step--1); }
-nav.toc ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
-nav.toc a {
-    display: grid; grid-template-columns: 2.1rem 1fr; align-items: baseline;
-    padding: 0.36rem 0.5rem; border-radius: 6px; color: var(--fg-soft); text-decoration: none; font-size: 0.95rem;
-}
-nav.toc a span { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); }
-nav.toc a:hover { background: var(--surface); color: var(--fg); }
-nav.toc a.active { background: var(--accent-soft); color: var(--fg); }
-nav.toc a.active span { color: var(--accent); }
-.side-foot { margin-top: auto; color: var(--muted); font-size: 0.8rem; }
-.menu-btn { display: none; }
-
-main { min-width: 0; padding-inline: clamp(16px, 4vw, 56px); padding-block: 0 6rem; }
-.col { max-width: var(--col); margin-inline: auto; }
-.wide { max-width: 64rem; margin-inline: auto; }
-
-/* ── Hero ──────────────────────────────────────────── */
-.hero { padding-block: 3.2rem 2.2rem; display: grid; gap: 1.6rem; }
-.eyebrow { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-h1 {
-    font-family: var(--font-display); font-stretch: 120%; font-weight: 800; font-size: var(--step-4);
-    line-height: 1.02; margin: 0.3rem 0 0; letter-spacing: -0.01em; text-wrap: balance;
-}
-h1 em { font-style: normal; color: var(--accent); }
-.lead { font-size: var(--step-1); color: var(--fg-soft); max-width: 40rem; margin: 0; }
-.hero-figure { margin: 0; }
-.hero-figure figcaption { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-
-/* ── Sections ──────────────────────────────────────── */
-section.chapter { padding-block: 3.2rem 1rem; border-top: 1px solid var(--line); }
-.chap-head { display: flex; align-items: baseline; gap: 0.9rem; flex-wrap: wrap; }
-.chap-no {
-    font-family: var(--font-mono); font-size: 0.8rem; color: var(--accent);
-    border: 1px solid currentColor; border-radius: 999px; padding: 0.1rem 0.55rem;
-}
-h2 {
-    font-family: var(--font-display); font-stretch: 112%; font-weight: 750; font-size: var(--step-3);
-    line-height: 1.1; margin: 0; text-wrap: balance;
-}
-h3 { font-family: var(--font-display); font-stretch: 108%; font-weight: 650; font-size: var(--step-1); margin: 2.2rem 0 0.4rem; text-wrap: balance; }
-h4 { font-size: var(--step-0); margin: 1.4rem 0 0.2rem; }
-.copy-link {
-    margin-left: auto; font: inherit; font-size: 0.8rem; color: var(--muted); background: none;
-    border: 1px solid var(--line); border-radius: 6px; padding: 0.15rem 0.5rem; cursor: pointer;
-}
-.copy-link:hover { color: var(--fg); border-color: var(--line-strong); }
-p { margin: 0.6rem 0; }
-.chapter > .col > p:first-of-type { color: var(--fg-soft); }
-ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 0.8rem 0; display: flex; flex-direction: column; gap: 0.35rem; }
-ol.steps > li { counter-increment: s; position: relative; padding-left: 2.3rem; }
-ol.steps > li::before {
-    content: counter(s); font-family: var(--font-mono); font-size: 0.78rem; color: var(--accent);
-    width: 1.5rem; height: 1.5rem; border-radius: 50%; border: 1px solid var(--line-strong);
-    display: grid; place-items: center; position: absolute; left: 0; top: 0.15rem;
-}
-ol.steps .result { display: block; color: var(--muted); font-size: 0.95rem; }
-ul.plain { padding-left: 1.2rem; margin: 0.6rem 0; }
-ul.plain li { margin: 0.25rem 0; }
-
-.callout { border: 1px solid var(--line-strong); background: var(--note-bg); border-radius: 10px; padding: 0.8rem 1rem; margin: 1.2rem 0; }
-.callout.warn { background: var(--warn-bg); border-color: var(--warn-line); }
-.callout b:first-child { display: block; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.2rem; }
-.callout p { margin: 0.2rem 0; }
-
-figure.shot { margin: 1.4rem 0; }
-figure.shot img, .compare, .tour-img {
-    border-radius: 10px; border: 1px solid var(--line-strong); box-shadow: var(--shadow); background: #111;
-}
-figure.shot img { cursor: zoom-in; width: 100%; height: auto; }
-figcaption { color: var(--muted); font-size: 0.9rem; margin-top: 0.55rem; }
-.pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
-.pair figure.shot { margin: 0; }
-
-.table-wrap { overflow-x: auto; margin: 1rem 0; border: 1px solid var(--line); border-radius: 10px; }
-table { border-collapse: collapse; width: 100%; font-size: 0.96rem; }
-th, td { text-align: left; padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--line); vertical-align: top; }
-th { font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; background: var(--surface); }
-tr:last-child td { border-bottom: 0; }
-
-.chip { display: inline-block; font-family: var(--font-mono); font-size: 0.78rem; padding: 0.05rem 0.45rem; border-radius: 5px; border: 1px solid currentColor; white-space: nowrap; }
-.chip.mod { color: var(--mod); } .chip.comp { color: var(--comp); } .chip.rot { color: var(--rot); }
-.chip.pos { color: var(--pos); } .chip.neg { color: var(--neg); }
-
-/* ── Quick start ───────────────────────────────────── */
-.quick { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1.2rem 1.3rem; }
-.quick h2 { font-size: var(--step-1); font-stretch: 110%; }
-.quick-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
-.quick ol { list-style: none; margin: 0.9rem 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.6rem; }
-.quick li label {
-    display: grid; grid-template-columns: auto 1fr; gap: 0.55rem; align-items: start; height: 100%;
-    padding: 0.7rem 0.75rem; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; background: var(--bg);
-}
-.quick li input { accent-color: var(--accent); margin-top: 0.3rem; width: 1rem; height: 1rem; }
-.quick li b { display: block; font-size: 0.98rem; }
-.quick li a { font-size: 0.86rem; }
-.quick li input:checked + span b { text-decoration: line-through; color: var(--muted); }
-.progress { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); }
-.btn-text { background: none; border: 0; color: var(--accent); font: inherit; font-size: 0.85rem; cursor: pointer; padding: 0; }
-
-/* ── Compare slider ────────────────────────────────── */
-.compare { position: relative; overflow: hidden; aspect-ratio: 16 / 9; max-width: 100%; user-select: none; }
-.compare img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.compare .top { clip-path: inset(0 0 0 var(--pos, 50%)); }
-.compare .bar { position: absolute; top: 0; bottom: 0; left: var(--pos, 50%); width: 2px; background: #fff; transform: translateX(-1px); pointer-events: none; box-shadow: 0 0 0 1px rgba(0,0,0,.35); }
-.compare .bar::after {
-    content: "◀ ▶"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: #fff; color: #111; font-size: 0.65rem; padding: 0.35rem 0.45rem; border-radius: 999px; white-space: nowrap; letter-spacing: 0.1em;
-}
-.compare input[type=range] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: ew-resize; margin: 0; }
-.compare .tag {
-    position: absolute; top: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 6px; font-family: var(--font-mono);
-    font-size: 0.75rem; background: rgba(0,0,0,.7); color: #fff; pointer-events: none;
-}
-.compare .tag.l { left: 0.7rem; } .compare .tag.r { right: 0.7rem; }
-
-/* ── Editor tour ───────────────────────────────────── */
-.tour { display: grid; grid-template-columns: minmax(0, 1fr) 17rem; gap: 1.2rem; align-items: start; margin-top: 1.2rem; }
-.tour-stage { position: relative; }
-.tour-img { width: 100%; height: auto; }
-.hot {
-    position: absolute; transform: translate(-50%, -50%); width: 1.4rem; height: 1.4rem; border-radius: 50%;
-    border: 2px solid #fff; background: var(--accent); color: #0b2633; font: 700 0.72rem/1 var(--font-mono);
-    cursor: pointer; display: grid; place-items: center; box-shadow: 0 0 0 4px rgba(79,195,247,.25);
-}
-.hot:hover, .hot.on { background: #fff; box-shadow: 0 0 0 6px rgba(79,195,247,.45); }
-.tour-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 1rem; position: sticky; top: 1rem; }
-.tour-card h4 { margin: 0.1rem 0 0.4rem; font-family: var(--font-display); font-size: 1.1rem; }
-.tour-card p { font-size: 0.96rem; color: var(--fg-soft); }
-.tour-nav { display: flex; gap: 0.5rem; margin-top: 0.8rem; }
-.tour-nav button, .btn {
-    font: inherit; font-size: 0.88rem; padding: 0.35rem 0.75rem; border-radius: 7px; cursor: pointer;
-    border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg);
-}
-.tour-nav button:hover, .btn:hover { border-color: var(--accent); }
-.tour-legend { columns: 2; column-gap: 1.5rem; padding: 0; list-style: none; font-size: 0.92rem; margin: 1rem 0 0; }
-.tour-legend li { break-inside: avoid; padding: 0.15rem 0; }
-.tour-legend button { background: none; border: 0; color: var(--fg-soft); font: inherit; cursor: pointer; text-align: left; padding: 0; }
-.tour-legend button:hover { color: var(--accent); }
-.tour-legend span { font-family: var(--font-mono); color: var(--accent); margin-right: 0.4rem; }
-
-/* ── Tool tabs ─────────────────────────────────────── */
-.tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1.2rem 0 0; }
-.tabs button {
-    display: flex; align-items: center; gap: 0.45rem; font: inherit; font-size: 0.93rem; cursor: pointer;
-    padding: 0.4rem 0.75rem; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--fg-soft);
-}
-.tabs button[aria-selected=true] { background: var(--accent-soft); border-color: var(--accent); color: var(--fg); }
-.tabs kbd { font-size: 0.72rem; }
-.tabpanel { padding-top: 0.6rem; }
-.tool-meta { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; color: var(--muted); font-size: 0.9rem; margin-top: 0.8rem; }
-
-/* ── Filename decoder ──────────────────────────────── */
-.decoder { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.1rem; margin: 1.2rem 0; }
-.decoder label { font-weight: 600; display: block; margin-bottom: 0.4rem; }
-.decoder input {
-    width: 100%; font: 0.95rem var(--font-mono); padding: 0.6rem 0.7rem; border-radius: 8px;
-    border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg);
-}
-.examples { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.6rem; font-size: 0.85rem; color: var(--muted); align-items: center; }
-.examples button { font: 0.78rem var(--font-mono); padding: 0.2rem 0.45rem; border-radius: 6px; border: 1px dashed var(--line-strong); background: none; color: var(--fg-soft); cursor: pointer; }
-.anatomy { font-family: var(--font-mono); font-size: 0.95rem; margin: 1rem 0 0.4rem; display: flex; flex-wrap: wrap; gap: 4px 6px; overflow-wrap: anywhere; }
-.seg { display: inline-flex; flex-direction: column; align-items: center; }
-.seg i { font-style: normal; padding: 0.1rem 0.15rem; border-bottom: 2px solid var(--muted); }
-.seg small { font-size: 0.66rem; color: var(--muted); margin-top: 0.15rem; letter-spacing: 0.04em; }
-.seg.k-prefix i { border-color: var(--fg-soft); }
-.seg.k-mod i { border-color: var(--mod); color: var(--mod); }
-.seg.k-comp i { border-color: var(--comp); color: var(--comp); }
-.seg.k-rot i { border-color: var(--rot); color: var(--rot); }
-.seg.k-extra i { border-color: var(--muted); color: var(--muted); }
-.seg.k-bad i { border-color: var(--neg); color: var(--neg); }
-.verdict { margin-top: 0.6rem; font-size: 0.95rem; }
-.verdict.ok { color: var(--pos); } .verdict.bad { color: var(--neg); }
-.verdict ul { margin: 0.3rem 0 0; padding-left: 1.2rem; color: var(--fg-soft); }
-
-/* ── Folder tree ───────────────────────────────────── */
-.tree { font-family: var(--font-mono); font-size: 0.88rem; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.9rem 1rem; overflow-x: auto; white-space: pre; line-height: 1.75; }
-.tree .note { color: var(--muted); }
-.tree .pick { color: var(--accent); }
-.tree .task { color: var(--comp); }
-
-/* ── Launcher mockup ───────────────────────────────── */
-.mock-wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.2rem; margin: 1.2rem 0; }
-.win { border-radius: 10px; overflow: hidden; border: 1px solid #c9cdd1; box-shadow: var(--shadow); background: #ececec; color: #1d1d1f; font: 13px/1.4 -apple-system, "Segoe UI", system-ui, sans-serif; }
-.win-bar { display: flex; align-items: center; gap: 6px; padding: 8px 10px; background: linear-gradient(#e7e7e7, #d9d9d9); border-bottom: 1px solid #c4c4c4; }
-.win-bar i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; }
-.win-bar i:nth-child(2) { background: #febc2e; } .win-bar i:nth-child(3) { background: #28c840; }
-.win-mark { width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; color: #1C1C1C; }
-.win-bar span { flex: 1; text-align: center; font-weight: 600; font-size: 12px; color: #4a4a4a; margin-right: 40px; }
-.win-body { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
-.win-status { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #fff; border: 1px solid #d0d0d0; border-radius: 6px; font-size: 12px; }
-.win-status .dot { width: 9px; height: 9px; border-radius: 50%; background: #9b9b9b; flex: none; }
-.win-status.starting .dot { background: #f5a623; animation: pulse 0.9s infinite alternate; }
-.win-status.running .dot { background: #28c840; }
-@keyframes pulse { to { opacity: 0.3; } }
-.win button.w {
-    font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid #b5b5b5; background: #fff; color: #1d1d1f; cursor: pointer; text-align: center;
-}
-.win button.w.primary { background: #0a84ff; border-color: #0a74e0; color: #fff; }
-.win button.w:disabled { opacity: 0.45; cursor: not-allowed; }
-.win .field { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; }
-.win .field label { grid-column: 1 / -1; font-size: 12px; color: #555; }
-.win .field output { background: #fff; border: 1px solid #d0d0d0; border-radius: 5px; padding: 4px 8px; font: 12px var(--font-mono); color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-.win .check { display: flex; gap: 6px; align-items: center; font-size: 12px; }
-.win .log { background: #1e1e1e; color: #b8f5b8; font: 11px/1.5 var(--font-mono); padding: 8px; border-radius: 5px; min-height: 3.2em; white-space: pre-wrap; }
-.mock-note { font-size: 0.85rem; color: var(--muted); }
-
-
-/* App dialog replica: fixed dark look, same as the app in both page themes */
-.app-modal-stage { margin: 1.2rem 0 0.4rem; padding: 2.4rem 1rem; border-radius: 10px; border: 1px solid var(--line-strong); display: grid; place-items: center;
-    background: radial-gradient(circle at 30% 30%, #5b6b5a, #2d3330 60%, #1f2321); }
-.app-modal { width: 100%; max-width: 24rem; background: #1c1c1c; color: #fff; border: 1px solid rgba(255,255,255,.15); border-radius: 12px; padding: 1.75rem; display: flex; flex-direction: column; gap: 0.4rem; box-shadow: 0 25px 50px rgba(0,0,0,.5); font: 14px/1.5 system-ui, sans-serif; }
-.app-modal b { font-size: 14px; }
-.app-modal p { margin: 0; font-size: 12px; color: rgba(255,255,255,.55); }
-.app-modal .count { font-size: 12px; color: #fbbf24; font-variant-numeric: tabular-nums; }
-.app-modal button { margin-top: 0.7rem; padding: 0.5rem; border-radius: 8px; font: 500 14px system-ui, sans-serif; cursor: pointer; background: rgba(59,130,246,.2); color: #60a5fa; border: 1px solid rgba(59,130,246,.3); }
-.app-modal button:hover { background: rgba(59,130,246,.3); }
-
-
-/* Screenshot first; the redrawn view shows only when the image file is missing */
-figure.with-fallback { margin: 0; }
-figure.with-fallback > img.real { width: 100%; height: auto; border-radius: 10px; border: 1px solid var(--line-strong); box-shadow: var(--shadow); cursor: zoom-in; }
-
-
-/* ── Tool animations ───────────────────────────────── */
-figure.anim { margin: 1.2rem 0; position: relative; }
-figure.anim canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; max-width: 100%; border-radius: 10px; border: 1px solid var(--line-strong); box-shadow: var(--shadow); background: #111; cursor: pointer; }
-.anim-toggle {
-    position: absolute; right: 0.7rem; top: 0.7rem; font: 600 0.78rem var(--font-body); padding: 0.25rem 0.7rem; border-radius: 999px;
-    border: 1px solid rgba(255,255,255,.35); background: rgba(0,0,0,.65); color: #fff; cursor: pointer;
-}
-.anim-toggle:hover { background: rgba(0,0,0,.85); }
-
-
-/* App toolbar icons, drawn as the dark rail tiles the app shows */
-.ti { display: inline-grid; place-items: center; width: 1.65em; height: 1.65em; border-radius: 6px; background: #2b2b2b; border: 1px solid rgba(255,255,255,.14); color: #B8B8B8; vertical-align: -0.48em; margin-inline: 0.1em; flex: none; }
-.ti svg { width: 1.05em; height: 1.05em; }
-.ti.on { color: #4FC3F7; }
-.ti.fill-on { color: #60a5fa; background: rgba(59,130,246,.22); border-color: rgba(96,165,250,.45); }
-.ti.erase-on { color: #f87171; background: rgba(239,68,68,.22); border-color: rgba(248,113,113,.45); }
-.ti.blank { visibility: hidden; }
-.ti.q { font: 700 0.85em/1 system-ui, sans-serif; }
-.tabs .ti { font-size: 0.95em; }
-#kb-table td:nth-child(2) .ti { margin-right: 0.45em; }
-
-/* ── Shortcuts ─────────────────────────────────────── */
-.kb-tools { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: center; margin-top: 1rem; }
-.kb-tools input { flex: 1 1 14rem; min-width: 0; padding: 0.5rem 0.7rem; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--fg); font: inherit; }
-.kb-live { font-size: 0.88rem; color: var(--muted); }
-#kb-table tr.hit td { background: var(--accent-soft); }
-#kb-table td:first-child { white-space: nowrap; }
-
-/* ── FAQ ───────────────────────────────────────────── */
-details { border: 1px solid var(--line); border-radius: 10px; padding: 0.2rem 1rem; margin: 0.5rem 0; background: var(--surface); }
-details[open] { padding-bottom: 0.7rem; }
-summary { cursor: pointer; font-weight: 600; padding: 0.55rem 0; }
-summary::marker { color: var(--accent); }
-
-pre.json { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.9rem 1rem; overflow-x: auto; font: 0.82rem/1.55 var(--font-mono); color: var(--fg-soft); }
-pre.json .k { color: var(--mod); } pre.json .s { color: var(--comp); } pre.json .c { color: var(--muted); }
-
-.minerals { display: flex; flex-wrap: wrap; gap: 0.6rem 1.2rem; margin: 0.8rem 0; font-size: 0.93rem; }
-.minerals div { min-width: 0; }
-.minerals b { display: block; font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-
-/* ── Lightbox ──────────────────────────────────────── */
-dialog.lightbox { border: 0; padding: 0; background: transparent; max-width: 96vw; max-height: 94vh; }
-dialog.lightbox::backdrop { background: rgba(0,0,0,.82); }
-dialog.lightbox img { max-width: 96vw; max-height: 88vh; border-radius: 8px; }
-dialog.lightbox p { color: #ddd; text-align: center; margin: 0.5rem 0 0; font-size: 0.9rem; }
-dialog.lightbox button { position: fixed; top: 1rem; right: 1rem; font: inherit; background: #fff; color: #111; border: 0; border-radius: 999px; padding: 0.35rem 0.8rem; cursor: pointer; }
-
-.toast { position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 0.45rem 0.9rem; border-radius: 8px; font-size: 0.9rem; z-index: 50; }
-
-/* ── Responsive ────────────────────────────────────── */
-@media (max-width: 1100px) {
-    .tour { grid-template-columns: minmax(0, 1fr); }
-    .tour-card { position: static; }
-}
-@media (max-width: 900px) {
-    .shell { grid-template-columns: minmax(0, 1fr); }
-    .side {
-        position: fixed; inset: 0 auto 0 0; width: min(85vw, 300px); z-index: 40;
-        transform: translateX(-102%); transition: transform 0.2s; box-shadow: var(--shadow);
-        padding-top: calc(1.4rem + env(safe-area-inset-top, 0px));
-    }
-    .side.open { transform: none; }
-    .menu-btn {
-        display: flex; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 30; gap: 0.5rem; align-items: center;
-        margin-inline: calc(-1 * clamp(16px, 4vw, 56px)); padding: 0.6rem clamp(16px, 4vw, 56px);
-        background: var(--bg); border-bottom: 1px solid var(--line);
-    }
-    .menu-btn button { font: inherit; font-size: 0.9rem; padding: 0.35rem 0.7rem; border-radius: 7px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--fg); cursor: pointer; }
-    .menu-btn b { font-family: var(--font-display); font-stretch: 112%; }
-    .quick ol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-@media (max-width: 560px) {
-    .pair { grid-template-columns: minmax(0, 1fr); }
-    .quick ol { grid-template-columns: minmax(0, 1fr); }
-    .tour-legend { columns: 1; }
-    .copy-link { display: none; }
-}
-@media print {
-    .side, .menu-btn, .copy-link, .kb-tools, .examples, .tour-nav, .hot { display: none !important; }
-    .shell { display: block; }
-    body { background: #fff; color: #000; }
-    section.chapter { break-inside: auto; }
-    figure, .compare, table { break-inside: avoid; }
-}
-</style>
+<link rel="alternate" hreflang="en" href="index.html">
+<link rel="alternate" hreflang="fr" href="index.fr.html">
+<link rel="stylesheet" href="assets/guide.css?v=4">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -459,6 +43,7 @@ dialog.lightbox button { position: fixed; top: 1rem; right: 1rem; font: inherit;
         <svg class="brand-mark" aria-hidden="true"><use href="#ta-mark"/></svg>
         <span><b>ThinAnnotator</b><small>User manual</small></span>
     </a>
+    <nav class="lang-switch" aria-label="Language"><a href="index.html" hreflang="en" lang="en" data-lang-link aria-current="page">EN</a><a href="index.fr.html" hreflang="fr" lang="fr" data-lang-link>FR</a></nav>
     <div class="search">
         <input id="q" type="search" placeholder="Search the manual" autocomplete="off" aria-label="Search the manual">
         <kbd class="hint" aria-hidden="true">/</kbd>
@@ -692,15 +277,15 @@ dialog.lightbox button { position: fixed; top: 1rem; right: 1rem; font: inherit;
 <section class="chapter" id="tour" data-title="The editor">
 <div class="col">
     <div class="chap-head"><span class="chap-no">04</span><h2>The editor</h2></div>
-    <p>The editor has a tool rail on the left, the image in the middle, and the annotation panel on the right. Click a numbered marker to learn what each part does.</p>
+    <p>The editor has a tool rail on the left, the image in the middle, and the annotation panel on the right. Click a numbered marker to learn what each part does. This screenshot shows a task opened from a batch, so the top bar also has the batch controls.</p>
 </div>
 <div class="wide">
     <div class="tour">
         <div class="tour-stage" id="tour-stage">
-            <img width="1600" height="900" class="tour-img" src="img/10-fully-annotated-fill.jpg" alt="The annotation editor with six annotated grains">
+            <img width="1600" height="900" class="tour-img" src="img/02b-batch-task-open.jpg" alt="The annotation editor in batch mode with seven annotated grains">
         </div>
         <div class="tour-card" aria-live="polite">
-            <div class="eyebrow" id="tour-count">1 / 12</div>
+            <div class="eyebrow" id="tour-count">1 / 13</div>
             <h4 id="tour-title"></h4>
             <p id="tour-text"></p>
             <div class="tour-nav"><button type="button" id="tour-prev">Previous</button><button type="button" id="tour-next">Next</button></div>
@@ -781,6 +366,15 @@ dialog.lightbox button { position: fixed; top: 1rem; right: 1rem; font: inherit;
         <button type="button" role="tab" id="tab-slic" aria-controls="panel-slic" aria-selected="false"><span class="ti" aria-hidden="true"><svg><use href="#i-slic"/></svg></span>Superpixels (SLIC) <kbd>L</kbd></button>
     </div>
 
+</div>
+<div class="wide" data-for="panel-point">
+    <figure class="anim" data-scene="point">
+        <canvas role="img" aria-label="Animation: two positive SAM points outline a crystal, then a negative point removes the neighbouring grain"></canvas>
+        <button type="button" class="anim-toggle" aria-label="Pause animation">Pause</button>
+        <figcaption>Replay: + points add to the outline, a − point removes what does not belong.</figcaption>
+    </figure>
+</div>
+<div class="col">
     <div class="tabpanel" role="tabpanel" id="panel-point" aria-labelledby="tab-point">
         <h3>Click the grain: Add point and Remove point</h3>
         <p>These are the SAM tools. You place points; the model finds the grain that contains them. <span class="chip pos">+ point</span> means "this is part of the grain". <span class="chip neg">− point</span> means "this is not".</p>
@@ -808,6 +402,13 @@ dialog.lightbox button { position: fixed; top: 1rem; right: 1rem; font: inherit;
         <figure class="shot"><img width="1600" height="900" src="img/07b-ai-segmentation-refined-second-point.jpg" alt="Outline after a second positive point" loading="lazy"><figcaption>A second <span class="chip pos">+ point</span> in the missing part extends the outline.</figcaption></figure>
     </div>
 </div>
+<div class="wide" data-for="panel-box" hidden>
+    <figure class="anim" data-scene="box">
+        <canvas role="img" aria-label="Animation: dragging a box around a crystal gives its whole outline"></canvas>
+        <button type="button" class="anim-toggle" aria-label="Pause animation">Pause</button>
+        <figcaption>Replay: drag a box around the grain and release.</figcaption>
+    </figure>
+</div>
 <div class="col">
     <div class="tabpanel" role="tabpanel" id="panel-box" aria-labelledby="tab-box" hidden>
         <h3>Draw a box around the grain</h3>
@@ -830,6 +431,13 @@ dialog.lightbox button { position: fixed; top: 1rem; right: 1rem; font: inherit;
         <figcaption>One box gives the outline of the whole crystal.</figcaption>
     </figure>
 </div>
+<div class="wide" data-for="panel-poly" hidden>
+    <figure class="anim" data-scene="polygon">
+        <canvas role="img" aria-label="Animation: placing polygon vertices around a grain, then closing the shape"></canvas>
+        <button type="button" class="anim-toggle" aria-label="Pause animation">Pause</button>
+        <figcaption>Replay: click vertices along the edge, then click the first vertex to close.</figcaption>
+    </figure>
+</div>
 <div class="col">
     <div class="tabpanel" role="tabpanel" id="panel-poly" aria-labelledby="tab-poly" hidden>
         <h3>Trace the grain with a polygon</h3>
@@ -844,15 +452,17 @@ dialog.lightbox button { position: fixed; top: 1rem; right: 1rem; font: inherit;
     </div>
 </div>
 <div class="wide" data-for="panel-poly" hidden>
-    <figure class="anim" data-scene="polygon">
-        <canvas role="img" aria-label="Animation: placing polygon vertices around a grain, then closing the shape"></canvas>
-        <button type="button" class="anim-toggle" aria-label="Pause animation">Pause</button>
-        <figcaption>Replay: click vertices along the edge, then click the first vertex to close.</figcaption>
-    </figure>
     <div class="pair">
         <figure class="shot"><img width="1600" height="900" src="img/05-manual-polygon-in-progress.jpg" alt="Polygon with six vertices, not closed" loading="lazy"><figcaption>Vertices in progress.</figcaption></figure>
         <figure class="shot"><img width="1600" height="900" src="img/05b-manual-polygon-closed.jpg" alt="Polygon closed as a new object" loading="lazy"><figcaption>Closed: the object opens in the panel.</figcaption></figure>
     </div>
+</div>
+<div class="wide" data-for="panel-free" hidden>
+    <figure class="anim" data-scene="freeform">
+        <canvas role="img" aria-label="Animation: drawing a freehand stroke around an opaque grain"></canvas>
+        <button type="button" class="anim-toggle" aria-label="Pause animation">Pause</button>
+        <figcaption>Replay: hold the button, draw around the grain, release.</figcaption>
+    </figure>
 </div>
 <div class="col">
     <div class="tabpanel" role="tabpanel" id="panel-free" aria-labelledby="tab-free" hidden>
@@ -865,11 +475,11 @@ dialog.lightbox button { position: fixed; top: 1rem; right: 1rem; font: inherit;
         <p>Freeform is fast for small grains and for patching a gap in a SAM outline. To cut instead of add, switch the panel to <span class="ui">Erase</span> first (see <a href="#fill-erase">Fill and Erase</a>).</p>
     </div>
 </div>
-<div class="wide" data-for="panel-free" hidden>
-    <figure class="anim" data-scene="freeform">
-        <canvas role="img" aria-label="Animation: drawing a freehand stroke around an opaque grain"></canvas>
+<div class="wide" data-for="panel-slic" hidden>
+    <figure class="anim" data-scene="slic">
+        <canvas role="img" aria-label="Animation: dragging a box, dropping superpixels outside the crystal, then applying"></canvas>
         <button type="button" class="anim-toggle" aria-label="Pause animation">Pause</button>
-        <figcaption>Replay: hold the button, draw around the grain, release.</figcaption>
+        <figcaption>Replay: drag a box, click the patches outside the grain, then click Apply.</figcaption>
     </figure>
 </div>
 <div class="col">
@@ -888,11 +498,6 @@ dialog.lightbox button { position: fixed; top: 1rem; right: 1rem; font: inherit;
     </div>
 </div>
 <div class="wide" data-for="panel-slic" hidden>
-    <figure class="anim" data-scene="slic">
-        <canvas role="img" aria-label="Animation: dragging a box, dropping superpixels outside the crystal, then applying"></canvas>
-        <button type="button" class="anim-toggle" aria-label="Pause animation">Pause</button>
-        <figcaption>Replay: drag a box, click the patches outside the grain, then click Apply.</figcaption>
-    </figure>
     <figure class="shot"><img width="1600" height="900" src="img/16d-slic-superpixel-review.jpg" alt="SLIC review window with superpixels" loading="lazy"><figcaption>The SLIC review window. Click patches to drop them, then click <span class="ui">Apply</span>.</figcaption></figure>
 </div>
 <div class="col">
@@ -915,11 +520,6 @@ dialog.lightbox button { position: fixed; top: 1rem; right: 1rem; font: inherit;
     <p>The switch works on any object, however you made it: SAM points, a box, a polygon, a freeform stroke or superpixels.</p>
 
     <h3 id="fill">Add a missing part</h3>
-    <ol class="steps">
-        <li>Select the object: click it on the image or in the panel.</li>
-        <li>In the panel, click <span class="ti fill-on" aria-hidden="true"><svg><use href="#i-brush"/></svg></span> <span class="ui">Fill</span>.</li>
-        <li>Press <span class="ti" aria-hidden="true"><svg><use href="#i-polygon"/></svg></span> <kbd>P</kbd> or <span class="ti" aria-hidden="true"><svg><use href="#i-freeform"/></svg></span> <kbd>F</kbd> and draw the missing part. Let the shape overlap the object a little.<span class="result">The shape joins the object. The outline now goes around both.</span></li>
-    </ol>
 </div>
 <div class="wide">
     <figure class="anim" data-scene="fill">
@@ -929,13 +529,12 @@ dialog.lightbox button { position: fixed; top: 1rem; right: 1rem; font: inherit;
     </figure>
 </div>
 <div class="col">
-    <h3 id="erase">Cut a part or a hole</h3>
     <ol class="steps">
-        <li>Select the object.</li>
-        <li>In the panel, click <span class="ti erase-on" aria-hidden="true"><svg><use href="#i-eraser"/></svg></span> <span class="ui">Erase</span>.</li>
-        <li>Press <span class="ti" aria-hidden="true"><svg><use href="#i-polygon"/></svg></span> <kbd>P</kbd> or <span class="ti" aria-hidden="true"><svg><use href="#i-freeform"/></svg></span> <kbd>F</kbd> and draw around the part to remove.<span class="result">The part disappears from the object. A shape inside the object leaves a hole.</span></li>
-        <li>Click <span class="ui">Fill</span> to go back to adding.</li>
+        <li>Select the object: click it on the image or in the panel.</li>
+        <li>In the panel, click <span class="ti fill-on" aria-hidden="true"><svg><use href="#i-brush"/></svg></span> <span class="ui">Fill</span>.</li>
+        <li>Press <span class="ti" aria-hidden="true"><svg><use href="#i-polygon"/></svg></span> <kbd>P</kbd> or <span class="ti" aria-hidden="true"><svg><use href="#i-freeform"/></svg></span> <kbd>F</kbd> and draw the missing part. Let the shape overlap the object a little.<span class="result">The shape joins the object. The outline now goes around both.</span></li>
     </ol>
+    <h3 id="erase">Cut a part or a hole</h3>
 </div>
 <div class="wide">
     <figure class="anim" data-scene="erase">
@@ -945,6 +544,12 @@ dialog.lightbox button { position: fixed; top: 1rem; right: 1rem; font: inherit;
     </figure>
 </div>
 <div class="col">
+    <ol class="steps">
+        <li>Select the object.</li>
+        <li>In the panel, click <span class="ti erase-on" aria-hidden="true"><svg><use href="#i-eraser"/></svg></span> <span class="ui">Erase</span>.</li>
+        <li>Press <span class="ti" aria-hidden="true"><svg><use href="#i-polygon"/></svg></span> <kbd>P</kbd> or <span class="ti" aria-hidden="true"><svg><use href="#i-freeform"/></svg></span> <kbd>F</kbd> and draw around the part to remove.<span class="result">The part disappears from the object. A shape inside the object leaves a hole.</span></li>
+        <li>Click <span class="ui">Fill</span> to go back to adding.</li>
+    </ol>
     <div class="callout">
         <b>Good to know</b>
         <p><span class="ui">Save</span> sets the switch back to <span class="ui">Fill</span>, so the next object starts in Fill.</p>
@@ -1242,697 +847,6 @@ dialog.lightbox button { position: fixed; top: 1rem; right: 1rem; font: inherit;
 
 <dialog class="lightbox" id="lightbox"><button type="button" id="lb-close">Close</button><img id="lb-img" alt=""><p id="lb-cap"></p></dialog>
 
-<script>
-(() => {
-    const $ = (s, r = document) => r.querySelector(s);
-    const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-    const store = {
-        get(k) { try { return localStorage.getItem(k); } catch { return null; } },
-        set(k, v) { try { localStorage.setItem(k, v); } catch { /* storage unavailable */ } },
-    };
-
-    function toast(msg) {
-        const el = document.createElement("div");
-        el.className = "toast"; el.textContent = msg;
-        document.body.append(el);
-        setTimeout(() => el.remove(), 1600);
-    }
-
-    // Compare sliders
-    $$(".compare").forEach((c) => {
-        const r = $("input[type=range]", c);
-        r.addEventListener("input", () => c.style.setProperty("--pos", r.value + "%"));
-    });
-
-    // Lightbox
-    const lb = $("#lightbox");
-    $$("figure.shot > img").forEach((img) => img.addEventListener("click", () => {
-        $("#lb-img").src = img.src;
-        $("#lb-img").alt = img.alt;
-        $("#lb-cap").textContent = img.closest("figure").querySelector("figcaption")?.textContent ?? "";
-        lb.showModal();
-    }));
-    $("#lb-close").addEventListener("click", () => lb.close());
-    lb.addEventListener("click", (e) => { if (e.target === lb) lb.close(); });
-
-
-    // Real screenshot when the file exists, redrawn view otherwise
-    $$("figure.with-fallback").forEach((fig) => {
-        const img = $("img.real", fig), fallback = $(".fallback", fig);
-        const useImage = () => { img.hidden = false; fallback.hidden = true; };
-        const useFallback = () => { img.hidden = true; fallback.hidden = false; };
-        if (img.complete) { img.naturalWidth ? useImage() : useFallback(); }
-        img.addEventListener("load", useImage);
-        img.addEventListener("error", useFallback);
-        img.addEventListener("click", () => {
-            $("#lb-img").src = img.src; $("#lb-img").alt = img.alt;
-            $("#lb-cap").textContent = fig.querySelector("figcaption")?.textContent ?? "";
-            lb.showModal();
-        });
-    });
-
-    // Mobile menu
-    const side = $("#side"), menuBtn = $("#menu-open");
-    menuBtn.addEventListener("click", () => {
-        const open = side.classList.toggle("open");
-        menuBtn.setAttribute("aria-expanded", String(open));
-    });
-    $$("#toc a, .brand").forEach((a) => a.addEventListener("click", () => side.classList.remove("open")));
-
-    // Scroll-spy
-    const links = new Map($$("#toc a").map((a) => [a.getAttribute("href").slice(1), a]));
-    const spy = new IntersectionObserver((entries) => {
-        entries.forEach((e) => {
-            if (!e.isIntersecting) return;
-            links.forEach((a) => a.classList.remove("active"));
-            links.get(e.target.id)?.classList.add("active");
-        });
-    }, {rootMargin: "-30% 0px -65% 0px"});
-    $$("section.chapter").forEach((s) => spy.observe(s));
-
-    // Copy-link buttons on chapter titles
-    $$(".chap-head").forEach((h) => {
-        const id = h.closest("section").id;
-        const b = document.createElement("button");
-        b.type = "button"; b.className = "copy-link"; b.textContent = "Copy link";
-        b.addEventListener("click", () => {
-            const url = location.href.split("#")[0] + "#" + id;
-            navigator.clipboard?.writeText(url).then(() => toast("Link copied"), () => toast(url));
-        });
-        h.append(b);
-    });
-
-    // Quick start checklist
-    const qs = $$(".quick input[type=checkbox]");
-    const qsUpdate = () => {
-        const n = qs.filter((c) => c.checked).length;
-        $("#quick-progress").textContent = `${n} / ${qs.length} done`;
-    };
-    qs.forEach((c) => {
-        c.checked = store.get(c.id) === "1";
-        c.addEventListener("change", () => { store.set(c.id, c.checked ? "1" : "0"); qsUpdate(); });
-    });
-    $("#quick-reset").addEventListener("click", () => { qs.forEach((c) => { c.checked = false; store.set(c.id, "0"); }); qsUpdate(); });
-    qsUpdate();
-
-    // Search
-    const index = [];
-    $$("section.chapter").forEach((sec) => {
-        const chapter = sec.dataset.title;
-        index.push({id: sec.id, title: chapter, chapter, text: sec.textContent.toLowerCase()});
-        $$("h3[id]", sec).forEach((h) => {
-            let text = "", n = h.nextElementSibling;
-            while (n && n.tagName !== "H3") { text += " " + n.textContent; n = n.nextElementSibling; }
-            index.push({id: h.id, title: h.textContent, chapter, text: (h.textContent + text).toLowerCase()});
-        });
-    });
-    const q = $("#q"), results = $("#results");
-    let hits = [], sel = 0;
-    function renderResults() {
-        const term = q.value.trim().toLowerCase();
-        if (!term) { results.hidden = true; return; }
-        const words = term.split(/\s+/).map((w) => new RegExp("(^|[^a-z0-9])" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-        hits = index
-            .filter((e) => words.every((w) => w.test(e.text)))
-            .map((e) => ({...e, score: words.reduce((s, w) => s + (w.test(e.title.toLowerCase()) ? 3 : 0), e.id === e.chapter ? 0 : 1)}))
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 8);
-        sel = 0;
-        results.innerHTML = hits.length
-            ? hits.map((h, i) => `<a href="#${h.id}" class="${i === 0 ? "on" : ""}">${h.title}<small>${h.chapter}</small></a>`).join("")
-            : "<p>No match. Try another word.</p>";
-        results.hidden = false;
-    }
-    q.addEventListener("input", renderResults);
-    q.addEventListener("keydown", (e) => {
-        const items = $$("a", results);
-        if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-            e.preventDefault();
-            if (!items.length) return;
-            sel = (sel + (e.key === "ArrowDown" ? 1 : items.length - 1)) % items.length;
-            items.forEach((a, i) => a.classList.toggle("on", i === sel));
-        } else if (e.key === "Enter" && items[sel]) {
-            e.preventDefault(); items[sel].click();
-        } else if (e.key === "Escape") {
-            q.value = ""; results.hidden = true; q.blur();
-        }
-    });
-    results.addEventListener("click", (e) => {
-        if (e.target.closest("a")) { results.hidden = true; q.value = ""; side.classList.remove("open"); }
-    });
-    document.addEventListener("click", (e) => { if (!e.target.closest(".search")) results.hidden = true; });
-
-    // Tool tabs: each tab shows its text panel and the wide figure block tied to it
-    const tabs = $$('[role="tab"]');
-    function selectTab(tab) {
-        tabs.forEach((t) => {
-            const on = t === tab;
-            t.setAttribute("aria-selected", String(on));
-            t.tabIndex = on ? 0 : -1;
-            const id = t.getAttribute("aria-controls");
-            $("#" + id).hidden = !on;
-            $$(`[data-for="${id}"]`).forEach((w) => { w.hidden = !on; });
-        });
-    }
-    tabs.forEach((t, i) => {
-        t.addEventListener("click", () => selectTab(t));
-        t.addEventListener("keydown", (e) => {
-            if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
-            const next = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
-            selectTab(next); next.focus();
-        });
-    });
-    selectTab(tabs[0]);
-
-
-    // Content above an anchor settles after the browser's initial jump; jump again once it has.
-    const jumpToHash = () => {
-        const target = location.hash && document.getElementById(location.hash.slice(1));
-        if (!target) return;
-        const tabPanel = target.closest('[role="tabpanel"]');
-        if (tabPanel) selectTab($(`[aria-controls="${tabPanel.id}"]`));
-        target.scrollIntoView({behavior: "instant", block: "start"});
-    };
-    if (document.readyState === "complete") jumpToHash(); else addEventListener("load", jumpToHash);
-    document.fonts?.ready.then(jumpToHash);
-
-    // Editor tour. Positions are percentages of the 1600×900 screenshot.
-    const spots = [
-        {x: 3.8, y: 2, t: "Open a new task", d: "Leaves this task and returns to the home screen. Save a draft first if you want to resume."},
-        {x: 49.8, y: 2, t: "Task name", d: "The thin section and the field of view you are annotating, for example GDX-22-PI / FOV_1."},
-        {x: 94, y: 2, t: "Finish and profile", d: "Finish ends the session and offers to save. The badge next to it shows your username; click it to edit your profile."},
-        {x: 4.6, y: 7.6, t: "Undo and redo", d: `<span class="ti" aria-hidden="true"><svg><use href="#i-undo"/></svg></span><span class="ti" aria-hidden="true"><svg><use href="#i-redo"/></svg></span> Step back or forward through your last 50 actions. The tooltip names the step.`},
-        {x: 4.6, y: 25, t: "Tools", d: `From top to bottom:<br><span class="ti" aria-hidden="true"><svg><use href="#i-pointer"/></svg></span> Pointer <kbd>V</kbd><br><span class="ti" aria-hidden="true"><svg><use href="#i-sam-group"/></svg></span> SAM tools: <span class="ti" aria-hidden="true"><svg><use href="#i-select-add"/></svg></span> <kbd>S</kbd> <span class="ti" aria-hidden="true"><svg><use href="#i-select-remove"/></svg></span> <kbd>X</kbd> <span class="ti" aria-hidden="true"><svg><use href="#i-bbox"/></svg></span> <kbd>B</kbd><br><span class="ti" aria-hidden="true"><svg><use href="#i-freeform"/></svg></span> Freeform draw <kbd>F</kbd><br><span class="ti" aria-hidden="true"><svg><use href="#i-polygon"/></svg></span> Polygon lasso <kbd>P</kbd><br><span class="ti" aria-hidden="true"><svg><use href="#i-slic"/></svg></span> Superpixels (SLIC) <kbd>L</kbd><br><span class="ti" aria-hidden="true"><svg><use href="#i-zoom-in"/></svg></span> <span class="ti" aria-hidden="true"><svg><use href="#i-zoom-out"/></svg></span> Zoom in / out <kbd>+</kbd> <kbd>−</kbd><br><span class="ti" aria-hidden="true"><svg><use href="#i-grab"/></svg></span> Pan <kbd>G</kbd>`},
-        {x: 4.6, y: 39.6, t: "Lighting pills", d: "Switch between PPL and XPL. When compensator images exist, γ1, γ-1 and γ0 pills appear under XPL."},
-        {x: 4.6, y: 45.5, t: "Display and help", d: `<span class="ti" aria-hidden="true"><svg><use href="#i-borders"/></svg></span> shows the objects as tinted areas or as outlines only. <span class="ti q" aria-hidden="true">?</span> opens the list of keyboard shortcuts.`},
-        {x: 4.6, y: 97, t: "Customize", d: `<span class="ti" aria-hidden="true"><svg><use href="#i-cog"/></svg></span> Language, toolbar layout and mask display.`},
-        {x: 82, y: 6, t: "Image badges", d: "The modality, compensator and rotation of the image on screen."},
-        {x: 7.5, y: 92.8, t: "Minimap", d: "The whole image with your current view. Press M to show or hide it."},
-        {x: 81, y: 97, t: "Zoom locked", d: "Keeps the zoom and position when you switch between lighting variants. Click to change to Zoom reset."},
-        {x: 92, y: 22, t: "Annotation panel", d: "Lists your objects with their three mineral hypotheses. Hover a name to highlight the grain; click it to edit the grain. At the bottom: Save draft and Export annotation (current image)."},
-    ];
-    const stage = $("#tour-stage"), legend = $("#tour-legend");
-    let cur = 0;
-    spots.forEach((s, i) => {
-        const b = document.createElement("button");
-        b.type = "button"; b.className = "hot"; b.textContent = i + 1;
-        b.style.left = s.x + "%"; b.style.top = s.y + "%";
-        b.setAttribute("aria-label", `${i + 1}. ${s.t}`);
-        b.addEventListener("click", () => show(i));
-        stage.append(b);
-        const li = document.createElement("li");
-        li.innerHTML = `<button type="button"><span>${i + 1}</span>${s.t}</button>`;
-        li.firstChild.addEventListener("click", () => show(i));
-        legend.append(li);
-    });
-    function show(i) {
-        cur = (i + spots.length) % spots.length;
-        $$(".hot", stage).forEach((h, j) => h.classList.toggle("on", j === cur));
-        $("#tour-count").textContent = `${cur + 1} / ${spots.length}`;
-        $("#tour-title").textContent = spots[cur].t;
-        $("#tour-text").innerHTML = spots[cur].d;
-    }
-    $("#tour-prev").addEventListener("click", () => show(cur - 1));
-    $("#tour-next").addEventListener("click", () => show(cur + 1));
-    show(0);
-
-    // File name checker. Mirrors the rule on the home screen.
-    const FORMATS = ["jpg", "jpeg", "png", "tif", "tiff", "bmp"];
-    const MODS = {PPL: "plane polarized", XPL: "cross polarized", RL: "reflected", FL: "fluorescence", TR: "transmitted"};
-    const COMPS = {add: "+λ compensator (γ1)", sous: "−λ compensator (γ-1)", na: "no compensator (γ0)"};
-    const fname = $("#fname"), anatomy = $("#anatomy"), verdict = $("#verdict");
-    const esc = (s) => s.replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
-    function decode() {
-        const name = fname.value.trim();
-        const segs = [], problems = [], notes = [];
-        const dot = name.lastIndexOf(".");
-        const stem = dot > 0 ? name.slice(0, dot) : name;
-        const ext = dot > 0 ? name.slice(dot + 1) : "";
-        const m = stem.match(/^(.+?)((?:_[A-Za-z0-9]+-[^_]+)+)$/);
-        let prefix = stem, tokens = [];
-        if (m) { prefix = m[1]; tokens = m[2].slice(1).split("_"); }
-        segs.push({k: "prefix", v: prefix, l: "prefix"});
-        const seen = {};
-        tokens.forEach((tok) => {
-            const i = tok.indexOf("-");
-            const key = tok.slice(0, i), val = tok.slice(i + 1);
-            let k = "extra", label = "extra token";
-            if (key === "mod") {
-                k = /^[A-Za-z0-9]+$/.test(val) ? "mod" : "bad"; label = "modality";
-                if (k === "bad") problems.push("mod must use letters and digits only.");
-                else notes.push(`Modality ${val}${MODS[val] ? " — " + MODS[val] : " (not a standard modality)"}`);
-            } else if (key === "comp") {
-                k = /^[A-Za-z0-9]+$/.test(val) ? "comp" : "bad"; label = "compensator";
-                if (k === "bad") problems.push("comp must use letters and digits only.");
-                else notes.push(`Compensator ${val}${COMPS[val] ? " — " + COMPS[val] : " (expected add, sous or na)"}`);
-            } else if (key === "rot") {
-                k = /^-?\d+$/.test(val) ? "rot" : "bad"; label = "rotation";
-                if (k === "bad") problems.push("rot must be a whole number of degrees, for example 45 or -45.");
-                else notes.push(`Stage rotation ${val}°`);
-            }
-            if (key in seen) problems.push(`The token ${key} appears twice.`);
-            seen[key] = true;
-            segs.push({k, v: "_" + tok, l: label});
-        });
-        if (ext) segs.push({k: FORMATS.includes(ext.toLowerCase()) ? "extra" : "bad", v: "." + ext, l: "extension"});
-        ["mod", "comp", "rot"].forEach((t) => { if (!seen[t]) problems.unshift(`The _${t}- token is missing.`); });
-        if (!ext) problems.push("The name has no file extension.");
-        else if (!FORMATS.includes(ext.toLowerCase())) problems.push(`.${ext} is not an accepted format. Use ${FORMATS.map((f) => "." + f).join(", ")}.`);
-        if (!m && name) problems.push("After the prefix, every part must be a _key-value token.");
-        anatomy.innerHTML = segs.map((s) => `<span class="seg k-${s.k}"><i>${esc(s.v)}</i><small>${s.l}</small></span>`).join("");
-        if (!name) { verdict.className = "verdict"; verdict.textContent = "Type a file name."; return; }
-        verdict.className = "verdict " + (problems.length ? "bad" : "ok");
-        verdict.innerHTML = problems.length
-            ? `The app will not read this file.<ul>${problems.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>`
-            : `The app reads this file.<ul>${notes.map((p) => `<li>${esc(p)}</li>`).join("")}</ul>`;
-    }
-    fname.addEventListener("input", decode);
-    $$(".examples button").forEach((b) => b.addEventListener("click", () => { fname.value = b.dataset.ex; decode(); }));
-    decode();
-
-    // Shortcut table: filter and live key lookup
-    const rows = $$("#kb-table tbody tr");
-    $("#kb-filter").addEventListener("input", (e) => {
-        const term = e.target.value.toLowerCase();
-        rows.forEach((r) => { r.hidden = !r.textContent.toLowerCase().includes(term); });
-    });
-    const kbSection = $("#shortcuts");
-    document.addEventListener("keydown", (e) => {
-        const tag = e.target.tagName;
-        if (tag === "INPUT" || tag === "TEXTAREA") return;
-        if (e.key === "/" ) { e.preventDefault(); q.focus(); return; }
-        const r = kbSection.getBoundingClientRect();
-        if (r.bottom < 0 || r.top > innerHeight) return;
-        let key = e.key.toLowerCase();
-        if (e.ctrlKey || e.metaKey) {
-            if (key === "z" || key === "y") e.preventDefault();
-            key = "ctrl+" + (e.shiftKey ? "shift+" : "") + key;
-        }
-        const row = rows.find((tr) => tr.dataset.k.split(" ").includes(key));
-        rows.forEach((tr) => tr.classList.remove("hit"));
-        if (row) {
-            row.classList.add("hit");
-            $("#kb-live").textContent = "In the app: " + row.cells[1].textContent;
-        } else if (!["shift", "control", "meta", "alt"].includes(key)) {
-            $("#kb-live").textContent = `${e.key} has no shortcut in the app.`;
-        }
-    });
-
-
-    // "Still there?" replica countdown (the app's grace period is 2 minutes)
-    let idleLeft = 120;
-    const idleCount = $("#idle-count");
-    const idleRender = () => { idleCount.textContent = `Closing in ${Math.floor(idleLeft / 60)}:${String(idleLeft % 60).padStart(2, "0")}`; };
-    setInterval(() => { idleLeft = idleLeft > 0 ? idleLeft - 1 : 120; idleRender(); }, 1000);
-    $("#idle-stay").addEventListener("click", () => { idleLeft = 120; idleRender(); toast("Back to work"); });
-
-    // Tool animations: scripted replays drawn over a real crop of the micrograph.
-    // Colours and line styles follow src/canvas/canvas-theme.ts.
-    const AW = 960, AH = 600, DPR = Math.min(2, window.devicePixelRatio || 1);
-    const COL = {amber: "#F59E0B", orange: "#f97316", red: "#EF4444", blue: "#4FC3F7"};
-    const base = new Image();
-    base.src = "img/anim-base.jpg";
-    const clamp01 = (u) => Math.max(0, Math.min(1, u));
-    const ease = (u) => (u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2);
-    const mix = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
-    const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
-    const toPath = (pts, closed = true) => {
-        const p = new Path2D();
-        pts.forEach(([x, y], i) => (i ? p.lineTo(x, y) : p.moveTo(x, y)));
-        if (closed) p.closePath();
-        return p;
-    };
-    const smooth = (pts, n = 10) => {
-        const out = [];
-        for (let i = 0; i < pts.length; i++) {
-            const p0 = pts[(i - 1 + pts.length) % pts.length], p1 = pts[i], p2 = pts[(i + 1) % pts.length], p3 = pts[(i + 2) % pts.length];
-            for (let k = 0; k < n; k++) {
-                const t = k / n, t2 = t * t, t3 = t2 * t;
-                out.push([0, 1].map((d) => 0.5 * (2 * p1[d] + (-p0[d] + p2[d]) * t + (2 * p0[d] - 5 * p1[d] + 4 * p2[d] - p3[d]) * t2 + (-p0[d] + 3 * p1[d] - 3 * p2[d] + p3[d]) * t3)));
-            }
-        }
-        return out;
-    };
-    const inside = (pt, poly) => {
-        let c = false;
-        for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-            const [xi, yi] = poly[i], [xj, yj] = poly[j];
-            if ((yi > pt[1]) !== (yj > pt[1]) && pt[0] < ((xj - xi) * (pt[1] - yi)) / (yj - yi) + xi) c = !c;
-        }
-        return c;
-    };
-    const offscreen = (w = AW, h = AH) => {
-        const c = document.createElement("canvas");
-        c.width = w * DPR; c.height = h * DPR;
-        return c;
-    };
-
-    // Shapes on the crop (image pixels of anim-base.jpg)
-    const CRYSTAL = [[325, 95], [380, 82], [450, 80], [520, 85], [552, 95], [558, 180], [556, 280], [552, 380], [548, 470], [530, 505], [470, 522], [400, 525], [345, 515], [322, 480], [320, 380], [322, 260], [322, 160]];
-    const CHLORITE = [[236, 284], [270, 268], [318, 262], [323, 300], [320, 380], [306, 444], [284, 450], [266, 418], [240, 380], [222, 330]];
-    const OPAQUE = smooth([[856, 314], [895, 296], [938, 306], [952, 345], [931, 400], [880, 406], [846, 389], [848, 350]], 12);
-    const LOWER = [[323, 350], [556, 345], [552, 380], [548, 470], [530, 505], [470, 522], [400, 525], [345, 515], [322, 480], [320, 410]];
-    const INCLUSION = smooth([[440, 250], [478, 242], [505, 262], [502, 300], [470, 318], [438, 305], [428, 276]], 12);
-    const CUT_BELOW = [[0, 370], [AW, 370], [AW, AH], [0, AH]];
-
-    // Mask renderer: fill layers add, hole layers cut; outline = dilated mask minus mask
-    const maskBuf = offscreen(), ringBuf = offscreen();
-    function drawMask(ctx, layers, color) {
-        const m = maskBuf.getContext("2d"), r = ringBuf.getContext("2d");
-        m.setTransform(DPR, 0, 0, DPR, 0, 0);
-        m.clearRect(0, 0, AW, AH);
-        m.fillStyle = color;
-        layers.forEach((l) => {
-            m.globalCompositeOperation = l.hole ? "destination-out" : "source-over";
-            if (l.canvas) m.drawImage(l.canvas, 0, 0, AW, AH);
-            else m.fill(toPath(l.pts));
-        });
-        m.globalCompositeOperation = "source-in";
-        m.fillRect(0, 0, AW, AH);
-        m.globalCompositeOperation = "source-over";
-        r.setTransform(1, 0, 0, 1, 0, 0);
-        r.clearRect(0, 0, ringBuf.width, ringBuf.height);
-        const w = 2.5 * DPR;
-        for (let a = 0; a < 16; a++) r.drawImage(maskBuf, Math.cos(a * Math.PI / 8) * w, Math.sin(a * Math.PI / 8) * w);
-        r.globalCompositeOperation = "destination-out";
-        r.drawImage(maskBuf, 0, 0);
-        r.globalCompositeOperation = "source-over";
-        ctx.save();
-        ctx.globalAlpha = 0.22;
-        ctx.drawImage(maskBuf, 0, 0, AW, AH);
-        ctx.globalAlpha = 1;
-        ctx.drawImage(ringBuf, 0, 0, AW, AH);
-        ctx.restore();
-    }
-
-    function drawCursor(ctx, [x, y], pressed) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.beginPath();
-        ctx.moveTo(0, 0); ctx.lineTo(0, 19); ctx.lineTo(5, 14.5); ctx.lineTo(8.5, 22); ctx.lineTo(11.5, 20.8); ctx.lineTo(8, 13.5); ctx.lineTo(14.5, 13.5); ctx.closePath();
-        ctx.fillStyle = pressed ? "#ffe9a8" : "#fff";
-        ctx.strokeStyle = "#000"; ctx.lineWidth = 1.3;
-        ctx.fill(); ctx.stroke();
-        ctx.restore();
-    }
-    function drawRipple(ctx, [x, y], age) {
-        if (age < 0 || age > 0.45) return;
-        ctx.save();
-        ctx.strokeStyle = `rgba(255,255,255,${1 - age / 0.45})`;
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(x, y, 5 + age * 45, 0, Math.PI * 2); ctx.stroke();
-        ctx.restore();
-    }
-    const iconCache = {};
-    const iconImage = (id, color = "#4FC3F7") => {
-        const key = id + color;
-        if (!iconCache[key]) {
-            const sym = document.getElementById("i-" + id);
-            const img = new Image();
-            img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${sym.getAttribute("viewBox")}" width="44" height="44" color="${color}">${sym.innerHTML}</svg>`);
-            iconCache[key] = img;
-        }
-        return iconCache[key];
-    };
-    function chip(ctx, x, y, text, {bg = "rgba(18,18,18,.82)", fg = "#fff", border = "rgba(255,255,255,.25)", align = "left", icon, iconColor} = {}) {
-        ctx.save();
-        ctx.font = "600 17px system-ui, -apple-system, sans-serif";
-        const pad = icon ? 30 : 0;
-        const w = ctx.measureText(text).width + 24 + pad, h = 32;
-        const left = align === "right" ? x - w : align === "center" ? x - w / 2 : x;
-        ctx.beginPath(); ctx.roundRect(left, y, w, h, 8);
-        ctx.fillStyle = bg; ctx.fill();
-        ctx.strokeStyle = border; ctx.lineWidth = 1; ctx.stroke();
-        if (icon) {
-            const img = iconImage(icon, iconColor);
-            if (img.complete && img.naturalWidth) ctx.drawImage(img, left + 10, y + 6, 20, 20);
-        }
-        ctx.fillStyle = fg; ctx.textBaseline = "middle";
-        ctx.fillText(text, left + 12 + pad, y + h / 2 + 1);
-        ctx.restore();
-    }
-    const MODE = {
-        fill: {bg: "rgba(59,130,246,.30)", fg: "#93c5fd", border: "rgba(96,165,250,.6)"},
-        erase: {bg: "rgba(239,68,68,.30)", fg: "#fca5a5", border: "rgba(248,113,113,.6)"},
-    };
-
-    // Polygon phase: cursor walks the vertices, one click each, last click on the first vertex closes
-    function polygonPhase(ctx, t, V, {start, step = 0.5, from, erase = false}) {
-        const n = V.length;
-        if (t < start) {
-            const cur = mix(from, V[0], ease(clamp01(t / start)));
-            return {cur, closed: false, click: -1};
-        }
-        const k = (t - start) / step;
-        if (k >= n) return {cur: V[0], closed: true, click: (k - n) * step};
-        const placed = Math.floor(k) + 1, u = ease(clamp01((k - Math.floor(k) - 0.15) / 0.75));
-        const cur = mix(V[placed - 1], V[placed % n], u);
-        const pts = V.slice(0, placed).concat([cur]);
-        ctx.save();
-        ctx.fillStyle = erase ? "rgba(239,68,68,0.10)" : "rgba(245,158,11,0.10)";
-        ctx.fill(toPath(pts));
-        ctx.strokeStyle = erase ? COL.red : COL.amber;
-        ctx.lineWidth = 2;
-        if (erase) ctx.setLineDash([8, 5]);
-        ctx.stroke(toPath(pts, false));
-        ctx.setLineDash([]);
-        V.slice(0, placed).forEach(([x, y]) => {
-            ctx.beginPath(); ctx.arc(x, y, 4.5, 0, Math.PI * 2);
-            ctx.fillStyle = erase ? COL.red : COL.amber; ctx.fill();
-        });
-        if (placed === n && dist(cur, V[0]) < 15) {
-            ctx.beginPath(); ctx.arc(V[0][0], V[0][1], 9, 0, Math.PI * 2);
-            ctx.lineWidth = 3; ctx.strokeStyle = erase ? COL.red : COL.amber; ctx.stroke();
-        }
-        ctx.restore();
-        return {cur, closed: false, click: (k - Math.floor(k)) * step};
-    }
-
-    // Freeform phase: button held, stroke follows the cursor, release closes the shape
-    function freeformPhase(ctx, t, P, {start, dur = 2.6, from, erase = false}) {
-        if (t < start) return {cur: mix(from, P[0], ease(clamp01(t / start))), done: false, down: false};
-        const u = clamp01((t - start) / dur);
-        if (u >= 1) return {cur: P[P.length - 1], done: true, down: false, release: t - start - dur};
-        const upto = Math.max(1, Math.floor(u * (P.length - 1)));
-        const pts = P.slice(0, upto + 1);
-        ctx.save();
-        ctx.strokeStyle = erase ? COL.red : COL.orange;
-        ctx.lineWidth = 3; ctx.lineJoin = ctx.lineCap = "round";
-        if (erase) ctx.setLineDash([8, 5]);
-        ctx.stroke(toPath(pts, false));
-        ctx.restore();
-        return {cur: pts[pts.length - 1], done: false, down: true};
-    }
-
-    // SLIC: jittered seeds in the box, nearest-seed labels, contours and dropped-cell shading precomputed
-    const BOX = [300, 58, 590, 302];
-    const slic = (() => {
-        const [x0, y0, x1, y1] = BOX, w = x1 - x0, h = y1 - y0;
-        let seed = 7;
-        const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-        const seeds = [];
-        for (let y = y0 + 15; y < y1; y += 30) for (let x = x0 + 15; x < x1; x += 30) seeds.push([x + (rnd() - 0.5) * 18, y + (rnd() - 0.5) * 18]);
-        const label = new Int16Array(w * h);
-        for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
-            let best = 0, bd = Infinity;
-            seeds.forEach(([sx, sy], k) => { const d = (sx - x0 - i) ** 2 + (sy - y0 - j) ** 2; if (d < bd) { bd = d; best = k; } });
-            label[j * w + i] = best;
-        }
-        const keep = seeds.map((sd) => inside(sd, CRYSTAL));
-        const drops = seeds.map((sd, k) => [sd, k]).filter(([, k]) => !keep[k]).sort((a, b) => Math.atan2(a[0][1] - 180, a[0][0] - 440) - Math.atan2(b[0][1] - 180, b[0][0] - 440)).map(([, k]) => k);
-        const paint = (fn) => {
-            const c = document.createElement("canvas"); c.width = w; c.height = h;
-            const g = c.getContext("2d"), img = g.createImageData(w, h);
-            for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) { const rgba = fn(i, j, label[j * w + i]); if (rgba) img.data.set(rgba, (j * w + i) * 4); }
-            g.putImageData(img, 0, 0);
-            return c;
-        };
-        const contours = paint((i, j, l) => ((i + 1 < w && label[j * w + i + 1] !== l) || (j + 1 < h && label[(j + 1) * w + i] !== l) ? [255, 255, 255, 190] : null));
-        const dropCache = new Map();
-        const dropped = (count) => {
-            if (!dropCache.has(count)) {
-                const off = new Set(drops.slice(0, count));
-                dropCache.set(count, paint((i, j, l) => (off.has(l) ? [0, 0, 0, 150] : null)));
-            }
-            return dropCache.get(count);
-        };
-        const kept = document.createElement("canvas"); kept.width = AW; kept.height = AH;
-        kept.getContext("2d").drawImage(paint((i, j, l) => (keep[l] ? [255, 255, 255, 255] : null)), x0, y0);
-        return {seeds, drops, contours, dropped, kept, total: seeds.length};
-    })();
-
-    const SCENES = {
-        polygon: {
-            icon: "polygon", tool: "P  Polygon lasso", dur: 0.8 + CHLORITE.length * 0.5 + 3,
-            captions: [[0, "Click along the edge to place vertices"], [0.8 + (CHLORITE.length - 1) * 0.5, "Click the first vertex to close"], [0.8 + CHLORITE.length * 0.5, "Closed: a new object"]],
-            draw(ctx, t) {
-                const r = polygonPhase(ctx, t, CHLORITE, {start: 0.8, from: [150, 170]});
-                if (r.closed) drawMask(ctx, [{pts: CHLORITE}], "#11A03B");
-                return r;
-            },
-        },
-        freeform: {
-            icon: "freeform", tool: "F  Freeform draw", dur: 0.8 + 2.6 + 3,
-            captions: [[0, "Hold the button and draw around the grain"], [3.4, "Release: the stroke closes and fills"]],
-            draw(ctx, t) {
-                const r = freeformPhase(ctx, t, OPAQUE, {start: 0.8, from: [760, 230]});
-                if (r.done) drawMask(ctx, [{pts: OPAQUE}], "#A647EA");
-                return {cur: r.cur, down: r.down, click: r.done ? r.release : -1};
-            },
-        },
-        fill: {
-            icon: "polygon", tool: "P  Polygon lasso", mode: "fill", dur: 1.4 + LOWER.length * 0.5 + 3.2,
-            captions: [[0, "The object is selected and Fill is on"], [1.4, "Draw the missing part, overlapping the object"], [1.4 + LOWER.length * 0.5, "Fill: the shape joins the object"]],
-            draw(ctx, t) {
-                const existing = [{pts: CRYSTAL}, {pts: CUT_BELOW, hole: true}];
-                const closed = t >= 1.4 + LOWER.length * 0.5;
-                drawMask(ctx, closed ? existing.concat([{pts: LOWER}]) : existing, "#11A03B");
-                return polygonPhase(ctx, t, LOWER, {start: 1.4, from: [640, 470]});
-            },
-        },
-        erase: {
-            icon: "freeform", tool: "F  Freeform draw", mode: "erase", dur: 1.4 + 2.4 + 3.2,
-            captions: [[0, "The object is selected and Erase is on"], [1.4, "Draw around the inclusion"], [3.8, "Erase: the loop is cut out and leaves a hole"]],
-            draw(ctx, t) {
-                const done = t >= 3.8;
-                drawMask(ctx, done ? [{pts: CRYSTAL}, {pts: INCLUSION, hole: true}] : [{pts: CRYSTAL}], "#11A03B");
-                const r = freeformPhase(ctx, t, INCLUSION, {start: 1.4, dur: 2.4, from: [640, 200], erase: true});
-                return {cur: r.cur, down: r.down, click: r.done ? r.release : -1};
-            },
-        },
-        slic: (() => {
-            const clicks = 4, tBox = 0.7, tDrag = 1.0, tCalc = 0.6, tShow = tBox + tDrag + tCalc, tClick = 0.65, tSweep = 0.07;
-            const tDone = tShow + 0.4 + clicks * tClick + (slic.drops.length - clicks) * tSweep;
-            const apply = [BOX[2] - 40, BOX[3] + 30], tApply = tDone + 0.9;
-            return {
-                icon: "slic", tool: "L  Superpixels (SLIC)", dur: tApply + 3,
-                captions: [[0, "Drag a box around the area"], [tBox + tDrag, "Computing SLIC..."], [tShow, "Click each patch outside the grain"], [tDone, "Click Apply"], [tApply, "The kept patches form a new object"]],
-                draw(ctx, t) {
-                    const [x0, y0, x1, y1] = BOX;
-                    if (t < tBox) return {cur: mix([200, 300], [x0, y0], ease(t / tBox)), click: -1};
-                    if (t < tBox + tDrag) {
-                        const cur = mix([x0, y0], [x1, y1], ease((t - tBox) / tDrag));
-                        ctx.save();
-                        ctx.fillStyle = "rgba(79,195,247,0.10)"; ctx.strokeStyle = COL.blue; ctx.lineWidth = 2; ctx.setLineDash([6, 3]);
-                        ctx.fillRect(x0, y0, cur[0] - x0, cur[1] - y0); ctx.strokeRect(x0, y0, cur[0] - x0, cur[1] - y0);
-                        ctx.restore();
-                        return {cur, down: true, click: -1};
-                    }
-                    if (t >= tApply) {
-                        drawMask(ctx, [{canvas: slic.kept}], "#EA4747");
-                        return {cur: apply, click: t - tApply};
-                    }
-                    ctx.save();
-                    ctx.fillStyle = "rgba(0,0,0,0.5)";
-                    ctx.fillRect(0, 0, AW, y0); ctx.fillRect(0, y1, AW, AH - y1); ctx.fillRect(0, y0, x0, y1 - y0); ctx.fillRect(x1, y0, AW - x1, y1 - y0);
-                    ctx.restore();
-                    if (t < tShow) return {cur: [x1, y1], click: -1};
-                    let count = 0, cur = [x1, y1], click = -1;
-                    const k = t - tShow - 0.4;
-                    if (k >= 0) {
-                        if (k < clicks * tClick) {
-                            const i = Math.floor(k / tClick), u = (k - i * tClick) / tClick;
-                            const prev = i ? slic.seeds[slic.drops[i - 1]] : [x1, y1];
-                            cur = mix(prev, slic.seeds[slic.drops[i]], ease(clamp01(u / 0.7)));
-                            count = i + (u >= 0.7 ? 1 : 0);
-                            click = u >= 0.7 ? (u - 0.7) * tClick : -1;
-                        } else {
-                            count = Math.min(slic.drops.length, clicks + Math.floor((k - clicks * tClick) / tSweep) + 1);
-                            cur = slic.seeds[slic.drops[count - 1]];
-                            click = 0.1;
-                        }
-                    }
-                    if (t >= tDone) cur = mix(cur, apply, ease(clamp01((t - tDone) / 0.7)));
-                    ctx.drawImage(slic.dropped(count), x0, y0);
-                    ctx.drawImage(slic.contours, x0, y0);
-                    chip(ctx, AW / 2, 20, `SLIC superpixels — ${slic.total - count} / ${slic.total} kept`, {align: "center"});
-                    chip(ctx, apply[0] + 20, apply[1] - 16, `Apply (${slic.total - count})`, {align: "right", bg: t >= tDone ? "#4FC3F7" : "rgba(79,195,247,.35)", fg: "#0b2633", border: "transparent"});
-                    chip(ctx, apply[0] - 95, apply[1] - 16, "Cancel", {align: "right"});
-                    return {cur, click};
-                },
-            };
-        })(),
-    };
-
-    function renderScene(anim, t) {
-        const {ctx, scene} = anim;
-        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-        ctx.clearRect(0, 0, AW, AH);
-        if (base.complete && base.naturalWidth) ctx.drawImage(base, 0, 0, AW, AH);
-        const r = scene.draw(ctx, t) || {};
-        chip(ctx, 16, 16, scene.tool, {icon: scene.icon});
-        if (scene.mode) chip(ctx, AW - 16, 16, scene.mode === "fill" ? "Fill" : "Erase", {...MODE[scene.mode], align: "right", icon: scene.mode === "fill" ? "brush" : "eraser", iconColor: MODE[scene.mode].fg});
-        const caption = scene.captions.filter(([t0]) => t >= t0).pop();
-        if (caption) chip(ctx, AW / 2, AH - 52, caption[1], {align: "center", bg: "rgba(0,0,0,.78)"});
-        if (r.cur) {
-            drawRipple(ctx, r.cur, r.click ?? -1);
-            drawCursor(ctx, r.cur, r.down);
-        }
-        const fade = scene.dur - t;
-        if (fade < 0.35) { ctx.fillStyle = `rgba(17,17,17,${1 - fade / 0.35})`; ctx.fillRect(0, 0, AW, AH); }
-    }
-
-    const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const anims = $$("figure.anim").map((fig) => {
-        const canvas = $("canvas", fig), btn = $(".anim-toggle", fig);
-        canvas.width = AW * DPR; canvas.height = AH * DPR;
-        const anim = {fig, canvas, btn, ctx: canvas.getContext("2d"), scene: SCENES[fig.dataset.scene], t: 0, playing: !reduceMotion, visible: false};
-        const toggle = () => {
-            anim.playing = !anim.playing;
-            btn.textContent = anim.playing ? "Pause" : "Play";
-            btn.setAttribute("aria-label", anim.playing ? "Pause animation" : "Play animation");
-        };
-        btn.addEventListener("click", toggle);
-        canvas.addEventListener("click", toggle);
-        if (reduceMotion) { anim.t = anim.scene.dur - 0.4; btn.textContent = "Play"; btn.setAttribute("aria-label", "Play animation"); }
-        return anim;
-    });
-    const seen = new IntersectionObserver((entries) => entries.forEach((e) => {
-        const a = anims.find((x) => x.canvas === e.target);
-        if (a) a.visible = e.isIntersecting;
-    }));
-    anims.forEach((a) => seen.observe(a.canvas));
-    let last = performance.now();
-    function tick(now) {
-        const dt = Math.min(0.1, (now - last) / 1000);
-        last = now;
-        anims.forEach((a) => {
-            if (!a.visible) return;
-            if (a.playing) a.t = (a.t + dt) % a.scene.dur;
-            renderScene(a, a.t);
-        });
-        requestAnimationFrame(tick);
-    }
-    base.decode?.().catch(() => {}).finally(() => anims.forEach((a) => renderScene(a, a.t)));
-    requestAnimationFrame(tick);
-
-    // Launcher illustration
-    const st = $("#mock-status"), stText = $("#mock-status-text"), start = $("#mock-start"), openBtn = $("#mock-open");
-    let running = false;
-    start.addEventListener("click", () => {
-        if (running) {
-            running = false; st.className = "win-status"; stText.textContent = "Server stopped";
-            start.textContent = "Start Server"; openBtn.disabled = true; return;
-        }
-        start.disabled = true; st.className = "win-status starting"; stText.textContent = "Starting… loading the SAM 2 model";
-        setTimeout(() => {
-            running = true; start.disabled = false; st.className = "win-status running";
-            stText.textContent = "Running on http://127.0.0.1:7263"; start.textContent = "Stop Server"; openBtn.disabled = false;
-        }, 1800);
-    });
-    openBtn.addEventListener("click", () => toast("Your browser opens the annotator"));
-    $("#mock-dataset").addEventListener("click", () => { $("#mock-ds").scrollIntoView({block: "center"}); });
-    const gen = $("#mock-gen"), log = $("#mock-log");
-    const canGen = () => { gen.disabled = $("#mock-src").textContent.startsWith("No") || $("#mock-dst").textContent.startsWith("No"); };
-    $$("[data-pick]").forEach((b) => b.addEventListener("click", () => { $("#" + b.dataset.pick).textContent = b.dataset.path; canGen(); }));
-    gen.addEventListener("click", () => {
-        const zip = $("#mock-zip").checked;
-        log.textContent = "Scanning annotations…";
-        setTimeout(() => {
-            log.textContent = `Scanning annotations…\nWrote dataset_20261009-1412/annotations.json\nCopied images/  ·  build.log${zip ? "\nCompressed to dataset_20261009-1412.zip" : ""}\nDone.`;
-        }, 900);
-    });
-})();
-</script>
+<script src="assets/guide.js?v=4"></script>
 </body>
 </html>

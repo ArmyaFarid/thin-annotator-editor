@@ -1,6 +1,7 @@
 import React from "react";
 import {SHORTCUT_DEFS, UI_SHORTCUT_DEFS, keyLabel} from "@/canvas/shortcuts.ts";
 import {t} from "@/i18n/index.ts";
+import {UserGuideLink} from "@/common/components/user-guide/UserGuideLink.tsx";
 
 interface ShortcutPanelProps {
     visible: boolean;
@@ -73,6 +74,12 @@ export const ShortcutPanel: React.FC<ShortcutPanelProps> = ({visible, onClose}) 
                             <span style={{fontSize: 11, color: "rgba(255,255,255,0.32)"}}>{t(d.hintKey)}</span>
                         </div>
                     ))}
+                </div>
+
+                <div style={{marginTop: 6, paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.07)"}}>
+                    <UserGuideLink style={{fontSize: 12, color: "#4FC3F7", textDecoration: "none"}}>
+                        {t("openUserGuide")} ↗
+                    </UserGuideLink>
                 </div>
             </div>
         </div>
