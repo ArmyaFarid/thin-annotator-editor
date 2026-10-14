@@ -23,6 +23,7 @@ import {t} from "@/i18n/index.ts";
 import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
 import {AnnotatorBadge} from "@/common/components/annotator-profile/AnnotatorBadge.tsx";
 import useBatchNavigation from "@/pages/annotator/useBatchNavigation.ts";
+import markUrl from "@/assets/brand/mark-color-on-dark.svg";
 
 export default function AnnotatorPage() {
     useAutosaveDraft();
@@ -111,14 +112,21 @@ export default function AnnotatorPage() {
                 </div>
             ) : null}
             <div className="w-full flex flex-row justify-between items-center">
-                <Tooltip content={t("openNewTaskTooltip")} side="bottom">
-                    <button
-                        onClick={() => setShowFinishModal(true)}
-                        className="flex items-center gap-1 bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">
-                        <ChevronLeftIcon className="w-3 h-3" />
-                        {t("openNewTask")}
-                    </button>
-                </Tooltip>
+                <div className="flex items-center gap-2">
+                    <img
+                        src={markUrl}
+                        alt={t("appTitle")}
+                        className="w-6 h-6"
+                    />
+                    <Tooltip content={t("openNewTaskTooltip")} side="bottom">
+                        <button
+                            onClick={() => setShowFinishModal(true)}
+                            className="flex items-center gap-1 bg-secondary px-2.5 py-1 rounded text-xs text-muted-foreground hover:text-foreground transition-colors">
+                            <ChevronLeftIcon className="w-3 h-3" />
+                            {t("openNewTask")}
+                        </button>
+                    </Tooltip>
+                </div>
                 <div className="flex items-center gap-3">
                     {batch.active ? (
                         <Tooltip content={t("batchPrevTooltip")} side="bottom">

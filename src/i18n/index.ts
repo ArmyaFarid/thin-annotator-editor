@@ -347,6 +347,8 @@ const T = {
 
         // Keyboard shortcuts panel
         keyboardShortcuts: "Raccourcis clavier",
+        userGuide: "Manuel d'utilisateur",
+        openUserGuide: "Ouvrir le manuel d'utilisateur",
         shortcutIdleLabel: "Pointeur",
         shortcutIdleHint: "Sélectionner sans dessiner",
         shortcutSelectAddLabel: "Select +",
@@ -769,6 +771,8 @@ const T = {
 
         // Keyboard shortcuts panel
         keyboardShortcuts: "Keyboard shortcuts",
+        userGuide: "User guide",
+        openUserGuide: "Open the user guide",
         shortcutIdleLabel: "Pointer",
         shortcutIdleHint: "Select without drawing",
         shortcutSelectAddLabel: "Select +",

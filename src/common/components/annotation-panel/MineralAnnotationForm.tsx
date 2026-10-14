@@ -27,8 +27,10 @@ const HYPOTHESES = [
     {label: () => t("hypothesis3"), sublabel: () => t("leastProbable")},
 ] as const;
 
+// Windows Chromium draws the dropdown itself with the page's light color-scheme, so options
+// inheriting the light text colour render white-on-white unless they get their own colours.
 const selectCls =
-    "w-full bg-transparent border border-white/15 rounded px-1.5 py-1 text-xs text-foreground focus:outline-none focus:border-white/30";
+    "w-full bg-transparent border border-white/15 rounded px-1.5 py-1 text-xs text-foreground focus:outline-none focus:border-white/30 [color-scheme:dark] [&_option]:bg-neutral-900 [&_option]:text-white [&_optgroup]:bg-neutral-900 [&_optgroup]:text-white/60";
 
 // A stored value with no matching option still shows — as its raw value.
 function isOrphan(value: string | null, options: AnnotationOption[]): boolean {

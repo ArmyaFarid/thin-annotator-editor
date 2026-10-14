@@ -1,0 +1,750 @@
+{
+    "data": [
+        {
+            "id": 1790866882388,
+            "label": "Augite",
+            "layers": [
+                {
+                    "id": 1790866963213,
+                    "source": "manual",
+                    "rleMask": {
+                        "counts": "dS]d11fo1a0C7@?K5I7L4M2M4@?^Oc0aL[MUYNQ3Rf1nMeYNV2oe1iNZYN[1bf1kNYYNW1ef1mNVYNW1ff1mNbXN`MIf3^g1QOZXNjM2Y3Zb1PLcbNY8]b17^MlGg\\Na8S_1]GkbN=hLG3d8W`1^GZbNESMX;``1WEXbNX;b]1nDYbNW;a]1nDPbNa;c]1dCZ`Nn0f1k;n]1bDoaN`;P^1aDoaN`;P^1aDPbNc;]]1lBYaNb1Y1f;Y]1jB]aNa1Y1e;Z]1jB]aNb1Y1d;X]1lB^aNa1Y1c;X]1nB_aN_17\\N=X=n\\1iBmbN6@^16]N>V=o\\1lBibN4E]13_N?U=m\\1QFbbNjLa0V=h\\1XFcbNaLe0Z=^\\1_FlcNd9gZ1TC`dNb3e0\\9iZ1jGUeNW8iZ1lGTeNW8jZ1jGUeNX8iZ1iGSeN\\8kZ1eGTeN\\8kZ1eGTeN]8hZ1hGhdNg8U[1T6]eNl[OVY1Wd0gfNk[OXY1Xd0dfNk[OYY1Zd0cfNg[O\\Y1^d0_fNd[O_Y1ad0\\fN`[OcY1_e0O2L3M3M3L4N3M2N2N2O1O1O100O001O1O1O001O1O1M3N101O1O100O10O01000100O001O00010O000000001O000000000001WFfgNjKZX1W4egNiK[X1n=01O01O000010O004L3M1O2N1O1O001O1O1O001O001O00001O00000O10000O0100000OfE[hNZLfW1f3ZhNZLeW1h3YhNYLfW1R>M3N1O2N2N3M3N2M101O1O1O1O1O1O2N1O2M2N2O1N101O000O2O00000O100000000O10O10000O100J6UDZiNYNiV1e1ZiNYNgV1f1ZiNYNgV1e1\\iNYNeV1f1\\iNUDHf8mV1V3ZiNXNfV1i1XiNVNjV1l1TiNSNmV1_=1O1O010O1O1O10010O0000000001OlBlhN\\1TW1cNnhNWEOh01f8RW1[1nhNWEOi0Of8TW1Z1ohNVENB083ELQ:SW1Z1QiNVEMB076Q:lV1P1RiNUELC157R:jV1Q1SiNTEKC25:P:fV1S1TiNUEJB44:R:bV1T1WiNSEIB54;R:`V1U1XiNREI@759T:_V1T1ZiNRELZO598W:\\V1U1YiN^E0YO5X:aV1S1XiN_EOXO4Y:eV1P1WiNbEMYO1W:kV1P1UiNW1kV1iNTiNX1kV1jNTiNV1lV1jNSiNW1mV1RNRiNaE1\\<mV1SNSiNe2mV1[MSiNe2mV1X;O0000001O0000000O2O000O2O00WD[iNXNcV1g1`iNYN_V1f1ciNYN\\V1g1fiNnBIm:`V1T2iiNmBKm:[V1V2jiNmBLl:ZV1X2iiNkBNm:XV1Y2kiNhBOn:VV1[2jiNfB1P;TV1n0aiNXEl0i9cU1n0diNWEl0i9^U1P1iiNVEo0c9XU18fiNgE6<R1`9QU1EeiNVF=2Nb0P1_9PU1GeiNYF:O1b0:POK_:jU1`0miN`E0e07WOLV:oU1b0iiN^E3e07YOKS:QV1\\1jiN[E7YOMP:RV1\\1iiN_E4WOOP:SV1[1iiNaE0VO4o9RV1Z1iiN`F4V8TV1n3liNSLSV1n3liNcC0P6SV1k0PjNTLLnL6R6nU1P1jiNSL1nL3P6RV1^6kiNSLUV1n3jiNRLVV1l>01O00YDjiNdMVV1\\2kiNcMUV1]2liNbMTV1^2liNbMSV1_2liNcMRV1W>O0O2O0O2O001Nl^OUjNYM0c4kU1Y?0O010O0O2O001O1PETjNkKlU1W4SjNhKnU1T?1O0O2N2L4N2O0O2O10000000000eDciNSM]V16aiNVG6a8ZV18eiNSG2d8ZV17hiNQG1f8WV19iiNoF1h8VV19hiNPG1h8WV19giNoF1h8YV19ciNRG3f8ZV19_iNTG6d8[V1k2eiNUM[V1k2diNVM\\V1j2diNUM]V1k2biNVM^V1k2aiNUM_V1l2_iNUMaV1U>01O001N2O1O00]AbiNe3]V1[LeiNd3[V1Q;O1O1O1O1O010O001O010O1O0010O010O010O01O001O001O001OkAniN\\2RV1cMQjN\\2nU1eMoiN]2QV1j;01O0O1000O101N100O1N3N1O1N101O1N2O1N1O2N2N1N3M3M3M2PARiNm4PW1RKPiNm4RW1RKnhNm4SW1SKmhNk4UW1o91N2N2N2M3N2N2N3M2N3M2O2M2[MThNU]OnW1eb0\\hNU]OeW1fb0bhNW]O`W1db0fhNY]O[W1cb0ihN\\]OYW1jb0`hNU]ObW1kb0^hNR]OdW1ob0[hNP]OgW1Pc0YhNn\\OiW1Rc0YhNj\\OiW1Vc0kgNZ[OF_1aX1Vc0ggN][OI[1bX1Xc0bgN`[OLV1dX1Zc0]gNb[OOS1fX1Yc0YgNg[O2n0gX1Yc0XgNi[O2l0hX1Zc0UgNk[O4i0iX1Zc0TgNm[O<>cX1cc0RgNo[O>9cX1gc0ofNP\\Oa04cX1Wc0mfN_\\O06i0CcX1gc0ffN]\\OO9aZ1Xc0ceN\\\\OM;bZ1Wc0RfNg\\OPZ1Vc0SfNe\\OQZ1Wc0_1K5K4M4J6[Oe0PNScNX@`]1]?h1F:K5J6J5K6D<G9H8^Ob0J6J7J7H8I`0\\Ok0iEa[NV7Ve1oGc[NW7Rg1nI\\XNS3Th1cLVXNd1LSMBKQk1d2n1J6M3L5L6^NeRNBTn14YZaW2",
+                        "size": [
+                            2048,
+                            2448
+                        ]
+                    }
+                }
+            ],
+            "point_labels": [],
+            "point_coords": [],
+            "color": {
+                "r": 17,
+                "g": 160,
+                "b": 59,
+                "a": 0.1
+            },
+            "annotation": {
+                "mineralIds": [
+                    "aug",
+                    "hyp",
+                    "hbl"
+                ],
+                "observedColor": "pale brown",
+                "relief": "high",
+                "birefringence": "medium",
+                "cleavage": "good",
+                "crystalSystem": "monoclinic",
+                "pleochroism": "weak",
+                "extinctionAngle": "",
+                "notes": "Demo values, not an expert identification"
+            },
+            "timing": {
+                "version": 1,
+                "spanId": "5dc38100-06d3-427e-a144-cbb0d0fc2baa",
+                "createdAt": 1790866881718,
+                "committedAt": 1790866885760,
+                "totalMs": 4042,
+                "intervals": [
+                    {
+                        "startedAt": 1790866881718,
+                        "durationMs": 4042,
+                        "reason": "committed"
+                    }
+                ],
+                "counts": {
+                    "geometry.bbox": 1,
+                    "model.sam-result": 1,
+                    "field.edit": 1,
+                    "object.commit": 1
+                },
+                "events": [
+                    {
+                        "offsetMs": 0,
+                        "kind": "geometry.bbox"
+                    },
+                    {
+                        "offsetMs": 670,
+                        "kind": "model.sam-result"
+                    },
+                    {
+                        "offsetMs": 2998,
+                        "kind": "field.edit"
+                    },
+                    {
+                        "offsetMs": 4042,
+                        "kind": "object.commit"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 1790866886685,
+            "label": "Chlorite",
+            "layers": [
+                {
+                    "id": 1790866887337,
+                    "source": "manual",
+                    "rleMask": {
+                        "counts": "clnR11no13L3L5M2N3L3N1O2M3N2N2O2M2N2O0O2O1N2N1O2N1O2O1N2N1O1O2N1O2N1O100O2N1O1O2N1O1O101N1O100O1O1O101N1O100O1O010O100O1O100O100O1O100O1O100O103L9H1N2N2O1N2N1O2N2O1N101N2N2O0O2O1N2O0O2O1N101O0O2N10001O000000000000000000000O10000O101N100O100O1O2N1O100O2N2O1N4M3L3M2N3N1N3M3M3M3N2M3N4K4L2O1N2N2O1N1O1O1O1N2O1N2O1O2N10O01000O01000O010O100O101M2O1O1O2N1O1O2N2M2O2L3O2M2O2O0O1O2N1N3M3K4M4I7J6K5M3O2M2N3M2O1N2O1N2N2O0O101N100O101N100O101N1O101N100O1O2O000O2O0O101N100O1O2O0O1O100O100O101N100O100O101N100O1O101O0O101N100O2O0O101N1O2O0O2O0O2O1N1O2O1N2N1O2O2M3L4]ORRNjNXn1n0c0Cb0_OmTgT3",
+                        "size": [
+                            2048,
+                            2448
+                        ]
+                    }
+                }
+            ],
+            "point_labels": [
+                1
+            ],
+            "point_coords": [
+                [
+                    695.0331384015594,
+                    894.2534113060428
+                ]
+            ],
+            "color": {
+                "r": 166,
+                "g": 71,
+                "b": 234,
+                "a": 0.1
+            },
+            "annotation": {
+                "mineralIds": [
+                    "chl",
+                    "bt",
+                    "hbl"
+                ],
+                "observedColor": "",
+                "relief": null,
+                "birefringence": null,
+                "cleavage": null,
+                "crystalSystem": null,
+                "pleochroism": null,
+                "extinctionAngle": "",
+                "notes": ""
+            },
+            "timing": {
+                "version": 1,
+                "spanId": "e4fd1b24-9f91-462a-a236-de59813f478e",
+                "createdAt": 1790866886306,
+                "committedAt": 1790866887337,
+                "totalMs": 1032,
+                "intervals": [
+                    {
+                        "startedAt": 1790866886306,
+                        "durationMs": 1032,
+                        "reason": "committed"
+                    }
+                ],
+                "counts": {
+                    "geometry.point": 1,
+                    "model.sam-result": 1,
+                    "object.commit": 1
+                },
+                "events": [
+                    {
+                        "offsetMs": 0,
+                        "kind": "geometry.point"
+                    },
+                    {
+                        "offsetMs": 379,
+                        "kind": "model.sam-result"
+                    },
+                    {
+                        "offsetMs": 1031,
+                        "kind": "object.commit"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 1790866888020,
+            "label": "Chlorite",
+            "layers": [
+                {
+                    "id": 1790866888647,
+                    "source": "manual",
+                    "rleMask": {
+                        "counts": "RYQ\\2:ao16L5M2M3M3N2N2N2N2M3N2M3M2N3M3M3N2M2N3L3M4K4M4M2N2N3M2N3N1O2M3O0O2N1O2N1O2N1O2N1O2N1O2N1O1O1N3M2N2N3N1O1N3M2N2O1O2N1000001N10000000001N100010O01O001O010O00000001O00001N100O101O0O1O100O1O001O1N2N2N2N2O1O001N2N2N2N2N1O3M2N2N2N2O1N2O1N3N001N2O1O0O2N2O1N101O1O1N2O1O1O1O1O1O1O100O1O1N2O1O1N2O2M2N2O1N3N1M4K4M4N1O2N1O2M2O2N2M2N3M3M3M4M2M4M3Hbi\\R2",
+                        "size": [
+                            2048,
+                            2448
+                        ]
+                    }
+                }
+            ],
+            "point_labels": [
+                1
+            ],
+            "point_coords": [
+                [
+                    1291.8674463937623,
+                    1277.504873294347
+                ]
+            ],
+            "color": {
+                "r": 160,
+                "g": 142,
+                "b": 17,
+                "a": 0.1
+            },
+            "annotation": {
+                "mineralIds": [
+                    "chl",
+                    "bt",
+                    "srp"
+                ],
+                "observedColor": "",
+                "relief": null,
+                "birefringence": null,
+                "cleavage": null,
+                "crystalSystem": null,
+                "pleochroism": null,
+                "extinctionAngle": "",
+                "notes": ""
+            },
+            "timing": {
+                "version": 1,
+                "spanId": "4d05a3e7-47ce-4d95-9e2a-4f497d557f7d",
+                "createdAt": 1790866887889,
+                "committedAt": 1790866888647,
+                "totalMs": 758,
+                "intervals": [
+                    {
+                        "startedAt": 1790866887889,
+                        "durationMs": 758,
+                        "reason": "committed"
+                    }
+                ],
+                "counts": {
+                    "geometry.point": 1,
+                    "model.sam-result": 1,
+                    "object.commit": 1
+                },
+                "events": [
+                    {
+                        "offsetMs": 0,
+                        "kind": "geometry.point"
+                    },
+                    {
+                        "offsetMs": 131,
+                        "kind": "model.sam-result"
+                    },
+                    {
+                        "offsetMs": 758,
+                        "kind": "object.commit"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 1790866889298,
+            "label": "Hornblende",
+            "layers": [
+                {
+                    "id": 1790866889928,
+                    "source": "manual",
+                    "rleMask": {
+                        "counts": "YZjl24ho16N03L\\PV5NgoiJ1O01NXP2NjoM2N10000001O001O00bRb06Um]O5L5K4L4L3N3M2M3M3M3M3YNkN_TNX1_k1kN^TNV1ak1mN\\TNU1ck1mNZTNT1ek1nNXTNU1gk1mNgSN^OOf1Zl1^OcSNd0\\l1^O`SNd0_l1@]SNb0bl1^101O00001O01O01O000010O0001O00001O010O001O001O10O00001O010O001O0001O010O001O000010O0001O000001O01O000001O000010O01O001O000010O01O010O010O10O0100O00001O001O00010O0010O01O010O00010O00010O01O01O010O10O010O0001O010O1O010O002N1O1O10O01O1O001O1O001O2N1O010WNkSNEVl12TTNLmk1H`TN6ak1FdTN7bk1AaTN>bm1N1KZae[1",
+                        "size": [
+                            2048,
+                            2448
+                        ]
+                    }
+                }
+            ],
+            "point_labels": [
+                1
+            ],
+            "point_coords": [
+                [
+                    1653.1617933723196,
+                    387.2436647173489
+                ]
+            ],
+            "color": {
+                "r": 71,
+                "g": 207,
+                "b": 234,
+                "a": 0.1
+            },
+            "annotation": {
+                "mineralIds": [
+                    "hbl",
+                    "bt",
+                    "chl"
+                ],
+                "observedColor": "",
+                "relief": null,
+                "birefringence": null,
+                "cleavage": null,
+                "crystalSystem": null,
+                "pleochroism": null,
+                "extinctionAngle": "",
+                "notes": ""
+            },
+            "timing": {
+                "version": 1,
+                "spanId": "785088d7-10da-45a8-a837-6d3e120af1d1",
+                "createdAt": 1790866889189,
+                "committedAt": 1790866889928,
+                "totalMs": 739,
+                "intervals": [
+                    {
+                        "startedAt": 1790866889189,
+                        "durationMs": 739,
+                        "reason": "committed"
+                    }
+                ],
+                "counts": {
+                    "geometry.point": 1,
+                    "model.sam-result": 1,
+                    "object.commit": 1
+                },
+                "events": [
+                    {
+                        "offsetMs": 0,
+                        "kind": "geometry.point"
+                    },
+                    {
+                        "offsetMs": 109,
+                        "kind": "model.sam-result"
+                    },
+                    {
+                        "offsetMs": 739,
+                        "kind": "object.commit"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 1790866890568,
+            "label": "Magnetite",
+            "layers": [
+                {
+                    "id": 1790866891208,
+                    "source": "manual",
+                    "rleMask": {
+                        "counts": "kTg\\37go14L3N1N3N1O2N1N2O2N1O2N101N2N101O1N2O001N2O0O2O0O2O1O0O2O1O1N2O0O2O1N2N1O2M2N3N1N2M4M2N20000000O100O100O100O1O2M3M2N3M3M3N2N1O2N1O2M3M3M3M3M5K4L4L4L4L4Kik^W1",
+                        "size": [
+                            2048,
+                            2448
+                        ]
+                    }
+                }
+            ],
+            "point_labels": [
+                1
+            ],
+            "point_coords": [
+                [
+                    1778.916179337232,
+                    1175.7037037037037
+                ]
+            ],
+            "color": {
+                "r": 160,
+                "g": 17,
+                "b": 95,
+                "a": 0.1
+            },
+            "annotation": {
+                "mineralIds": [
+                    "mag",
+                    "ilm",
+                    "hem"
+                ],
+                "observedColor": "",
+                "relief": null,
+                "birefringence": null,
+                "cleavage": null,
+                "crystalSystem": null,
+                "pleochroism": null,
+                "extinctionAngle": "",
+                "notes": ""
+            },
+            "timing": {
+                "version": 1,
+                "spanId": "e450d38f-3f45-43ee-8d6b-f64e3013f4c9",
+                "createdAt": 1790866890471,
+                "committedAt": 1790866891208,
+                "totalMs": 737,
+                "intervals": [
+                    {
+                        "startedAt": 1790866890471,
+                        "durationMs": 737,
+                        "reason": "committed"
+                    }
+                ],
+                "counts": {
+                    "geometry.point": 1,
+                    "model.sam-result": 1,
+                    "object.commit": 1
+                },
+                "events": [
+                    {
+                        "offsetMs": 0,
+                        "kind": "geometry.point"
+                    },
+                    {
+                        "offsetMs": 97,
+                        "kind": "model.sam-result"
+                    },
+                    {
+                        "offsetMs": 737,
+                        "kind": "object.commit"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 1790866891862,
+            "label": "Chlorite",
+            "layers": [
+                {
+                    "id": 1790866892498,
+                    "source": "manual",
+                    "rleMask": {
+                        "counts": "PXWj17fo18L2M3M6J5K4L3M2O1N1O2N100O2N2O0O3M2O3L3M3N2M3N1N2N100O1O010O00010O00010O0010O01O001O00001O00000000010O000001O00010O001O001O000010O01O00001O0000010O00000010O0001O00010O001O0010O0001O001O00010O00001O00001O01O01O001O1O1O1O1O100O1O1O1O2N1O1O1O100O1O1O1O001O1O001O001O001O0O101O00001O00001O0O2O0O2O0O2N2N2N2N2N2N4JoePe2",
+                        "size": [
+                            2048,
+                            2448
+                        ]
+                    }
+                }
+            ],
+            "point_labels": [
+                1
+            ],
+            "point_coords": [
+                [
+                    1002.4327485380117,
+                    1325.411306042885
+                ]
+            ],
+            "color": {
+                "r": 112,
+                "g": 234,
+                "b": 71,
+                "a": 0.1
+            },
+            "annotation": {
+                "mineralIds": [
+                    "chl",
+                    "ep",
+                    "hbl"
+                ],
+                "observedColor": "",
+                "relief": null,
+                "birefringence": null,
+                "cleavage": null,
+                "crystalSystem": null,
+                "pleochroism": null,
+                "extinctionAngle": "",
+                "notes": ""
+            },
+            "timing": {
+                "version": 1,
+                "spanId": "b4e2ca19-c40a-40e1-a2c9-8e0085cf7f4c",
+                "createdAt": 1790866891742,
+                "committedAt": 1790866892498,
+                "totalMs": 756,
+                "intervals": [
+                    {
+                        "startedAt": 1790866891742,
+                        "durationMs": 756,
+                        "reason": "committed"
+                    }
+                ],
+                "counts": {
+                    "geometry.point": 1,
+                    "model.sam-result": 1,
+                    "object.commit": 1
+                },
+                "events": [
+                    {
+                        "offsetMs": 0,
+                        "kind": "geometry.point"
+                    },
+                    {
+                        "offsetMs": 120,
+                        "kind": "model.sam-result"
+                    },
+                    {
+                        "offsetMs": 756,
+                        "kind": "object.commit"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 1790866937357,
+            "label": "Biotite",
+            "layers": [
+                {
+                    "id": 1790866946336,
+                    "source": "manual",
+                    "rleMask": {
+                        "counts": "kYZ]3g0Yo1S1mNS1mNS1mN=C1N2O1O001O1O1N2O1O1O1O1O1O0O2O1O1O1O1O1O1N2O1O001O1O1O1N2O1O1O1O1O1O0O2O1O1O1O1O1O1N2O1O001O1O1N2O1O1O1O1O1O0O2O1O1O1O1O1O1N2O1O001O1O1O1N2O1O1O1O1O1O0O2O1O1O1O1O1O1N2O1O001O1O1N2O1O1O1O1O1O0O2O1O1O1O1O000O010000000000O010000000O1000O100000O100000O10O10000000O10O100000000O01000000000O10O100000O100000O1000O10000000O02O001O1O1O0O2O1O1O001N2O001O1O1O0O2O1O001O1N2O001O1O1O0O2O1O001O1N2O001O1O001N2O1O001O1N101O1O1O001N2O1O001O1N101O1O1O001N2O001O1O1N101O1O1O001N2O001O1O1N101O1O001O1N2O001O1O1N101O1O001O1N2O001J6J5K6I7J6J5J7J6I6K6J6I7J5J7J6J6I6K6J6I6K6I7J6J5J\\dki0",
+                        "size": [
+                            2048,
+                            2448
+                        ]
+                    }
+                }
+            ],
+            "point_labels": [],
+            "point_coords": [],
+            "color": {
+                "r": 112,
+                "g": 234,
+                "b": 71,
+                "a": 0.1
+            },
+            "annotation": {
+                "mineralIds": [
+                    "bt",
+                    "chl",
+                    "hbl"
+                ],
+                "observedColor": "",
+                "relief": null,
+                "birefringence": null,
+                "cleavage": null,
+                "crystalSystem": null,
+                "pleochroism": null,
+                "extinctionAngle": "",
+                "notes": ""
+            },
+            "timing": {
+                "version": 1,
+                "spanId": "d4c9a836-8a13-4110-80cc-a05641e8a774",
+                "createdAt": 1790866944378,
+                "committedAt": 1790866946336,
+                "totalMs": 1958,
+                "intervals": [
+                    {
+                        "startedAt": 1790866944378,
+                        "durationMs": 1958,
+                        "reason": "committed"
+                    }
+                ],
+                "counts": {
+                    "geometry.polygon": 1,
+                    "object.commit": 1
+                },
+                "events": [
+                    {
+                        "offsetMs": 0,
+                        "kind": "geometry.polygon"
+                    },
+                    {
+                        "offsetMs": 1958,
+                        "kind": "object.commit"
+                    }
+                ]
+            }
+        }
+    ],
+    "taskTiming": {
+        "version": 1,
+        "spanId": "2d47be36-88a3-4489-902c-739a41e7cbea",
+        "createdAt": 1790866878256,
+        "totalMs": 47291,
+        "intervals": [
+            {
+                "startedAt": 1790866881718,
+                "durationMs": 11490,
+                "reason": "session-end"
+            },
+            {
+                "startedAt": 1790866944378,
+                "durationMs": 35801,
+                "reason": "open"
+            }
+        ],
+        "counts": {
+            "tool.select": 5,
+            "geometry.bbox": 1,
+            "model.sam-result": 6,
+            "field.edit": 7,
+            "object.commit": 7,
+            "geometry.point": 5,
+            "geometry.polygon": 1,
+            "variant.switch": 3,
+            "geometry.slic-bbox": 1
+        },
+        "events": [
+            {
+                "offsetMs": 1656,
+                "kind": "tool.select"
+            },
+            {
+                "offsetMs": 3462,
+                "kind": "geometry.bbox"
+            },
+            {
+                "offsetMs": 4132,
+                "kind": "model.sam-result"
+            },
+            {
+                "offsetMs": 6460,
+                "kind": "field.edit"
+            },
+            {
+                "offsetMs": 7504,
+                "kind": "object.commit"
+            },
+            {
+                "offsetMs": 7917,
+                "kind": "tool.select"
+            },
+            {
+                "offsetMs": 8050,
+                "kind": "geometry.point"
+            },
+            {
+                "offsetMs": 8429,
+                "kind": "model.sam-result"
+            },
+            {
+                "offsetMs": 9081,
+                "kind": "object.commit"
+            },
+            {
+                "offsetMs": 9339,
+                "kind": "field.edit"
+            },
+            {
+                "offsetMs": 9633,
+                "kind": "geometry.point"
+            },
+            {
+                "offsetMs": 9764,
+                "kind": "model.sam-result"
+            },
+            {
+                "offsetMs": 10391,
+                "kind": "object.commit"
+            },
+            {
+                "offsetMs": 10673,
+                "kind": "field.edit"
+            },
+            {
+                "offsetMs": 10933,
+                "kind": "geometry.point"
+            },
+            {
+                "offsetMs": 11042,
+                "kind": "model.sam-result"
+            },
+            {
+                "offsetMs": 11672,
+                "kind": "object.commit"
+            },
+            {
+                "offsetMs": 11951,
+                "kind": "field.edit"
+            },
+            {
+                "offsetMs": 12215,
+                "kind": "geometry.point"
+            },
+            {
+                "offsetMs": 12312,
+                "kind": "model.sam-result"
+            },
+            {
+                "offsetMs": 12952,
+                "kind": "object.commit"
+            },
+            {
+                "offsetMs": 13219,
+                "kind": "field.edit"
+            },
+            {
+                "offsetMs": 13486,
+                "kind": "geometry.point"
+            },
+            {
+                "offsetMs": 13606,
+                "kind": "model.sam-result"
+            },
+            {
+                "offsetMs": 14242,
+                "kind": "object.commit"
+            },
+            {
+                "offsetMs": 14519,
+                "kind": "field.edit"
+            },
+            {
+                "offsetMs": 63194,
+                "kind": "tool.select"
+            },
+            {
+                "offsetMs": 66122,
+                "kind": "geometry.polygon"
+            },
+            {
+                "offsetMs": 68080,
+                "kind": "object.commit"
+            },
+            {
+                "offsetMs": 68369,
+                "kind": "field.edit"
+            },
+            {
+                "offsetMs": 69858,
+                "kind": "variant.switch"
+            },
+            {
+                "offsetMs": 73556,
+                "kind": "variant.switch"
+            },
+            {
+                "offsetMs": 77239,
+                "kind": "variant.switch"
+            },
+            {
+                "offsetMs": 87186,
+                "kind": "tool.select"
+            },
+            {
+                "offsetMs": 87521,
+                "kind": "geometry.slic-bbox"
+            },
+            {
+                "offsetMs": 95677,
+                "kind": "tool.select"
+            }
+        ],
+        "taskKey": {
+            "pairsCode": "GDX-22-PI",
+            "sampleId": "FOV_1"
+        },
+        "viewedAt": 1790866878256,
+        "objectsTotalMs": 10022,
+        "overheadMs": 37269,
+        "discarded": [],
+        "sessions": [
+            {
+                "id": "2cb138cc-f4ad-4378-a442-c00603b067b8",
+                "startedAt": 1790866878207,
+                "truncated": true
+            },
+            {
+                "id": "d4ed2d06-10c6-4e91-9872-e7209c9e33b2",
+                "startedAt": 1790866937360
+            }
+        ]
+    },
+    "_meta": {
+        "version": "1.0.0",
+        "saved_at": "2026-10-01T15:03:00.188853",
+        "pairs_code": "GDX-22-PI",
+        "sample_id": "FOV_1"
+    }
+}

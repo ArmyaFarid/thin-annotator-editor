@@ -4,9 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/copy-guide.mjs",
     "dev": "vite",
     "merge-schemas": "tsx schemas/merge-schemas",
     "relay": "yarn merge-schemas && relay-compiler",
+    "prebuild": "node scripts/copy-guide.mjs",
     "build": "tsc && vite build",
     "test": "vitest run",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",

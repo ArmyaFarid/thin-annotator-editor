@@ -1,0 +1,419 @@
+{
+  "info": {
+    "description": "Petrographic thin section mineral dataset",
+    "version": "1.0",
+    "year": 2026,
+    "contributor": "",
+    "date_created": "2026-10-01T15:04:43.861300"
+  },
+  "licenses": [
+    {
+      "id": 1,
+      "name": "Attribution-NonCommercial",
+      "url": "http://creativecommons.org/licenses/by-nc/2.0/"
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "qtz",
+      "name_en": "Quartz",
+      "name_fr": "Quartz",
+      "supercategory": "tectosilicates"
+    },
+    {
+      "id": 2,
+      "name": "kfs",
+      "name_en": "K-feldspar",
+      "name_fr": "Feldspath K",
+      "supercategory": "tectosilicates"
+    },
+    {
+      "id": 3,
+      "name": "plag",
+      "name_en": "Plagioclase",
+      "name_fr": "Plagioclase",
+      "supercategory": "tectosilicates"
+    },
+    {
+      "id": 4,
+      "name": "ms",
+      "name_en": "Muscovite",
+      "name_fr": "Muscovite",
+      "supercategory": "phyllosilicates"
+    },
+    {
+      "id": 5,
+      "name": "bt",
+      "name_en": "Biotite",
+      "name_fr": "Biotite",
+      "supercategory": "phyllosilicates"
+    },
+    {
+      "id": 6,
+      "name": "chl",
+      "name_en": "Chlorite",
+      "name_fr": "Chlorite",
+      "supercategory": "phyllosilicates"
+    },
+    {
+      "id": 7,
+      "name": "srp",
+      "name_en": "Serpentine",
+      "name_fr": "Serpentine",
+      "supercategory": "phyllosilicates"
+    },
+    {
+      "id": 8,
+      "name": "hbl",
+      "name_en": "Hornblende",
+      "name_fr": "Hornblende",
+      "supercategory": "inosilicates"
+    },
+    {
+      "id": 9,
+      "name": "aug",
+      "name_en": "Augite",
+      "name_fr": "Augite",
+      "supercategory": "inosilicates"
+    },
+    {
+      "id": 10,
+      "name": "hyp",
+      "name_en": "Hypersthene",
+      "name_fr": "Hypersthène",
+      "supercategory": "inosilicates"
+    },
+    {
+      "id": 11,
+      "name": "ol",
+      "name_en": "Olivine",
+      "name_fr": "Olivine",
+      "supercategory": "nesosilicates"
+    },
+    {
+      "id": 12,
+      "name": "grt",
+      "name_en": "Garnet",
+      "name_fr": "Grenat",
+      "supercategory": "nesosilicates"
+    },
+    {
+      "id": 13,
+      "name": "zrn",
+      "name_en": "Zircon",
+      "name_fr": "Zircon",
+      "supercategory": "nesosilicates"
+    },
+    {
+      "id": 14,
+      "name": "tur",
+      "name_en": "Tourmaline",
+      "name_fr": "Tourmaline",
+      "supercategory": "cyclosilicates"
+    },
+    {
+      "id": 15,
+      "name": "ep",
+      "name_en": "Epidote",
+      "name_fr": "Épidote",
+      "supercategory": "sorosilicates"
+    },
+    {
+      "id": 16,
+      "name": "ttn",
+      "name_en": "Titanite",
+      "name_fr": "Titanite",
+      "supercategory": "sorosilicates"
+    },
+    {
+      "id": 17,
+      "name": "cal",
+      "name_en": "Calcite",
+      "name_fr": "Calcite",
+      "supercategory": "carbonates"
+    },
+    {
+      "id": 18,
+      "name": "dol",
+      "name_en": "Dolomite",
+      "name_fr": "Dolomite",
+      "supercategory": "carbonates"
+    },
+    {
+      "id": 19,
+      "name": "mag",
+      "name_en": "Magnetite",
+      "name_fr": "Magnétite",
+      "supercategory": "oxides"
+    },
+    {
+      "id": 20,
+      "name": "ilm",
+      "name_en": "Ilmenite",
+      "name_fr": "Ilménite",
+      "supercategory": "oxides"
+    },
+    {
+      "id": 21,
+      "name": "hem",
+      "name_en": "Hematite",
+      "name_fr": "Hématite",
+      "supercategory": "oxides"
+    },
+    {
+      "id": 22,
+      "name": "ap",
+      "name_en": "Apatite",
+      "name_fr": "Apatite",
+      "supercategory": "phosphates"
+    }
+  ],
+  "images": [
+    {
+      "id": 1,
+      "file_name": "1_GDX-22-PI_mod-PPL_comp-na_rot-45.bmp",
+      "width": 2448,
+      "height": 2048,
+      "license": 1,
+      "metadata": {
+        "lightning_modality": "PPL",
+        "gamma": "na",
+        "rotation": 45
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "id": 1,
+      "image_id": 1,
+      "category_id": 9,
+      "segmentation": {
+        "counts": "dS]d11fo1a0C7@?K5I7L4M2M4@?^Oc0aL[MUYNQ3Rf1nMeYNV2oe1iNZYN[1bf1kNYYNW1ef1mNVYNW1ff1mNbXN`MIf3^g1QOZXNjM2Y3Zb1PLcbNY8]b17^MlGg\\Na8S_1]GkbN=hLG3d8W`1^GZbNESMX;``1WEXbNX;b]1nDYbNW;a]1nDPbNa;c]1dCZ`Nn0f1k;n]1bDoaN`;P^1aDoaN`;P^1aDPbNc;]]1lBYaNb1Y1f;Y]1jB]aNa1Y1e;Z]1jB]aNb1Y1d;X]1lB^aNa1Y1c;X]1nB_aN_17\\N=X=n\\1iBmbN6@^16]N>V=o\\1lBibN4E]13_N?U=m\\1QFbbNjLa0V=h\\1XFcbNaLe0Z=^\\1_FlcNd9gZ1TC`dNb3e0\\9iZ1jGUeNW8iZ1lGTeNW8jZ1jGUeNX8iZ1iGSeN\\8kZ1eGTeN\\8kZ1eGTeN]8hZ1hGhdNg8U[1T6]eNl[OVY1Wd0gfNk[OXY1Xd0dfNk[OYY1Zd0cfNg[O\\Y1^d0_fNd[O_Y1ad0\\fN`[OcY1_e0O2L3M3M3L4N3M2N2N2O1O1O100O001O1O1O001O1O1M3N101O1O100O10O01000100O001O00010O000000001O000000000001WFfgNjKZX1W4egNiK[X1n=01O01O000010O004L3M1O2N1O1O001O1O1O001O001O00001O00000O10000O0100000OfE[hNZLfW1f3ZhNZLeW1h3YhNYLfW1R>M3N1O2N2N3M3N2M101O1O1O1O1O1O2N1O2M2N2O1N101O000O2O00000O100000000O10O10000O100J6UDZiNYNiV1e1ZiNYNgV1f1ZiNYNgV1e1\\iNYNeV1f1\\iNUDHf8mV1V3ZiNXNfV1i1XiNVNjV1l1TiNSNmV1_=1O1O010O1O1O10010O0000000001OlBlhN\\1TW1cNnhNWEOh01f8RW1[1nhNWEOi0Of8TW1Z1ohNVENB083ELQ:SW1Z1QiNVEMB076Q:lV1P1RiNUELC157R:jV1Q1SiNTEKC25:P:fV1S1TiNUEJB44:R:bV1T1WiNSEIB54;R:`V1U1XiNREI@759T:_V1T1ZiNRELZO598W:\\V1U1YiN^E0YO5X:aV1S1XiN_EOXO4Y:eV1P1WiNbEMYO1W:kV1P1UiNW1kV1iNTiNX1kV1jNTiNV1lV1jNSiNW1mV1RNRiNaE1\\<mV1SNSiNe2mV1[MSiNe2mV1X;O0000001O0000000O2O000O2O00WD[iNXNcV1g1`iNYN_V1f1ciNYN\\V1g1fiNnBIm:`V1T2iiNmBKm:[V1V2jiNmBLl:ZV1X2iiNkBNm:XV1Y2kiNhBOn:VV1[2jiNfB1P;TV1n0aiNXEl0i9cU1n0diNWEl0i9^U1P1iiNVEo0c9XU18fiNgE6<R1`9QU1EeiNVF=2Nb0P1_9PU1GeiNYF:O1b0:POK_:jU1`0miN`E0e07WOLV:oU1b0iiN^E3e07YOKS:QV1\\1jiN[E7YOMP:RV1\\1iiN_E4WOOP:SV1[1iiNaE0VO4o9RV1Z1iiN`F4V8TV1n3liNSLSV1n3liNcC0P6SV1k0PjNTLLnL6R6nU1P1jiNSL1nL3P6RV1^6kiNSLUV1n3jiNRLVV1l>01O00YDjiNdMVV1\\2kiNcMUV1]2liNbMTV1^2liNbMSV1_2liNcMRV1W>O0O2O0O2O001Nl^OUjNYM0c4kU1Y?0O010O0O2O001O1PETjNkKlU1W4SjNhKnU1T?1O0O2N2L4N2O0O2O10000000000eDciNSM]V16aiNVG6a8ZV18eiNSG2d8ZV17hiNQG1f8WV19iiNoF1h8VV19hiNPG1h8WV19giNoF1h8YV19ciNRG3f8ZV19_iNTG6d8[V1k2eiNUM[V1k2diNVM\\V1j2diNUM]V1k2biNVM^V1k2aiNUM_V1l2_iNUMaV1U>01O001N2O1O00]AbiNe3]V1[LeiNd3[V1Q;O1O1O1O1O010O001O010O1O0010O010O010O01O001O001O001OkAniN\\2RV1cMQjN\\2nU1eMoiN]2QV1j;01O0O1000O101N100O1N3N1O1N101O1N2O1N1O2N2N1N3M3M3M2PARiNm4PW1RKPiNm4RW1RKnhNm4SW1SKmhNk4UW1o91N2N2N2M3N2N2N3M2N3M2O2M2[MThNU]OnW1eb0\\hNU]OeW1fb0bhNW]O`W1db0fhNY]O[W1cb0ihN\\]OYW1jb0`hNU]ObW1kb0^hNR]OdW1ob0[hNP]OgW1Pc0YhNn\\OiW1Rc0YhNj\\OiW1Vc0kgNZ[OF_1aX1Vc0ggN][OI[1bX1Xc0bgN`[OLV1dX1Zc0]gNb[OOS1fX1Yc0YgNg[O2n0gX1Yc0XgNi[O2l0hX1Zc0UgNk[O4i0iX1Zc0TgNm[O<>cX1cc0RgNo[O>9cX1gc0ofNP\\Oa04cX1Wc0mfN_\\O06i0CcX1gc0ffN]\\OO9aZ1Xc0ceN\\\\OM;bZ1Wc0RfNg\\OPZ1Vc0SfNe\\OQZ1Wc0_1K5K4M4J6[Oe0PNScNX@`]1]?h1F:K5J6J5K6D<G9H8^Ob0J6J7J7H8I`0\\Ok0iEa[NV7Ve1oGc[NW7Rg1nI\\XNS3Th1cLVXNd1LSMBKQk1d2n1J6M3L5L6^NeRNBTn14YZaW2",
+        "size": [
+          2048,
+          2448
+        ]
+      },
+      "area": 330553.0,
+      "bbox": [
+        838.0,
+        454.0,
+        465.0,
+        844.0
+      ],
+      "iscrowd": 1,
+      "mineralIds": [
+        9,
+        10,
+        8
+      ],
+      "birefringence": "medium",
+      "cleavage": "good",
+      "crystalSystem": "monoclinic",
+      "extinctionAngle": "",
+      "notes": "Demo values, not an expert identification",
+      "observedColor": "pale brown",
+      "pleochroism": "weak",
+      "relief": "high"
+    },
+    {
+      "id": 2,
+      "image_id": 1,
+      "category_id": 6,
+      "segmentation": {
+        "counts": "clnR11no13L3L5M2N3L3N1O2M3N2N2O2M2N2O0O2O1N2N1O2N1O2O1N2N1O1O2N1O2N1O100O2N1O1O2N1O1O101N1O100O1O1O101N1O100O1O010O100O1O100O100O1O100O1O100O103L9H1N2N2O1N2N1O2N2O1N101N2N2O0O2O1N2O0O2O1N101O0O2N10001O000000000000000000000O10000O101N100O100O1O2N1O100O2N2O1N4M3L3M2N3N1N3M3M3M3N2M3N4K4L2O1N2N2O1N1O1O1O1N2O1N2O1O2N10O01000O01000O010O100O101M2O1O1O2N1O1O2N2M2O2L3O2M2O2O0O1O2N1N3M3K4M4I7J6K5M3O2M2N3M2O1N2O1N2N2O0O101N100O101N100O101N1O101N100O1O2O000O2O0O101N100O1O2O0O1O100O100O101N100O100O101N100O1O101O0O101N100O2O0O101N1O2O0O2O0O2O1N1O2O1N2N1O2O2M3L4]ORRNjNXn1n0c0Cb0_OmTgT3",
+        "size": [
+          2048,
+          2448
+        ]
+      },
+      "area": 31998.0,
+      "bbox": [
+        559.0,
+        804.0,
+        277.0,
+        213.0
+      ],
+      "iscrowd": 1,
+      "mineralIds": [
+        6,
+        5,
+        8
+      ],
+      "birefringence": null,
+      "cleavage": null,
+      "crystalSystem": null,
+      "extinctionAngle": "",
+      "notes": "",
+      "observedColor": "",
+      "pleochroism": null,
+      "relief": null
+    },
+    {
+      "id": 3,
+      "image_id": 1,
+      "category_id": 6,
+      "segmentation": {
+        "counts": "RYQ\\2:ao16L5M2M3M3N2N2N2N2M3N2M3M2N3M3M3N2M2N3L3M4K4M4M2N2N3M2N3N1O2M3O0O2N1O2N1O2N1O2N1O2N1O2N1O1O1N3M2N2N3N1O1N3M2N2O1O2N1000001N10000000001N100010O01O001O010O00000001O00001N100O101O0O1O100O1O001O1N2N2N2N2O1O001N2N2N2N2N1O3M2N2N2N2O1N2O1N3N001N2O1O0O2N2O1N101O1O1N2O1O1O1O1O1O1O100O1O1N2O1O1N2O2M2N2O1N3N1M4K4M4N1O2N1O2M2O2N2M2N3M3M3M4M2M4M3Hbi\\R2",
+        "size": [
+          2048,
+          2448
+        ]
+      },
+      "area": 15805.0,
+      "bbox": [
+        1216.0,
+        1217.0,
+        169.0,
+        147.0
+      ],
+      "iscrowd": 1,
+      "mineralIds": [
+        6,
+        5,
+        7
+      ],
+      "birefringence": null,
+      "cleavage": null,
+      "crystalSystem": null,
+      "extinctionAngle": "",
+      "notes": "",
+      "observedColor": "",
+      "pleochroism": null,
+      "relief": null
+    },
+    {
+      "id": 4,
+      "image_id": 1,
+      "category_id": 8,
+      "segmentation": {
+        "counts": "YZjl24ho16N03L\\PV5NgoiJ1O01NXP2NjoM2N10000001O001O00bRb06Um]O5L5K4L4L3N3M2M3M3M3M3YNkN_TNX1_k1kN^TNV1ak1mN\\TNU1ck1mNZTNT1ek1nNXTNU1gk1mNgSN^OOf1Zl1^OcSNd0\\l1^O`SNd0_l1@]SNb0bl1^101O00001O01O01O000010O0001O00001O010O001O001O10O00001O010O001O0001O010O001O000010O0001O000001O01O000001O000010O01O001O000010O01O010O010O10O0100O00001O001O00010O0010O01O010O00010O00010O01O01O010O10O010O0001O010O1O010O002N1O1O10O01O1O001O1O001O2N1O010WNkSNEVl12TTNLmk1H`TN6ak1FdTN7bk1AaTN>bm1N1KZae[1",
+        "size": [
+          2048,
+          2448
+        ]
+      },
+      "area": 15172.0,
+      "bbox": [
+        1485.0,
+        325.0,
+        264.0,
+        170.0
+      ],
+      "iscrowd": 1,
+      "mineralIds": [
+        8,
+        5,
+        6
+      ],
+      "birefringence": null,
+      "cleavage": null,
+      "crystalSystem": null,
+      "extinctionAngle": "",
+      "notes": "",
+      "observedColor": "",
+      "pleochroism": null,
+      "relief": null
+    },
+    {
+      "id": 5,
+      "image_id": 1,
+      "category_id": 19,
+      "segmentation": {
+        "counts": "kTg\\37go14L3N1N3N1O2N1N2O2N1O2N101N2N101O1N2O001N2O0O2O0O2O1O0O2O1O1N2O0O2O1N2N1O2M2N3N1N2M4M2N20000000O100O100O100O1O2M3M2N3M3M3N2N1O2N1O2M3M3M3M3M5K4L4L4L4L4Kik^W1",
+        "size": [
+          2048,
+          2448
+        ]
+      },
+      "area": 3570.0,
+      "bbox": [
+        1739.0,
+        1137.0,
+        77.0,
+        76.0
+      ],
+      "iscrowd": 1,
+      "mineralIds": [
+        19,
+        20,
+        21
+      ],
+      "birefringence": null,
+      "cleavage": null,
+      "crystalSystem": null,
+      "extinctionAngle": "",
+      "notes": "",
+      "observedColor": "",
+      "pleochroism": null,
+      "relief": null
+    },
+    {
+      "id": 6,
+      "image_id": 1,
+      "category_id": 6,
+      "segmentation": {
+        "counts": "PXWj17fo18L2M3M6J5K4L3M2O1N1O2N100O2N2O0O3M2O3L3M3N2M3N1N2N100O1O010O00010O00010O0010O01O001O00001O00000000010O000001O00010O001O001O000010O01O00001O0000010O00000010O0001O00010O001O0010O0001O001O00010O00001O00001O01O01O001O1O1O1O1O100O1O1O1O2N1O1O1O100O1O1O1O001O1O001O001O001O0O101O00001O00001O0O2O0O2O0O2N2N2N2N2N2N4JoePe2",
+        "size": [
+          2048,
+          2448
+        ]
+      },
+      "area": 9108.0,
+      "bbox": [
+        931.0,
+        1277.0,
+        156.0,
+        99.0
+      ],
+      "iscrowd": 1,
+      "mineralIds": [
+        6,
+        15,
+        8
+      ],
+      "birefringence": null,
+      "cleavage": null,
+      "crystalSystem": null,
+      "extinctionAngle": "",
+      "notes": "",
+      "observedColor": "",
+      "pleochroism": null,
+      "relief": null
+    },
+    {
+      "id": 7,
+      "image_id": 1,
+      "category_id": 5,
+      "segmentation": {
+        "counts": "kYZ]3g0Yo1S1mNS1mNS1mN=C1N2O1O001O1O1N2O1O1O1O1O1O0O2O1O1O1O1O1O1N2O1O001O1O1O1N2O1O1O1O1O1O0O2O1O1O1O1O1O1N2O1O001O1O1N2O1O1O1O1O1O0O2O1O1O1O1O1O1N2O1O001O1O1O1N2O1O1O1O1O1O0O2O1O1O1O1O1O1N2O1O001O1O1N2O1O1O1O1O1O0O2O1O1O1O1O000O010000000000O010000000O1000O100000O100000O10O10000000O10O100000000O01000000000O10O100000O100000O1000O10000000O02O001O1O1O0O2O1O1O001N2O001O1O1O0O2O1O001O1N2O001O1O1O0O2O1O001O1N2O001O1O001N2O1O001O1N101O1O1O001N2O1O001O1N101O1O1O001N2O001O1O1N101O1O1O001N2O001O1O1N101O1O001O1N2O001O1O1N101O1O001O1N2O001J6J5K6I7J6J5J7J6I6K6J6I7J5J7J6J6I6K6J6I6K6I7J6J5J\\dki0",
+        "size": [
+          2048,
+          2448
+        ]
+      },
+      "area": 55736.0,
+      "bbox": [
+        1749.0,
+        291.0,
+        285.0,
+        256.0
+      ],
+      "iscrowd": 1,
+      "mineralIds": [
+        5,
+        6,
+        8
+      ],
+      "birefringence": null,
+      "cleavage": null,
+      "crystalSystem": null,
+      "extinctionAngle": "",
+      "notes": "",
+      "observedColor": "",
+      "pleochroism": null,
+      "relief": null
+    }
+  ]
+}

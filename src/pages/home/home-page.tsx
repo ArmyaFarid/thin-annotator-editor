@@ -3,6 +3,7 @@ import {useNavigate} from "react-router-dom";
 import {toast} from "sonner";
 import {useSetAtom} from "jotai";
 import {
+    BookOpenIcon,
     ChevronDownIcon,
     Cog6ToothIcon,
     FolderOpenIcon,
@@ -20,8 +21,10 @@ import {clearDraft} from "@/app/persistence.ts";
 import {t} from "@/i18n/index.ts";
 import {AnnotatorBadge} from "@/common/components/annotator-profile/AnnotatorBadge.tsx";
 import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
+import {UserGuideLink} from "@/common/components/user-guide/UserGuideLink.tsx";
 import {EmptyFolderError} from "@/lib/services/api/folder/service.ts";
 import {useOpenTaskFromFolder} from "@/lib/services/api/task/hooks.ts";
+import lockupUrl from "@/assets/brand/lockup-horizontal-on-dark.svg";
 import {
     useBatches,
     useBatchStep,
@@ -188,6 +191,14 @@ export default function HomePage() {
     return (
         <div className="relative flex-1 overflow-y-auto">
             <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
+                <Tooltip content={t("openUserGuide")} side="bottom">
+                    <UserGuideLink
+                        aria-label={t("openUserGuide")}
+                        className="h-7 px-2 flex items-center gap-1.5 rounded border border-white/15 text-xs text-white/50 hover:text-white hover:bg-white/5 transition-colors">
+                        <BookOpenIcon className="w-4 h-4" />
+                        {t("userGuide")}
+                    </UserGuideLink>
+                </Tooltip>
                 <Tooltip content={t("customizeTitle")} side="bottom">
                     <button
                         onClick={() => setCustomizeOpen(true)}
@@ -200,8 +211,12 @@ export default function HomePage() {
             </div>
             <div className="flex flex-col items-center gap-6 px-4 py-8">
                 <div className="flex flex-col items-center gap-2 text-center">
-                    <h1 className="text-xl font-semibold text-white">
-                        {t("appTitle")}
+                    <h1>
+                        <img
+                            src={lockupUrl}
+                            alt={t("appTitle")}
+                            className="h-10 w-auto"
+                        />
                     </h1>
                     <p className="text-sm text-white/50">{t("homeChoose")}</p>
                 </div>

@@ -1,0 +1,165 @@
+{
+    "$meta": {
+        "product": "ThinAnnotator",
+        "extractedOn": "2026-10-01",
+        "branch": "motion-design",
+        "theme": "Dark only. The app renders dark in practice (App.scss sets color-scheme: dark; every screen uses dark surfaces). A DaisyUI 'light' theme is configured in tailwind.config.js but no screen uses it.",
+        "units": "CSS pixels unless stated. Screenshots were taken at 1920x1080 CSS px, device scale 2 (3840x2160 files).",
+        "sources": [
+            "tailwind.config.js",
+            "src/layouts/RootLayout.tsx",
+            "src/canvas/canvas-theme.ts",
+            "src/canvas/color.ts",
+            "src/theme/tokens.stylex.ts",
+            "src/assets/scss/App.scss",
+            "src/common/components/annotator-toolbar/Toolbar.tsx",
+            "src/pages/home/home-page.tsx",
+            "src/pages/annotator/AnnotatorPage.tsx"
+        ]
+    },
+    "color": {
+        "background": {
+            "app": {"value": "#2B2B2B", "source": "src/layouts/RootLayout.tsx (stylex container backgroundColor)"},
+            "surface": {"value": "#3A3A3A", "source": "tailwind.config.js theme.extend.colors.secondary, used as bg-secondary by toolbar, canvas frame, annotation panel"},
+            "surfaceCard": {"value": "rgba(58,58,58,0.4)", "source": "home-page.tsx bg-secondary/40 (option cards, batch rows)"},
+            "modal": {"value": "#1C1C1C", "source": "CustomizeModal, LanguageChoiceModal, AnnotatorPage finish dialog"},
+            "modalScrim": {"value": "rgba(0,0,0,0.6)", "note": "plus backdrop-blur-sm (4px)"},
+            "buttonHover": {"value": "#2F2F2F", "source": "Toolbar.tsx, AnnotationPanel.tsx"},
+            "buttonHoverStrong": {"value": "#3A3A3A", "source": "AnnotationPanel Save button hover"},
+            "canvasLetterbox": {"value": "#3A3A3A", "note": "area around the image inside the editor frame (bg-secondary)"}
+        },
+        "border": {
+            "subtle": {"value": "rgba(255,255,255,0.10)", "source": "border-white/10"},
+            "default": {"value": "rgba(255,255,255,0.15)", "source": "border-white/15"},
+            "panel": {"value": "rgba(255,255,255,0.20)", "source": "border-white/20 on canvas frame and annotation panel"}
+        },
+        "text": {
+            "primary": {"value": "#FFFFFF"},
+            "primaryMuted": {"value": "rgba(255,255,255,0.90)"},
+            "secondary": {"value": "rgba(255,255,255,0.60)"},
+            "tertiary": {"value": "rgba(255,255,255,0.40)"},
+            "hint": {"value": "rgba(255,255,255,0.35)"},
+            "toolIcon": {"value": "#B8B8B8", "source": "Toolbar.tsx"},
+            "toolIconDisabled": {"value": "#5A5A5A", "source": "Toolbar.tsx"}
+        },
+        "accent": {
+            "cyan": {"value": "#4FC3F7", "role": "active tool icon, active ring (40% alpha), Refine button, selected choice, Apply button in overlays", "source": "Toolbar.tsx, canvas-theme.ts palette.blue"},
+            "primaryButtonBg": {"value": "rgba(59,130,246,0.20)", "role": "primary actions (Choose a folder, Next, Save and leave)", "source": "Tailwind bg-blue-500/20"},
+            "primaryButtonBgHover": {"value": "rgba(59,130,246,0.30)"},
+            "primaryButtonBorder": {"value": "rgba(59,130,246,0.30)"},
+            "primaryButtonText": {"value": "#60A5FA", "source": "Tailwind text-blue-400"}
+        },
+        "chip": {
+            "modality": {"bg": "rgba(59,130,246,0.10)", "text": "#60A5FA", "border": "rgba(59,130,246,0.20)", "role": "PPL / XPL badge"},
+            "compensator": {"bg": "rgba(16,185,129,0.10)", "text": "#34D399", "border": "rgba(16,185,129,0.20)", "role": "gamma badge"},
+            "rotation": {"bg": "rgba(245,158,11,0.10)", "text": "#FBBF24", "border": "rgba(245,158,11,0.20)", "role": "rotation badge"}
+        },
+        "status": {
+            "error": {"value": "#F87171", "source": "Tailwind text-red-400 (inline errors, delete button)"},
+            "errorBg": {"value": "rgba(239,68,68,0.15)"},
+            "success": {"value": "#34D399", "source": "Tailwind text-emerald-400 (anchors on, 'already annotated' badge, borders-only icon)"},
+            "warning": {"value": "#FBBF24", "source": "Tailwind amber (hypotheses-required hint, rotation chip)"},
+            "toasts": {"value": "sonner richColors", "note": "Toasts use the sonner library default rich colors, top-right. Success toast is light green with dark green text (see assets/13-export-annotation-toast.png)."}
+        },
+        "daisyuiLightThemeUnused": {
+            "base-100": "#FFFFFF", "base-200": "#F1F4F7", "base-300": "#DEE3E9",
+            "primary": "#0064E0", "secondary": "#2B2B2B", "accent": "#6441D2",
+            "info": "#009B9B", "success": "#0F9B14", "warning": "#FA8719", "error": "#C80A28",
+            "note": "Configured in tailwind.config.js, inherited from the SAM 2 demo. Not observed on any screen."
+        }
+    },
+    "canvas": {
+        "mask": {
+            "fillAlpha": 0.1,
+            "strokeWidthCssPx": 2.5,
+            "activeShadow": "drop-shadow(0 0 4px rgba(255,255,255,0.85))",
+            "inactiveAlphaWhenOneIsActive": 0.3,
+            "holeSkeletonStroke": "rgba(255,140,50,0.9)",
+            "holeSkeletonDash": [5, 3],
+            "displayModes": ["fill (outline + 10% fill)", "borders only"],
+            "source": "src/canvas/canvas-theme.ts"
+        },
+        "objectColorPalette": {
+            "rule": "Color is per object, not per mineral class. hue = index x 137.508 deg (golden angle), saturation 80%, lightness 60% for even index, 35% for odd index.",
+            "source": "src/canvas/color.ts getDistinctColor",
+            "firstTen": ["#EA4747", "#11A03B", "#A647EA", "#A08E11", "#47CFEA", "#A0115F", "#70EA47", "#1711A0", "#EA7D47", "#11A06B"],
+            "note": "No mineral-to-color mapping exists in the code."
+        },
+        "samPrompts": {
+            "positivePoint": "#22C55E",
+            "negativePoint": "#EF4444",
+            "pointRadius": 4,
+            "boxStroke": "#4FC3F7",
+            "boxFill": "rgba(79,195,247,0.15)",
+            "boxDrawingDash": [6, 3]
+        },
+        "drawing": {
+            "polygonAddStroke": "#F59E0B",
+            "polygonSubtractStroke": "#EF4444",
+            "polygonSubtractDash": [8, 5],
+            "polygonCloseThresholdPx": 15,
+            "freeformStroke": "#F97316",
+            "freeformStrokeWidth": 3
+        },
+        "vertexEditor": {
+            "vertexRadius": 5,
+            "vertexFill": "rgba(255,255,255,0.75)",
+            "vertexStroke": "#F59E0B",
+            "vertexDragFill": "#F97316",
+            "deleteButtonRadius": 9,
+            "deleteFill": "rgba(239,68,68,0.8)"
+        },
+        "cursorHud": {"bg": "rgba(0,0,0,0.55)", "bgOutsideImage": "rgba(220,38,38,0.88)", "font": "11px ui-monospace, monospace"},
+        "slicOverlay": {"contourDark": "rgba(17,17,17,0.88)", "contourLight": "rgba(255,255,255,0.92)", "hoverFill": "rgba(79,195,247,0.15)", "contourWidth": "1 image pixel"}
+    },
+    "typography": {
+        "fontFamilyDeclared": "'Inter', sans-serif",
+        "fontFamilyRendered": "System sans-serif fallback. Inter is declared in App.scss at /fonts/Inter-VariableFont.ttf, but the shipped file is /fonts/Inter-VariableFont_opsz,wght.ttf, so the declared URL returns the HTML index page and Inter never loads (verified: document.fonts.check('12px Inter') === false).",
+        "fontFamilyMono": "Tailwind font-mono (ui-monospace, SFMono-Regular, Menlo, ...) for task id, paths, counters",
+        "scale": {
+            "xs": {"size": "0.75rem", "lineHeight": 1.5},
+            "sm": {"size": "0.875rem", "lineHeight": 1.5},
+            "base": {"size": "1rem", "lineHeight": 1.5},
+            "lg": {"size": "1.125rem", "lineHeight": 1.2, "weight": 500},
+            "xl": {"size": "1.25rem", "lineHeight": 1.2, "weight": 500},
+            "2xl": {"size": "1.5rem", "lineHeight": 1.2, "weight": 500}
+        },
+        "usage": {
+            "appTitle": "text-xl (20px) semibold, white",
+            "cardTitle": "text-sm (14px) semibold, white 90%",
+            "body": "text-xs (12px), white 60%",
+            "sectionLabel": "10-12px uppercase, tracking-wider, semibold, white 40-60%",
+            "microLabel": "10-11px",
+            "source": "tailwind.config.js, home-page.tsx, AnnotationPanel.tsx"
+        }
+    },
+    "shape": {
+        "radius": {
+            "button": "0.5rem (rounded-lg) for tool buttons and primary buttons; 0.25rem (rounded) for small chips and panel buttons",
+            "panel": "0.375rem (rounded-md) for canvas frame and annotation panel",
+            "toolbarRail": "0.75rem (rounded-xl)",
+            "modal": "0.75rem (rounded-xl)",
+            "card": "0.5rem (rounded-lg)"
+        },
+        "shadow": {"modal": "Tailwind shadow-2xl", "flyout": "Tailwind shadow-xl"},
+        "spacing": {"0": "0px", "1": "4px", "2": "8px", "3": "12px", "4": "16px", "5": "20px", "6": "24px", "8": "32px", "source": "src/theme/tokens.stylex.ts and Tailwind default scale"},
+        "icons": {
+            "library": "@heroicons/react v2, 24/outline",
+            "custom": "src/assets/icons/*.svg (pointer, select-add, select-remove, bounding-box, polygon-lasso, freeform-draw, slic-bbox, sam-group, zoom-in, zoom-out, grab, eraser, add-mark, remove-mark)",
+            "toolIconSize": "16px in a 32px button"
+        }
+    },
+    "layout": {
+        "viewportCaptured": "1920x1080 CSS px",
+        "regions": {
+            "topBar": {"height": "about 28px row", "contents": "Open a new task (left), task id 'thinSection / FOV' and batch controls (center), Finish + annotator badge (right)"},
+            "toolbarRail": {"position": "left", "width": "48px (w-12)", "contents": "undo, redo, tools, PPL/XPL/gamma/rotation pills, borders toggle, ?, customize gear pinned at bottom"},
+            "canvas": {"position": "center", "width": "flex-1", "overlays": "modality/gamma/rotation chips top-right, cursor HUD top-left, minimap bottom-left, Zoom locked toggle bottom-right"},
+            "annotationPanel": {"position": "right", "width": "288px (w-72)", "contents": "object list or edit form; Save draft + Export pinned at bottom"},
+            "pagePadding": "8px gap and padding (PageLayout)"
+        }
+    },
+    "logo": {
+        "status": "NONE. No logo, app icon, or favicon file exists in the frontend. index.html has no favicon link and its <title> is 'Lame minces annotator'. The PyInstaller spec builds ThinAnnotator.app with icon=None."
+    }
+}
