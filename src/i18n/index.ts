@@ -153,11 +153,11 @@ const T = {
 
         // Save task
         saveTask: "Enregistrer le brouillon",
-        saveAnnotation: "Exporter l'annotation (image actuelle)",
+        saveAnnotation: "Enregistrer",
         saving: "Sauvegarde...",
         saveTaskSuccess: "Brouillon enregistré",
         saveTaskError: "Échec de l'enregistrement du brouillon",
-        exportAnnotationSuccess: "Annotation exportée",
+        exportAnnotationSuccess: "Annotations exportées pour toutes les images",
         exportAnnotationError: "Échec de l'export de l'annotation",
 
         // Draft restore modal
@@ -382,7 +382,7 @@ const T = {
         saveTaskTooltip:
             "Sauvegarde le travail en cours pour le reprendre plus tard",
         exportAnnotationTooltip:
-            "Exporte l'annotation finale de l'image actuelle au format COCO",
+            "Exporte l'annotation finale au format COCO pour chaque image de la tâche",
         fillModeTooltip:
             "Mode remplissage : les tracés ajoutent de la matière à la région",
         eraseModeTooltip:
@@ -574,11 +574,11 @@ const T = {
 
         // Save task
         saveTask: "Save draft",
-        saveAnnotation: "Export annotation (current image)",
+        saveAnnotation: "Save",
         saving: "Saving...",
         saveTaskSuccess: "Draft saved",
         saveTaskError: "Failed to save draft",
-        exportAnnotationSuccess: "Annotation exported",
+        exportAnnotationSuccess: "Annotations exported for every image",
         exportAnnotationError: "Failed to export annotation",
 
         // Draft restore modal
@@ -800,7 +800,7 @@ const T = {
         deleteRegion: "Delete this region",
         saveTaskTooltip: "Save the work in progress to resume it later",
         exportAnnotationTooltip:
-            "Export the final annotation of the current image in COCO format",
+            "Export the final annotation in COCO format for every image of the task",
         fillModeTooltip: "Fill mode: strokes add material to the region",
         eraseModeTooltip:
             "Erase mode: strokes remove material from the region",
