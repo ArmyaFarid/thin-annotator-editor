@@ -19,7 +19,7 @@ import {commitHistoryAtom} from "@/app/history.ts";
 import {mergeToCanvas, canvasToRLE} from "@/canvas/utils/maskMerge.ts";
 import {MaskEditTools} from "@/common/components/annotation-panel/MaskEditTools.tsx";
 import {MineralAnnotationForm} from "@/common/components/annotation-panel/MineralAnnotationForm.tsx";
-import {useExportAnnotation} from "@/lib/services/api/annotations/hooks.ts";
+import {useExportAllImages} from "@/lib/services/api/annotations/hooks.ts";
 import {Tooltip} from "@/common/components/ui/Tooltip.tsx";
 
 export const AnnotationPanel: React.FC = () => {
@@ -42,7 +42,7 @@ export const AnnotationPanel: React.FC = () => {
     const {mutateAsync: saveTask, isPending: isSavingTask} =
         useSaveTask({pairsCode, sampleId});
     const {mutateAsync: saveAnnotation, isPending: isSavingAnnotation} =
-        useExportAnnotation({pairsCode, sampleId});
+        useExportAllImages({pairsCode, sampleId});
 
     async function handleSaveTask() {
         try {

@@ -55,6 +55,7 @@ export default function AnnotatorPage() {
     );
 
     const batch = useBatchNavigation(pairsCode, sampleId);
+    const isLastTask = batch.position?.hasNext === false;
     const [showFinishModal, setShowFinishModal] = useState(false);
     const {mutateAsync: saveAnnotations, isPending: savingTask} =
         useSaveTask({pairsCode, sampleId});
@@ -159,19 +160,24 @@ export default function AnnotatorPage() {
                                 </span>
                             ) : null}
                             <Tooltip
-                                content={t("batchNextTooltip")}
+                                content={
+                                    isLastTask
+                                        ? t("batchFinishTooltip")
+                                        : t("batchNextTooltip")
+                                }
                                 side="bottom">
                                 <button
                                     onClick={batch.goNext}
-                                    disabled={
-                                        batch.moving ||
-                                        batch.position?.hasNext === false
-                                    }
+                                    disabled={batch.moving}
                                     className="flex items-center gap-1 bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2.5 py-1 rounded text-xs hover:bg-blue-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
                                     {batch.moving
                                         ? t("batchMoving")
-                                        : t("batchNext")}
-                                    <ChevronRightIcon className="w-3 h-3" />
+                                        : isLastTask
+                                          ? t("batchFinish")
+                                          : t("batchNext")}
+                                    {isLastTask ? null : (
+                                        <ChevronRightIcon className="w-3 h-3" />
+                                    )}
                                 </button>
                             </Tooltip>
                         </>
