@@ -91,6 +91,9 @@ const T = {
         // Batch navigation inside the editor
         batchPrev: "Précédente",
         batchNext: "Suivante",
+        batchFinish: "Terminer le lot",
+        batchFinishTooltip:
+            "Enregistrer et exporter cette dernière tâche, puis terminer le lot",
         batchPrevTooltip: "Revenir à la tâche précédente du lot",
         batchNextTooltip:
             "Enregistrer et exporter cette tâche, puis passer à la suivante",
@@ -509,6 +512,9 @@ const T = {
         // Batch navigation inside the editor
         batchPrev: "Previous",
         batchNext: "Next",
+        batchFinish: "Finish batch",
+        batchFinishTooltip:
+            "Save and export this last task, then finish the batch",
         batchPrevTooltip: "Go back to the previous task in the batch",
         batchNextTooltip:
             "Save and export this task, then move on to the next one",
