@@ -9,7 +9,6 @@ import {
 
 // Single axios instance for the REST backend. No auth interceptor — the app is
 // served locally by the Python package and there is nothing to authenticate.
-// GraphQL does NOT go through here; Relay owns that transport.
 const api = axios.create({
     baseURL: IMAGE_API_ENDPOINT,
     headers: {"Content-Type": "application/json"},

@@ -410,6 +410,7 @@ const T = {
 
         // Image editor loading
         slicComputing: "Calcul SLIC...",
+        inferenceError: "Échec du calcul. Réessayez.",
         processing: "Traitement...",
         loadingImage: "Chargement de l'image...",
 
@@ -827,6 +828,7 @@ const T = {
 
         // Image editor loading
         slicComputing: "Computing SLIC...",
+        inferenceError: "Computation failed. Try again.",
         processing: "Processing...",
         loadingImage: "Loading image...",
 

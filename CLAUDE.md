@@ -18,7 +18,6 @@ Python service (`http://localhost:7263`) runs SAM 2 and SLIC and serves the imag
 yarn dev            # dev server
 yarn build          # tsc && vite build — run before every commit
 yarn lint           # eslint
-yarn relay          # regenerate Relay artifacts after touching a GraphQL operation
 ```
 
 `yarn build` is the real gate: the codebase leans on `Record<Tool, …>`-style exhaustive types,
@@ -43,8 +42,8 @@ While editing, an object accumulates layers; **Save** collapses them into a sing
 Beware: **two different classes are called `Mask`** — the state interface in `app/atom.ts` and
 the renderer in `canvas/annotations/Mask.ts` that draws it.
 
-`objectId` in engine callbacks means *mask id*. `objectId` in GraphQL is SAM 2's own id (hardcoded
-to `1` for point prompts, reused as the superpixel index for SLIC). Same word, unrelated meanings.
+`objectId` in engine callbacks means *mask id*. `objectId` in the `/api/inference/points` response is
+SAM 2's own id, always `0`. Same word, unrelated meanings.
 
 ---
 
@@ -188,18 +187,16 @@ tool works, and why adding a no-op tool needs no handler.
 
 ## Backend integration
 
-**GraphQL (Relay)** — operations are defined inline with `graphql\`\`` next to the component that
-uses them; generated types land in a sibling `__generated__/`. Never move operations into the
-top-level `graphql/` folder, which is infrastructure only.
+Everything is REST; there is no GraphQL. The editor's endpoints live in `services/api/editor/`:
 
-- `addPointsImage` — SAM prompts (points + bboxes) → RLE mask
-- `computeSlicImage` — bbox → superpixel RLEs
-- `getPairs` — the lighting-modality and gamma variants of one field of view
+- `GET /api/pairs` — the lighting-modality, gamma and rotation variants of one field of view
+- `POST /api/inference/points` — SAM prompts (points + corner bboxes) → RLE mask
+- `POST /api/inference/slic-label-map` — `[x, y, w, h]` bbox → uint16 label map
 
-**REST** — `/api/pick-folder`, `/api/task/load`, `/api/task/save`, `/api/annotations/save`,
-`/api/annotation-options`. Reached through `lib/services/api/`, one folder per resource:
-`dto.ts` (wire shapes) → `mappers.ts` (validation + conversion) → `service.ts` → `hooks.ts`
-(TanStack Query).
+The rest — `/api/pick-folder`, `/api/task/*`, `/api/batch/*`, `/api/annotations/save`,
+`/api/annotation-options` — follows the same layout. Reached through `lib/services/api/`, one
+folder per resource: `dto.ts` (wire shapes) → `mappers.ts` (validation + conversion) →
+`service.ts` → `hooks.ts` (TanStack Query).
 
 ### The persisted format is not the in-memory model
 
@@ -217,9 +214,10 @@ Rules when touching either side:
 This is why the planned `Date.now()` → `crypto.randomUUID()` id change is safe to make now — the
 mapper is where the old numeric ids get read.
 
-Bridge pattern: read the result with `useLazyLoadQuery` / `useMutation`, then write it into an
-atom in a callback or effect. Relay is transport; Jotai is the source of truth. Never store Relay
-results directly in atoms.
+Bridge pattern: read the result with `useQuery` / `useMutation`, then write it into an atom in a
+callback or effect. TanStack is transport; Jotai is the source of truth. An unknown route answers
+with the SPA's `index.html` at 200, so services check the body is JSON (`BatchEndpointError`,
+`EditorEndpointError`).
 
 ---
 
@@ -246,8 +244,6 @@ never hardcoded.
 - `src/jscocotools/mask.ts` — the RLE codec
 - `src/settings/` — inherited SAM 2 endpoint settings modal (the gear in `RootLayout`, separate
   from the customize modal)
-- `src/graphql/` infrastructure — `fetchGraphQL`, `RelayEnvironment`, the provider
-- every `__generated__/` directory — Relay compiler output
 - `src/common/components/filter-gamma-selector/`
 - the explicit `<img>` sizing in `CanvasStack` (see Coordinates above)
 
@@ -256,6 +252,10 @@ never hardcoded.
 ## Known follow-ups
 
 Real, unblocking, and safe to pick up:
+
+- **TanStack infers `any`.** `typescript` is pinned below 5.4, and `@tanstack/react-query` 5.101
+  needs newer inference: `useQuery(...).data` is `any`. `editor/hooks.ts` declares its return
+  types explicitly; the other modules don't yet. Raising TypeScript fixes it everywhere.
 
 - **Stale dependencies.** `mp4box`, `pts` and `react-pts-canvas` survive in `package.json` from
   the deleted video pipeline.
