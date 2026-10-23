@@ -25,31 +25,49 @@ export interface PairsResponseDTO {
     acquiredImages: AcquiredImageDTO[];
 }
 
+/** `[x, y, w, h]` — every box in the segmentation API has this shape. */
+export type BoxDTO = [number, number, number, number];
+
 /**
- * POST /api/inference/points
- * `bboxes` are corners `[x0, y0, x1, y1]`; the backend uses only the first.
+ * POST /api/segmentation/sam2 — all keys required, unknown keys answer 400.
+ * One label per point (`-1` is ignored); only the first box is used.
  */
-export interface PointsRequestDTO {
+export interface Sam2RequestDTO {
     imageId: string;
     points: [number, number][];
     labels: number[];
-    bboxes: [number, number, number, number][];
+    bboxes: BoxDTO[];
 }
 
-export interface PointsResponseDTO {
-    rleMaskList: {objectId: number; rleMask: RLEDTO}[];
-}
-
-/** POST /api/inference/slic-label-map — `bbox` is `[x, y, w, h]`, not corners. */
-export interface SlicLabelMapRequestDTO {
+/** POST /api/segmentation/slic */
+export interface SlicRequestDTO {
     imageId: string;
-    bbox: [number, number, number, number];
+    bbox: BoxDTO;
 }
 
-export interface SlicLabelMapResponseDTO {
-    data: string;
-    height: number;
-    width: number;
-    dtype: string;
-    bbox: {x: number; y: number; w: number; h: number};
+interface SegmentationEnvelopeDTO {
+    imageWidth: number;
+    imageHeight: number;
 }
+
+/** Holds exactly one mask today, all zeros when there is no prompt. */
+export interface MaskListDTO extends SegmentationEnvelopeDTO {
+    kind: "masks";
+    masks: RLEDTO[];
+}
+
+/**
+ * `width`/`height` are the dimensions of `data` and may be smaller than the
+ * requested bbox when it is clipped at the image edge; `x`/`y` place it.
+ */
+export interface LabelMapDTO extends SegmentationEnvelopeDTO {
+    kind: "labelMap";
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    dtype: "uint16";
+    data: string;
+}
+
+export type SegmentationResponseDTO = MaskListDTO | LabelMapDTO;

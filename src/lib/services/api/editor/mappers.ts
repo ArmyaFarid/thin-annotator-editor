@@ -2,10 +2,9 @@ import type {RLEMask} from "@/app/atom.ts";
 import type {
     AcquiredImageDTO,
     PairsResponseDTO,
-    PointsRequestDTO,
-    PointsResponseDTO,
-    SlicLabelMapRequestDTO,
-    SlicLabelMapResponseDTO,
+    Sam2RequestDTO,
+    SegmentationResponseDTO,
+    SlicRequestDTO,
 } from "@/lib/services/api/editor/dto.ts";
 import type {
     Pairs,
@@ -41,7 +40,7 @@ function isAcquiredImage(v: unknown): v is AcquiredImageDTO {
 export function pointsInputToDto({
     image,
     prompts,
-}: PointsInput): PointsRequestDTO {
+}: PointsInput): Sam2RequestDTO {
     const pointPrompts = prompts.filter((p) => !p.bbox);
     return {
         imageId: image.id,
@@ -51,7 +50,7 @@ export function pointsInputToDto({
             .filter((p) => p.bbox != null)
             .map((p) => {
                 const {left, top, width, height} = p.bbox!;
-                return [Math.round(left), top, left + width, top + height];
+                return [left, top, width, height];
             }),
     };
 }
@@ -59,7 +58,7 @@ export function pointsInputToDto({
 export function slicInputToDto({
     image,
     bbox,
-}: SlicInput): SlicLabelMapRequestDTO {
+}: SlicInput): SlicRequestDTO {
     return {
         imageId: image.id,
         bbox: [
@@ -95,8 +94,12 @@ export function dtoToPairs(dto: PairsResponseDTO): Pairs {
 }
 
 /** The backend returns a single mask; `null` when it returned none usable. */
-export function dtoToRleMask(dto: PointsResponseDTO): RLEMask | null {
-    const rle = dto.rleMaskList?.[0]?.rleMask;
+export function dtoToRleMask(dto: SegmentationResponseDTO): RLEMask | null {
+    if (dto.kind !== "masks") {
+        Logger.warn(`[sam2] expected kind "masks", got "${dto.kind}"`);
+        return null;
+    }
+    const rle = dto.masks?.[0];
     return isRle(rle) ? rle : null;
 }
 
@@ -131,16 +134,19 @@ function decodeLabelMap(
 // width/height come from the array, not the request: the backend's slice
 // clips at the image edge.
 export function dtoToSlicLabelMap(
-    dto: SlicLabelMapResponseDTO,
+    dto: SegmentationResponseDTO,
 ): SlicLabelMapResult {
+    if (dto.kind !== "labelMap") {
+        throw new Error(`[slic] expected kind "labelMap", got "${dto.kind}"`);
+    }
     return {
-        bbox: {x: dto.bbox.x, y: dto.bbox.y, w: dto.width, h: dto.height},
+        bbox: {x: dto.x, y: dto.y, w: dto.width, h: dto.height},
         labelMap: {
             labels: decodeLabelMap(dto.data, dto.dtype, dto.width, dto.height),
             w: dto.width,
             h: dto.height,
-            x: dto.bbox.x,
-            y: dto.bbox.y,
+            x: dto.x,
+            y: dto.y,
         },
     };
 }
