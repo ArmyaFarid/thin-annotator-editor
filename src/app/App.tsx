@@ -20,10 +20,10 @@
  */
 
 import "@/assets/scss/App.scss";
+import {Suspense} from "react";
 import ErrorReport from "@/common/error/ErrorReport";
 import AppErrorFallback from "@/app/AppErrorFallback";
 import AppSuspenseFallback from "@/app/AppSuspenseFallback";
-import RelayEnvironmentProvider from "@/graphql/RelayEnvironmentProvider";
 import RootLayout from "@/layouts/RootLayout";
 import AnnotatorPage from "@/pages/annotator/AnnotatorPageWrapper.tsx";
 import HomePage from "@/pages/home/home-page.tsx";
@@ -31,13 +31,13 @@ import PageNotFoundPage from "@/routes/PageNotFoundPage";
 import {AnnotatorProfileModal} from "@/common/components/annotator-profile/AnnotatorProfileModal.tsx";
 import {LanguageChoiceModal} from "@/common/components/language-choice/LanguageChoiceModal.tsx";
 import {CustomizeModal} from "@/common/components/customize/CustomizeModal.tsx";
-import useSettingsContext from "@/settings/useSettingsContext";
 import useLoadAnnotationOptions from "@/lib/services/api/options/hooks.ts";
 import {QueryClientProvider} from "@tanstack/react-query";
 import {queryClient} from "@/lib/services/api/queryClient.ts";
 import {useAtomValue} from "jotai";
 import {langAtom, langChosenAtom} from "@/app/atom.ts";
 import {Route, Routes} from "react-router-dom";
+import {ErrorBoundary} from "react-error-boundary";
 import {Toaster} from "sonner";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
@@ -50,32 +50,30 @@ export default function AppWrapper() {
 }
 
 function App() {
-    const {settings} = useSettingsContext();
     useLoadAnnotationOptions();
     // Subscribing here is what repaints the whole tree on a language change,
     useAtomValue(langAtom);
     const langChosen = useAtomValue(langChosenAtom);
     return (
-        <RelayEnvironmentProvider
-            endpoint={settings.videoAPIEndpoint}
-            suspenseFallback={<AppSuspenseFallback />}
-            errorFallback={AppErrorFallback}>
-            <TooltipPrimitive.Provider
-                delayDuration={800}
-                skipDelayDuration={600}>
-                <Toaster richColors position="top-right" />
-                <AppRoutes />
-                {/* Above the routes, so they also cover the home page. The
-                    language step blocks the profile step rather than stacking
-                    on top of it. */}
-                {langChosen ? (
-                    <AnnotatorProfileModal />
-                ) : (
-                    <LanguageChoiceModal />
-                )}
-                <CustomizeModal />
-            </TooltipPrimitive.Provider>
-        </RelayEnvironmentProvider>
+        <ErrorBoundary FallbackComponent={AppErrorFallback}>
+            <Suspense fallback={<AppSuspenseFallback />}>
+                <TooltipPrimitive.Provider
+                    delayDuration={800}
+                    skipDelayDuration={600}>
+                    <Toaster richColors position="top-right" />
+                    <AppRoutes />
+                    {/* Above the routes, so they also cover the home page. The
+                        language step blocks the profile step rather than stacking
+                        on top of it. */}
+                    {langChosen ? (
+                        <AnnotatorProfileModal />
+                    ) : (
+                        <LanguageChoiceModal />
+                    )}
+                    <CustomizeModal />
+                </TooltipPrimitive.Provider>
+            </Suspense>
+        </ErrorBoundary>
     );
 }
 

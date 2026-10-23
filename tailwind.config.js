@@ -13,8 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import tailwindCSSTypography from '@tailwindcss/typography';
-import daisyui from 'daisyui';
 import * as daisyColorThemes from 'daisyui/src/theming/themes';
 
 /** @type {import('tailwindcss').Config} */
@@ -129,5 +127,8 @@ export default {
       },
     },
   },
-  plugins: [tailwindCSSTypography, daisyui],
+  // daisyui and @tailwindcss/typography used to be listed here, but jiti < 1.21.7 loaded both
+  // as empty objects, so neither ever ran and the UI was designed without them. Listing them
+  // now would switch daisyUI's themes and component styles on across the app.
+  plugins: [],
 };

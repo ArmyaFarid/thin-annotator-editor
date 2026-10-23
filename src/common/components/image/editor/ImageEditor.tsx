@@ -1,5 +1,4 @@
 import React, {useCallback, useEffect, useRef, useState} from "react";
-import {graphql, useLazyLoadQuery, useMutation} from "react-relay";
 import {useAtom, useAtomValue, useSetAtom} from "jotai";
 import {CanvasStack} from "@/canvas/CanvasStack.tsx";
 import usePrompts from "@/common/components/image/editor/usePrompts.ts";
@@ -15,47 +14,18 @@ import {
     activeImageSizeAtom,
     acquiredImagesAtom,
     slicOverlayAtom,
-    ActiveImage,
 } from "@/app/atom.ts";
 import {RefineOverlay} from "@/common/components/image/editor/refine/RefineOverlay.tsx";
 import {SlicOverlay} from "@/common/components/image/editor/slic/SlicOverlay.tsx";
-import type {ImageEditorGetPairsQuery} from "@/common/components/image/editor/__generated__/ImageEditorGetPairsQuery.graphql.ts";
 import useSlicPrompts from "@/common/components/image/editor/useSlicPrompts.ts";
 import useActiveImage from "@/common/components/image/editor/useActiveImage.ts";
+import {
+    useAddPoints,
+    usePairs,
+    useSlicLabelMap,
+} from "@/lib/services/api/editor/hooks.ts";
 import {t} from "@/i18n/index.ts";
-
-interface RLEMask {
-    counts: string;
-    size: [number, number];
-}
-
-// The backend sends `arr.tobytes()` base64-encoded — raw, C-order, native
-// (little-endian) byte order, so a typed-array view over the bytes is enough.
-function decodeLabelMap(
-    data: string,
-    dtype: string,
-    w: number,
-    h: number,
-): Uint16Array {
-    const bin = atob(data);
-    const bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) {
-        bytes[i] = bin.charCodeAt(i);
-    }
-    switch (dtype) {
-        case "uint16":
-            return new Uint16Array(bytes.buffer, bytes.byteOffset, w * h);
-        case "uint8":
-            return Uint16Array.from(bytes.subarray(0, w * h));
-        case "int32":
-        case "uint32":
-            return Uint16Array.from(
-                new Uint32Array(bytes.buffer, bytes.byteOffset, w * h),
-            );
-        default:
-            throw new Error(`unsupported SLIC label map dtype: ${dtype}`);
-    }
-}
+import {toast} from "sonner";
 
 interface ImageEditorProps {
     pairsCode: string;
@@ -82,258 +52,142 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
     const [imageLoading, setImageLoading] = useState(false);
     const onImageSettled = useCallback(() => setImageLoading(false), []);
 
-    const pairsData = useLazyLoadQuery<ImageEditorGetPairsQuery>(
-        graphql`
-            query ImageEditorGetPairsQuery(
-                $pairsCode: String!
-                $sampleId: String!
-            ) {
-                getPairs(pairsCode: $pairsCode, sampleId: $sampleId) {
-                    id
-                    sampleId
-                    polarizedFilterTypes
-                    rotations
-                    gammas
-                    acquiredImages {
-                        polarizedFilterType
-                        gamma
-                        rotation
-                        image {
-                            id
-                            path
-                            url
-                            width
-                            height
-                        }
-                    }
-                }
-            }
-        `,
-        {pairsCode, sampleId},
-        {fetchKey: `${pairsCode}-${sampleId}`, fetchPolicy: "network-only"},
-    );
+    const pairs = usePairs({pairsCode, sampleId});
+    const addPoints = useAddPoints();
+    const slicLabelMap = useSlicLabelMap();
 
     useEffect(() => {
-        setConfig({
-            variants: pairsData.getPairs.acquiredImages.map((a) => ({
-                filter: a.polarizedFilterType,
-                gamma: a.gamma ?? null,
-                rotation: a.rotation ?? null,
-            })),
-        });
-        setAcquiredImages(
-            pairsData.getPairs.acquiredImages.map((a) => ({
-                image: a.image as ActiveImage,
-                combination: {
-                    filter: a.polarizedFilterType,
-                    gamma: a.gamma ?? null,
-                    rotation: a.rotation ?? null,
-                },
-            })),
-        );
-    }, [pairsData]);
+        if (!pairs.data) {
+            return;
+        }
+        setConfig({variants: pairs.data.variants});
+        setAcquiredImages(pairs.data.acquiredImages);
+    }, [pairs.data]);
 
     useEffect(() => {
-        const match = pairsData.getPairs.acquiredImages.find(
-            (a) =>
-                a.polarizedFilterType === activeFilterGammaCombination.filter &&
-                (a.gamma ?? null) === activeFilterGammaCombination.gamma &&
-                (a.rotation ?? null) === activeFilterGammaCombination.rotation,
+        if (!pairs.data) {
+            return;
+        }
+        const match = pairs.data.acquiredImages.find(
+            ({combination}) =>
+                combination.filter === activeFilterGammaCombination.filter &&
+                combination.gamma === activeFilterGammaCombination.gamma &&
+                combination.rotation === activeFilterGammaCombination.rotation,
         );
-        const img = (match?.image as ActiveImage) ?? null;
+        const img = match?.image ?? null;
         setActiveImage(img);
         if (img) {
             setImageSize({w: img.width, h: img.height});
         }
-    }, [activeFilterGammaCombination, pairsData]);
+    }, [activeFilterGammaCombination, pairs.data]);
 
     // Cleared by the <img>'s load/error event, forwarded by CanvasStack.
     useEffect(() => {
         setImageLoading(activeImage != null);
     }, [activeImage?.url]);
 
-    const AddPointsMutation = graphql`
-        mutation ImageEditorAddPointsMutation($input: AddPointsImageInput!) {
-            addPointsImage(input: $input) {
-                frameIndex
-                rleMaskList {
-                    objectId
-                    rleMask {
-                        counts
-                        size
-                    }
-                }
-            }
-        }
-    `;
-
-    const ComputeSlicLabelMapMutation = graphql`
-        mutation ImageEditorComputeSlicLabelMapMutation(
-            $input: SlicImageInput!
-        ) {
-            computeSlicImageGetLabelMap(input: $input) {
-                data
-                height
-                width
-                dtype
-                bbox {
-                    x
-                    y
-                    w
-                    h
-                }
-            }
-        }
-    `;
-
-    const [commitPoints, pointsInFlight] = useMutation(AddPointsMutation);
-    const [commitComputeSlicMutationLabelMap, slicLabelMapInFlight] =
-        useMutation(ComputeSlicLabelMapMutation);
+    function onInferenceError() {
+        toast.error(t("inferenceError"));
+    }
 
     function sendPrompt() {
-        const bboxes: [number, number, number, number][] = prompts
-            .filter((p) => p.bbox != null)
-            .map((p) => {
-                const {left, top, width, height} = p.bbox!;
-                return [Math.round(left), top, left + width, top + height];
-            });
-
+        if (!activeImage) {
+            return;
+        }
         const pointPrompts = prompts.filter((p) => !p.bbox);
-        commitPoints({
-            variables: {
-                input: {
-                    imagePath: activeImage?.path,
-                    imageId: activeImage?.id,
-                    objectId: 1,
-                    points: pointPrompts.map((p) => p.point_coords),
-                    labels: pointPrompts.map((p) => p.point_labels),
-                    bboxes,
-                },
-            },
-            onCompleted: (res: any) => {
-                const firstMask = res?.addPointsImage?.rleMaskList?.[0]
-                    ?.rleMask as RLEMask | undefined;
-                if (!firstMask) {
-                    return;
-                }
+        addPoints.mutate(
+            {image: activeImage, prompts},
+            {
+                onError: onInferenceError,
+                onSuccess: (firstMask) => {
+                    if (!firstMask) {
+                        return;
+                    }
 
-                const coords = pointPrompts.map((p) => p.point_coords);
-                const labels = pointPrompts.map((p) => p.point_labels);
-                const layerId = Date.now() + 1;
+                    const coords = pointPrompts.map((p) => p.point_coords);
+                    const labels = pointPrompts.map((p) => p.point_labels);
+                    const layerId = Date.now() + 1;
 
-                commitHistory({
-                    action: "sam.result",
-                    payload: {prompts: pointPrompts.length},
-                });
+                    commitHistory({
+                        action: "sam.result",
+                        payload: {prompts: pointPrompts.length},
+                    });
 
-                if (currentMask === 0) {
-                    const id = Date.now();
-                    const color = getDistinctColor(
-                        maskCounter.current,
-                        MASK_FILL_ALPHA,
-                    );
-                    maskCounter.current += 1;
-                    setMasks((prev) => [
-                        ...prev,
-                        {
-                            id,
-                            label: `Lame ${maskCounter.current - 1}`,
-                            layers: [
-                                {
-                                    id: layerId,
-                                    rleMask: firstMask,
-                                    source: "sam" as const,
-                                },
-                            ],
-                            point_coords: coords,
-                            point_labels: labels,
-                            color,
-                        },
-                    ]);
-                    setCurrentMask(id);
-                } else {
-                    setMasks((prev) =>
-                        prev.map((m) => {
-                            if (m.id !== currentMask) {
-                                return m;
-                            }
-                            const hasSam = m.layers.some(
-                                (l) => l.source === "sam",
-                            );
-                            const layers = hasSam
-                                ? m.layers.map((l) =>
-                                      l.source === "sam"
-                                          ? {...l, rleMask: firstMask}
-                                          : l,
-                                  )
-                                : [
-                                      {
-                                          id: layerId,
-                                          rleMask: firstMask,
-                                          source: "sam" as const,
-                                      },
-                                      ...m.layers,
-                                  ];
-                            return {
-                                ...m,
-                                layers,
+                    if (currentMask === 0) {
+                        const id = Date.now();
+                        const color = getDistinctColor(
+                            maskCounter.current,
+                            MASK_FILL_ALPHA,
+                        );
+                        maskCounter.current += 1;
+                        setMasks((prev) => [
+                            ...prev,
+                            {
+                                id,
+                                label: `Lame ${maskCounter.current - 1}`,
+                                layers: [
+                                    {
+                                        id: layerId,
+                                        rleMask: firstMask,
+                                        source: "sam" as const,
+                                    },
+                                ],
                                 point_coords: coords,
                                 point_labels: labels,
-                            };
-                        }),
-                    );
-                }
+                                color,
+                            },
+                        ]);
+                        setCurrentMask(id);
+                    } else {
+                        setMasks((prev) =>
+                            prev.map((m) => {
+                                if (m.id !== currentMask) {
+                                    return m;
+                                }
+                                const hasSam = m.layers.some(
+                                    (l) => l.source === "sam",
+                                );
+                                const layers = hasSam
+                                    ? m.layers.map((l) =>
+                                          l.source === "sam"
+                                              ? {...l, rleMask: firstMask}
+                                              : l,
+                                      )
+                                    : [
+                                          {
+                                              id: layerId,
+                                              rleMask: firstMask,
+                                              source: "sam" as const,
+                                          },
+                                          ...m.layers,
+                                      ];
+                                return {
+                                    ...m,
+                                    layers,
+                                    point_coords: coords,
+                                    point_labels: labels,
+                                };
+                            }),
+                        );
+                    }
+                },
             },
-        });
+        );
     }
 
     function sendSlicPrompt() {
-        if (!slicPrompt) {
+        if (!slicPrompt?.bbox || !activeImage) {
             return;
         }
-
-        const bbox: [number, number, number, number] | null = slicPrompt.bbox
-            ? [
-                  Math.round(slicPrompt.bbox.left),
-                  Math.round(slicPrompt.bbox.top),
-                  Math.round(slicPrompt.bbox.width),
-                  Math.round(slicPrompt.bbox.height),
-              ]
-            : null;
-
-        commitComputeSlicMutationLabelMap({
-            variables: {
-                input: {
-                    imagePath: activeImage?.path,
-                    imageId: activeImage?.id,
-                    bbox,
+        slicLabelMap.mutate(
+            {image: activeImage, bbox: slicPrompt.bbox},
+            {
+                onError: onInferenceError,
+                onSuccess: (map) => {
+                    setSlicOverlay({...map, targetMaskId: currentMask});
                 },
             },
-            onCompleted: (res: any) => {
-                const m = res?.computeSlicImageGetLabelMap;
-                if (!m) {
-                    return;
-                }
-                // width/height come from the array, not the request: the
-                // backend's slice clips at the image edge.
-                setSlicOverlay({
-                    bbox: {x: m.bbox.x, y: m.bbox.y, w: m.width, h: m.height},
-                    labelMap: {
-                        labels: decodeLabelMap(
-                            m.data,
-                            m.dtype,
-                            m.width,
-                            m.height,
-                        ),
-                        w: m.width,
-                        h: m.height,
-                        x: m.bbox.x,
-                        y: m.bbox.y,
-                    },
-                    targetMaskId: currentMask,
-                });
-            },
-        });
+        );
     }
 
     useEffect(() => {
@@ -348,13 +202,17 @@ export const ImageEditor: React.FC<ImageEditorProps> = ({
         }
     }, [slicPrompt]);
 
-    const isLoading = pointsInFlight || slicLabelMapInFlight || imageLoading;
+    const isLoading =
+        pairs.isPending ||
+        addPoints.isPending ||
+        slicLabelMap.isPending ||
+        imageLoading;
 
     function loadingLabel() {
-        if (slicLabelMapInFlight) {
+        if (slicLabelMap.isPending) {
             return t("slicComputing");
         }
-        return pointsInFlight ? t("processing") : t("loadingImage");
+        return addPoints.isPending ? t("processing") : t("loadingImage");
     }
 
     return (

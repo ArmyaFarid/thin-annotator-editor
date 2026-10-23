@@ -23,5 +23,5 @@
     "allowSyntheticDefaultImports": true,
     "strictNullChecks": true
   },
-  "include": ["vite.config.ts", "schemas"]
+  "include": ["vite.config.ts"]
 }

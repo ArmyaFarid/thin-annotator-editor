@@ -38,10 +38,8 @@
 
     "baseUrl": "./src",
     "paths": {
-      "mp4box": ["types/mp4box"],
       "@/*": ["*"]
     }
   },
-  "include": ["src"],
-  "references": [{"path": "./tsconfig.node.json"}]
+  "include": ["src"]
 }

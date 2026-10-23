@@ -86,7 +86,7 @@ Keep the rotation value consistent across all images in one FOV folder.
 
 ### You will need
 
-- **Node 18+** (the Docker image uses 22.9) and **Yarn**
+- **Node 24** (pinned in `.nvmrc`; `nvm use` selects it) and **Yarn**
 - **The companion backend** — a Python service that runs SAM 2 and SLIC and serves the image
   files. The frontend expects it at `http://localhost:7263`.
 
@@ -94,7 +94,6 @@ Keep the rotation value consistent across all images in one FOV folder.
 
 ```bash
 yarn install
-yarn relay      # generate Relay artifacts from the GraphQL schema
 yarn dev        # start the dev server
 ```
 
@@ -107,8 +106,6 @@ yarn build      # typecheck + production build
 yarn lint       # eslint
 yarn preview    # serve the production build
 ```
-
-Re-run `yarn relay` whenever you add or change a GraphQL query or mutation.
 
 ### Configuration
 
@@ -187,7 +184,6 @@ src/
 ├── app/          Jotai state, undo/redo history, config
 ├── lib/services/ REST access: one folder per resource (dto → mappers → service → hooks)
 ├── i18n/         translation dictionary (fr / en)
-├── graphql/      Relay environment and fetching (GraphQL only)
 └── pages/        home (folder picker) and annotator routes
 ```
 
