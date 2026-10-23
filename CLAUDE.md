@@ -42,8 +42,7 @@ While editing, an object accumulates layers; **Save** collapses them into a sing
 Beware: **two different classes are called `Mask`** — the state interface in `app/atom.ts` and
 the renderer in `canvas/annotations/Mask.ts` that draws it.
 
-`objectId` in engine callbacks means *mask id*. `objectId` in the `/api/inference/points` response is
-SAM 2's own id, always `0`. Same word, unrelated meanings.
+`objectId` in engine callbacks means *mask id*.
 
 ---
 
@@ -190,8 +189,8 @@ tool works, and why adding a no-op tool needs no handler.
 Everything is REST; there is no GraphQL. The editor's endpoints live in `services/api/editor/`:
 
 - `GET /api/pairs` — the lighting-modality, gamma and rotation variants of one field of view
-- `POST /api/inference/points` — SAM prompts (points + corner bboxes) → RLE mask
-- `POST /api/inference/slic-label-map` — `[x, y, w, h]` bbox → uint16 label map
+- `POST /api/segmentation/sam2` — SAM prompts (points + `[x, y, w, h]` boxes) → `kind: "masks"`
+- `POST /api/segmentation/slic` — `[x, y, w, h]` bbox → `kind: "labelMap"`, a uint16 label map
 
 The rest — `/api/pick-folder`, `/api/task/*`, `/api/batch/*`, `/api/annotations/save`,
 `/api/annotation-options` — follows the same layout. Reached through `lib/services/api/`, one

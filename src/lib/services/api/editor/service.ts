@@ -1,8 +1,7 @@
 import api from "@/lib/services/api/axios.ts";
 import type {
     PairsResponseDTO,
-    PointsResponseDTO,
-    SlicLabelMapResponseDTO,
+    SegmentationResponseDTO,
 } from "@/lib/services/api/editor/dto.ts";
 import type {
     Pairs,
@@ -44,20 +43,20 @@ export const editorService = {
     },
 
     addPoints: async (input: PointsInput): Promise<RLEMask | null> => {
-        const res = await api.post<PointsResponseDTO>(
-            "/api/inference/points",
+        const res = await api.post<SegmentationResponseDTO>(
+            "/api/segmentation/sam2",
             pointsInputToDto(input),
         );
-        assertObject(res.data, "/api/inference/points");
+        assertObject(res.data, "/api/segmentation/sam2");
         return dtoToRleMask(res.data);
     },
 
     slicLabelMap: async (input: SlicInput): Promise<SlicLabelMapResult> => {
-        const res = await api.post<SlicLabelMapResponseDTO>(
-            "/api/inference/slic-label-map",
+        const res = await api.post<SegmentationResponseDTO>(
+            "/api/segmentation/slic",
             slicInputToDto(input),
         );
-        assertObject(res.data, "/api/inference/slic-label-map");
+        assertObject(res.data, "/api/segmentation/slic");
         return dtoToSlicLabelMap(res.data);
     },
 };
