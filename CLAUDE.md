@@ -253,12 +253,6 @@ never hardcoded.
 
 Real, unblocking, and safe to pick up:
 
-- **TanStack infers `any`.** `typescript` is pinned below 5.4, and `@tanstack/react-query` 5.101
-  needs newer inference: `useQuery(...).data` is `any`. `editor/hooks.ts` declares its return
-  types explicitly; the other modules don't yet. Raising TypeScript fixes it everywhere.
-
-- **Stale dependencies.** `mp4box`, `pts` and `react-pts-canvas` survive in `package.json` from
-  the deleted video pipeline.
 - **`BorderOnlyToggle.tsx`** has no importers — the toolbar button replaced it.
 - **`editorOnAtom`** is written by two components and read by none; the panel switches on
   `currentMask !== 0`.

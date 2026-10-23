@@ -1,5 +1,5 @@
 # Stage 1: Build Stage
-FROM node:22.9.0 AS build
+FROM node:24 AS build
 
 WORKDIR /app
 

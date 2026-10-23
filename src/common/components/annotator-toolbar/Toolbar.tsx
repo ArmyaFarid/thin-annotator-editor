@@ -90,9 +90,7 @@ function buildRail(): RailItem[] {
     return items;
 }
 
-interface ToolbarProps {}
-
-export const Toolbar: React.FC<ToolbarProps> = () => {
+export const Toolbar: React.FC = () => {
     const [activeTool, setActiveTool] = useAnnotatorToolbar();
     const [showShortcuts, setShowShortcuts] = useAtom(showShortcutsAtom);
     const [borderOnly, setBorderOnly] = useAtom(borderOnlyAtom);

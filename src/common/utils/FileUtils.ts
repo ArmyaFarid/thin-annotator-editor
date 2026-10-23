@@ -65,7 +65,7 @@ export async function* streamFile(url: string, init?: RequestInit): FileStream {
     const contentLength = response.headers.get('Content-Length');
     if (response.body != null && contentLength != null) {
       const totalLength = parseInt(contentLength);
-      const chunks: Uint8Array[] = [];
+      const chunks: Uint8Array<ArrayBuffer>[] = [];
       let start = 0;
       let end = 0;
 

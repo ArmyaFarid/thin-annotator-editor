@@ -14,9 +14,6 @@ import type {
 import {editorService} from "@/lib/services/api/editor/service.ts";
 import type {TaskRef} from "@/lib/services/api/task/service.ts";
 
-// Explicit return types: on this TypeScript version TanStack's inference
-// collapses `data` to `any`.
-
 export const pairsKey = (pairsCode: string, sampleId: string) =>
     ["pairs", pairsCode, sampleId] as const;
 

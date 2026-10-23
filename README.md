@@ -86,7 +86,7 @@ Keep the rotation value consistent across all images in one FOV folder.
 
 ### You will need
 
-- **Node 18+** (the Docker image uses 22.9) and **Yarn**
+- **Node 24** (pinned in `.nvmrc`; `nvm use` selects it) and **Yarn**
 - **The companion backend** — a Python service that runs SAM 2 and SLIC and serves the image
   files. The frontend expects it at `http://localhost:7263`.
 
